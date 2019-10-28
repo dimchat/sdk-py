@@ -28,24 +28,19 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .protocol import ReceiptCommand
-from .protocol import BlockCommand, MuteCommand
+from .mars import NetMsgHead, NetMsg
 
-from .network import NetMsgHead, NetMsg
-from .network import CASubject, CAValidity, CAData, CertificateAuthority
-from .network import ServiceProvider, Station
-
-name = 'DIM-SDK'
-
-__author__ = 'Albert Moky'
+from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
+from .station import ServiceProvider, Station
 
 __all__ = [
-    # Protocol
-    'ReceiptCommand',
-    'BlockCommand', 'MuteCommand',
 
-    # Network
+    # Data packing
     'NetMsgHead', 'NetMsg',
+
+    # CA
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
+
+    # Roles
     'ServiceProvider', 'Station',
 ]
