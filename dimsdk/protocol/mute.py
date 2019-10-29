@@ -36,6 +36,8 @@
     If value of 'list' is None, means querying mute-list from station
 """
 
+from typing import Optional
+
 from dimp import ID, HistoryCommand
 
 
@@ -84,7 +86,7 @@ class MuteCommand(HistoryCommand):
     #   mute-list
     #
     @property
-    def mute_list(self) -> list:
+    def mute_list(self) -> Optional[list]:
         if self.__list is None:
             # TODO: convert values to ID objects
             self.__list = self.get('list')

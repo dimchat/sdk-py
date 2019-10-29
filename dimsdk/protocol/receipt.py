@@ -35,6 +35,8 @@
     As receipt returned to sender to proofing the message's received
 """
 
+from typing import Optional
+
 from dimp import Envelope
 from dimp import Command
 from mkm.crypto.utils import base64_decode
@@ -86,7 +88,7 @@ class ReceiptCommand(Command):
     #   envelope
     #
     @property
-    def envelope(self) -> Envelope:
+    def envelope(self) -> Optional[Envelope]:
         if self.__envelope is None:
             if 'sender' in self and 'receiver' in self:
                 self.__envelope = Envelope(self)
@@ -96,7 +98,7 @@ class ReceiptCommand(Command):
     #   signature
     #
     @property
-    def signature(self) -> bytes:
+    def signature(self) -> Optional[bytes]:
         if self.__signature is None:
             base64 = self.get('signature')
             if base64 is not None:
@@ -107,7 +109,7 @@ class ReceiptCommand(Command):
     #   message
     #
     @property
-    def message(self) -> str:
+    def message(self) -> Optional[str]:
         return self.get('message')
 
     @message.setter

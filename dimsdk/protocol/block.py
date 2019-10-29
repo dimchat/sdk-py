@@ -36,6 +36,8 @@
     If value of 'list' is None, means querying block-list from station
 """
 
+from typing import Optional
+
 from dimp import ID, HistoryCommand
 
 
@@ -84,7 +86,7 @@ class BlockCommand(HistoryCommand):
     #   block-list
     #
     @property
-    def block_list(self) -> list:
+    def block_list(self) -> Optional[list]:
         if self.__list is None:
             # TODO: convert values to ID objects
             self.__list = self.get('list')

@@ -28,27 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from mkm import SymmetricKey, PrivateKey, PublicKey
-from mkm import NetworkID, Address, ID, Meta, Profile
-from mkm import Entity, IEntityDataSource
-from mkm import User, LocalUser, IUserDataSource
-from mkm import Group, IGroupDataSource
-
-from dkd import Content, ContentType, ForwardContent
-from dkd import Envelope, Message
-from dkd import InstantMessage, SecureMessage, ReliableMessage
-from dkd import IInstantMessageDelegate, ISecureMessageDelegate, IReliableMessageDelegate
-
-from dimp import TextContent, FileContent, ImageContent, AudioContent, VideoContent
-from dimp import Command, HistoryCommand, GroupCommand
-from dimp import InviteCommand, ExpelCommand, JoinCommand, QuitCommand
-from dimp import QueryCommand, ResetCommand
-from dimp import HandshakeCommand, MetaCommand, ProfileCommand
-
-from dimp import ICallback, ICompletionHandler, ITransceiverDelegate
-from dimp import Barrack
-from dimp import KeyCache
-from dimp import Transceiver
+from dimp import *
 
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
@@ -56,6 +36,9 @@ from .protocol import BlockCommand, MuteCommand
 from .network import NetMsgHead, NetMsg
 from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station
+
+from .delegate import Callback, CompletionHandler, MessengerDelegate
+from .messenger import Messenger
 
 name = 'DIM-SDK'
 
@@ -72,21 +55,28 @@ __all__ = [
 
     # entity
     'NetworkID', 'Address', 'ID', 'Meta', 'Profile',
-    'Entity', 'IEntityDataSource',
-    'User', 'LocalUser', 'IUserDataSource',
-    'Group', 'IGroupDataSource',
+    'Entity', 'User', 'LocalUser', 'Group',
+
+    # delegate
+    'EntityDataSource', 'UserDataSource', 'GroupDataSource',
+
+    'ANYONE', 'EVERYONE',
 
     #
     #   DaoKeDao
     #
 
     # message
-    'Content', 'ContentType', 'ForwardContent',
-    'Envelope', 'Message',
+    'Envelope', 'Content', 'Message',
+
+    # content types
+    'ContentType', 'ForwardContent',
 
     # transform
     'InstantMessage', 'SecureMessage', 'ReliableMessage',
-    'IInstantMessageDelegate', 'ISecureMessageDelegate', 'IReliableMessageDelegate',
+
+    # delegate
+    'InstantMessageDelegate', 'SecureMessageDelegate', 'ReliableMessageDelegate',
 
     #
     #   DIMP
@@ -100,10 +90,12 @@ __all__ = [
     'HandshakeCommand', 'MetaCommand', 'ProfileCommand',
 
     # core
-    'ICallback', 'ICompletionHandler', 'ITransceiverDelegate',
     'Barrack',
     'KeyCache',
     'Transceiver',
+
+    # delegate
+    'SocialNetworkDelegate', 'CipherKeyDelegate', 'TransceiverDelegate',
 
     #
     #   DIM SDK
@@ -117,4 +109,9 @@ __all__ = [
     'NetMsgHead', 'NetMsg',
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
     'ServiceProvider', 'Station',
+
+    # delegate
+    'Callback', 'CompletionHandler', 'MessengerDelegate',
+
+    'Messenger',
 ]
