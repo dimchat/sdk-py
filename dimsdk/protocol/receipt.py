@@ -37,7 +37,6 @@
 
 from dimp import Envelope
 from dimp import Command
-from dimp.protocol.command import command_classes
 from mkm.crypto.utils import base64_decode
 
 
@@ -141,4 +140,4 @@ class ReceiptCommand(Command):
 
 
 # register command class
-command_classes[Command.RECEIPT] = ReceiptCommand
+Command.register(command=Command.RECEIPT, command_class=ReceiptCommand)

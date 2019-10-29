@@ -37,7 +37,6 @@
 """
 
 from dimp import ID, HistoryCommand
-from dimp.protocol.command import command_classes
 
 
 class MuteCommand(HistoryCommand):
@@ -140,4 +139,4 @@ class MuteCommand(HistoryCommand):
 
 
 # register command class
-command_classes[MuteCommand.MUTE] = MuteCommand
+HistoryCommand.register(command=MuteCommand.MUTE, command_class=MuteCommand)

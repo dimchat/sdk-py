@@ -37,7 +37,6 @@
 """
 
 from dimp import ID, HistoryCommand
-from dimp.protocol.command import command_classes
 
 
 class BlockCommand(HistoryCommand):
@@ -140,4 +139,4 @@ class BlockCommand(HistoryCommand):
 
 
 # register command class
-command_classes[BlockCommand.BLOCK] = BlockCommand
+HistoryCommand.register(command=BlockCommand.BLOCK, command_class=BlockCommand)
