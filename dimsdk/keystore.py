@@ -64,7 +64,9 @@ class KeyStore(KeyCache):
         elif value != self.__user:
             # load key map for new user
             self.__user = value
-            self.update_keys(self.load_keys())
+            dictionary = self.load_keys()
+            if dictionary is not None:
+                self.update_keys(dictionary)
 
     @property
     def directory(self) -> str:
