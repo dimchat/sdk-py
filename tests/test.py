@@ -10,7 +10,18 @@
 
 import unittest
 
-from dimsdk import ReceiptCommand
+from dimsdk import *
+
+
+class EntityTestCase(unittest.TestCase):
+
+    def test1_immortals(self):
+        print('\n---------------- %s' % self)
+
+        facebook = Facebook()
+        id1 = facebook.identifier('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
+        moki = facebook.user(identifier=id1)
+        print('moki: ', moki)
 
 
 class CommandTestCase(unittest.TestCase):

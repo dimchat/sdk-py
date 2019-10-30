@@ -35,28 +35,53 @@
     A map for short name to ID, just like DNS
 """
 
-from abc import abstractmethod
 from typing import Optional
 
-from dimp import ID
+from dimp import ID, ANYONE, EVERYONE
+from mkm.address import ANYWHERE
 
 
 class AddressNameService:
 
     def __init__(self):
         super().__init__()
+        # Constant ID
+        moky = ID.new(name='moky', address=ANYWHERE)
+        # Reserved names
+        keywords = ['all', 'everyone', 'anyone', 'owner', 'founder',
+                    'root', 'admin', 'administrator', 'assistant',
+                    'dkd', 'mkm', 'dimp', 'dim', 'dimt',
+                    ]
+        self.__reversed = keywords
+        # ANS records
+        self.__caches = {
+            'all': EVERYONE,
+            'everyone': EVERYONE,
+            'anyone': ANYONE,
+            'owner': ANYONE,
+            'founder': moky,
+        }
 
-    @abstractmethod
-    def save_record(self, name: str, identifier: ID) -> bool:
+    def save_record(self, name: str, identifier: ID=None) -> bool:
         """ Save ANS record """
-        pass
+        if name in self.__reversed:
+            # this name is reserved, cannot register
+            return False
+        if identifier is None:
+            self.__caches.pop(name, None)
+        else:
+            self.__caches[name] = identifier
+        # TODO: save this record into database
+        return True
 
-    @abstractmethod
     def record(self, name: str) -> Optional[ID]:
         """ Get ID by short name """
-        pass
+        return self.__caches.get(name)
 
-    @abstractmethod
     def names(self, identifier: ID) -> Optional[list]:
         """ Get all short names with this ID """
-        pass
+        array = []
+        for (key, value) in self.__caches.items():
+            if key == identifier:
+                array.append(value)
+        return array

@@ -30,6 +30,8 @@
 
 from dimp import *
 
+from .dos import File, TextFile, JSONFile
+
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
 
@@ -38,6 +40,10 @@ from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station
 
 from .delegate import Callback, CompletionHandler, MessengerDelegate
+
+from .ans import AddressNameService
+from .facebook import Facebook
+from .keystore import KeyStore
 from .messenger import Messenger
 
 name = 'DIM-SDK'
@@ -101,6 +107,9 @@ __all__ = [
     #   DIM SDK
     #
 
+    # DOS
+    'File', 'TextFile', 'JSONFile',
+
     # protocol
     'ReceiptCommand',
     'BlockCommand', 'MuteCommand',
@@ -113,5 +122,5 @@ __all__ = [
     # delegate
     'Callback', 'CompletionHandler', 'MessengerDelegate',
 
-    'Messenger',
+    'AddressNameService', 'Facebook', 'KeyStore', 'Messenger',
 ]

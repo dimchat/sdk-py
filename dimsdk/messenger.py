@@ -49,28 +49,25 @@ class Messenger(Transceiver):
     def __init__(self):
         super().__init__()
 
-    def check_meta(self, msg: ReliableMessage) -> bool:
-        # [Meta Protocol] check meta in first contact message
-        facebook: Facebook = self.barrack
-        sender = facebook.identifier(msg.envelope.sender)
-        meta = facebook.meta(identifier=sender)
-        if meta is not None:
-            return True
-        # first contact, try meta in message package
-        meta = Meta(msg.meta)
-        if meta is None:
-            # TODO: query meta for sender from DIM network
-            #       (do it by application)
-            raise LookupError('failed to get meta for sender: %s' % sender)
-        # save meta for new contact
-        return facebook.save_meta(meta=meta, identifier=sender)
-
     #
     #  Transform
     #
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        if self.check_meta(msg=msg):
-            return super().verify_message(msg=msg)
+        # [Meta Protocol] check meta in first contact message
+        facebook: Facebook = self.barrack
+        sender = facebook.identifier(msg.envelope.sender)
+        meta = facebook.meta(identifier=sender)
+        if meta is None:
+            # first contact, try meta in message package
+            meta = Meta(msg.meta)
+            if meta is None:
+                # TODO: query meta for sender from DIM network
+                #       (do it by application)
+                raise LookupError('failed to get meta for sender: %s' % sender)
+            # save meta for new contact
+            if not facebook.save_meta(meta=meta, identifier=sender):
+                raise ValueError('save meta error: %s, %s' % (sender, meta))
+        return super().verify_message(msg=msg)
 
     def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
         i_msg = super().decrypt_message(msg=msg)
