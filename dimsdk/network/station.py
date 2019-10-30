@@ -36,8 +36,8 @@
     SP      : DIM network service provider
 """
 
-from mkm import PublicKey
-from mkm import ID, User, Group
+from dimp import PublicKey
+from dimp import ID, User, Group
 
 from .certificate import CertificateAuthority
 

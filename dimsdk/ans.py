@@ -37,8 +37,9 @@
 
 from typing import Optional
 
-from dimp import ID, ANYONE, EVERYONE
 from mkm.address import ANYWHERE
+
+from dimp import ID, ANYONE, EVERYONE
 
 
 class AddressNameService:

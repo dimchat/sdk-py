@@ -38,7 +38,10 @@
 import json
 from typing import Optional
 
-from dimp import *
+from dimp import Meta
+from dimp import ContentType, ForwardContent
+from dimp import InstantMessage, SecureMessage, ReliableMessage
+from dimp import Transceiver
 
 from .delegate import Callback, CompletionHandler, MessengerDelegate
 from .facebook import Facebook

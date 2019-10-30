@@ -37,9 +37,10 @@
 
 from typing import Optional
 
+from mkm.crypto.utils import base64_decode
+
 from dimp import Envelope
 from dimp import Command
-from mkm.crypto.utils import base64_decode
 
 
 class ReceiptCommand(Command):

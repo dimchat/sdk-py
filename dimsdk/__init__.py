@@ -30,8 +30,6 @@
 
 from dimp import *
 
-from .dos import File, TextFile, JSONFile
-
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
 
@@ -106,9 +104,6 @@ __all__ = [
     #
     #   DIM SDK
     #
-
-    # DOS
-    'File', 'TextFile', 'JSONFile',
 
     # protocol
     'ReceiptCommand',

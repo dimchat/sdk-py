@@ -36,8 +36,9 @@
 """
 
 import os
-import json
 from typing import Optional
+
+from mkm.dos import JSONFile
 
 from dimp import ID, SymmetricKey, LocalUser
 from dimp import KeyCache
@@ -73,35 +74,25 @@ class KeyStore(KeyCache):
     def directory(self, value: str):
         self.__base_dir = value
 
-    def __directory(self, control: str, identifier: ID, sub_dir: str = None) -> str:
-        path = self.__base_dir + control + '/' + identifier.address
-        if sub_dir:
-            path = path + '/' + sub_dir
-        if not os.path.exists(path):
-            os.makedirs(path)
-        return path
-
-    def __path(self) -> str:
-        if self.__user is not None:
-            directory = self.__directory('public', self.__user.identifier)
-            return directory + '/keystore.js'
+    # '/tmp/.dim/protected/{ADDRESS}/keystore.js'
+    def __path(self) -> Optional[str]:
+        if self.__user is None:
+            return None
+        return os.path.join(self.__base_dir, 'protected', self.__user.identifier, 'keystore.js')
 
     def save_keys(self, key_map: dict) -> bool:
         # write key table to persistent storage
         path = self.__path()
         if path is None:
             return False
-        with open(path, 'w') as file:
-            file.write(json.dumps(key_map))
-            return True
+        return JSONFile(path).write(key_map)
 
     def load_keys(self) -> Optional[dict]:
         # load key table from persistent storage
         path = self.__path()
-        if path is not None and os.path.exists(path):
-            with open(path, 'r') as file:
-                data = file.read()
-                return json.loads(data)
+        if path is None:
+            return None
+        return JSONFile(path).read()
 
     #
     #   ICipherKeyDataSource

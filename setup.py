@@ -12,7 +12,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -30,12 +30,15 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     packages=find_packages(),
+    package_data={
+        '': ['*.js']
+    },
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.7.3', 'dkd', 'mkm'
+        'dimp>=0.7.4', 'mkm'
     ]
 )

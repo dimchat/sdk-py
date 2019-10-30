@@ -37,11 +37,12 @@
 
 from typing import Optional
 
+from mkm.immortals import Immortals
+
 from dimp import NetworkID, ID, Meta, Profile, User, Group
 from dimp import Barrack, LocalUser, PrivateKey
 
 from .ans import AddressNameService
-from .immortals import Immortals
 
 
 class Facebook(Barrack):

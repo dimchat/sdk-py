@@ -37,6 +37,8 @@
 
 from abc import ABCMeta, abstractmethod
 
+from dimp import TransceiverDelegate
+
 
 class Callback(metaclass=ABCMeta):
 
@@ -56,7 +58,7 @@ class CompletionHandler(metaclass=ABCMeta):
         pass
 
 
-class MessengerDelegate(metaclass=ABCMeta):
+class MessengerDelegate(TransceiverDelegate):
 
     @abstractmethod
     def send_package(self, data: bytes, handler: CompletionHandler) -> bool:

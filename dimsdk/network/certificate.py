@@ -37,8 +37,9 @@
 
 import json
 
-from mkm import PublicKey
 from mkm.crypto.utils import base64_decode
+
+from dimp import PublicKey
 
 
 class CASubject(dict):
