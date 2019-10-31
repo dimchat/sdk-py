@@ -38,8 +38,8 @@
 import json
 from typing import Optional
 
-from dimp import Meta
-from dimp import ContentType, ForwardContent
+from dimp import Meta, SymmetricKey
+from dimp import ContentType, Content, ForwardContent, FileContent
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Transceiver
 
@@ -85,6 +85,39 @@ class Messenger(Transceiver):
                 return secret
             # FIXME: not for you?
         return i_msg
+
+    def encrypt_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
+        password = SymmetricKey(key=key)
+        assert password == key, 'irregular symmetric key: %s' % key
+        # check attachment for File/Image/Audio/Video message content before
+        if isinstance(content, FileContent):
+            data = password.encrypt(data=content.data)
+            # upload (encrypted) file data onto CDN and save the URL in message content
+            url = self.delegate.upload_data(data=data, msg=msg)
+            if url is not None:
+                content.url = url
+                content.data = None
+        return super().encrypt_content(content=content, key=password, msg=msg)
+
+    def decrypt_content(self, data: bytes, key: dict, msg: SecureMessage) -> Optional[Content]:
+        password = SymmetricKey(key=key)
+        content = super().decrypt_content(data=data, key=password, msg=msg)
+        if content is None:
+            return None
+        # check attachment for File/Image/Audio/Video message content after
+        if isinstance(content, FileContent):
+            i_msg = InstantMessage.new(content=content, envelope=msg.envelope)
+            # download from CDN
+            file_data = self.delegate.download_data(content.url, i_msg)
+            if file_data is None:
+                # save symmetric key for decrypted file data after download from CDN
+                content.password = password
+            else:
+                # decrypt file data
+                content.data = password.decrypt(data=file_data)
+                assert content.data is not None, 'failed to decrypt file data with key: %s' % key
+                content.url = None
+        return content
 
     #
     #  Conveniences
