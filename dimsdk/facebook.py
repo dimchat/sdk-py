@@ -295,7 +295,7 @@ class Facebook(Barrack):
             #     decrypt key not found, use the same with sign key?
             key = self.private_key_for_signature(identifier)
             if key is not None:
-                keys = [keys]
+                keys = [key]
         return keys
 
     def contacts(self, identifier: ID) -> Optional[list]:
