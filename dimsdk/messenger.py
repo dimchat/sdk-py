@@ -51,23 +51,24 @@ class Messenger(Transceiver):
 
     def __init__(self):
         super().__init__()
+        self.delegate: MessengerDelegate = None
 
     #
     #  Transform
     #
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        # [Meta Protocol] check meta in first contact message
         facebook: Facebook = self.barrack
         sender = facebook.identifier(msg.envelope.sender)
-        meta = facebook.meta(identifier=sender)
+        meta = Meta(msg.meta)
         if meta is None:
-            # first contact, try meta in message package
-            meta = Meta(msg.meta)
+            meta = facebook.meta(identifier=sender)
             if meta is None:
                 # TODO: query meta for sender from DIM network
                 #       (do it by application)
                 raise LookupError('failed to get meta for sender: %s' % sender)
-            # save meta for new contact
+        else:
+            # [Meta Protocol]
+            # save meta for sender
             if not facebook.save_meta(meta=meta, identifier=sender):
                 raise ValueError('save meta error: %s, %s' % (sender, meta))
         return super().verify_message(msg=msg)
@@ -76,6 +77,7 @@ class Messenger(Transceiver):
         i_msg = super().decrypt_message(msg=msg)
         # check: top-secret message
         if i_msg.content.type == ContentType.Forward:
+            # [Forward Protocol]
             # do it again to drop the wrapper,
             # the secret inside the content is the real message
             content: ForwardContent = i_msg.content

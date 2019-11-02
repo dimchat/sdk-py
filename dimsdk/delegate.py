@@ -44,7 +44,7 @@ from dimp import InstantMessage
 class Callback(metaclass=ABCMeta):
 
     @abstractmethod
-    def finished(self, result, error):
+    def finished(self, result, error=None):
         pass
 
 

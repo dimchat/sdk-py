@@ -38,44 +38,80 @@
 from typing import Optional
 
 from mkm.address import ANYWHERE
-
 from dimp import ID, ANYONE, EVERYONE
+
+#
+#   Founder
+#
+founder = ID.new(name='moky', address=ANYWHERE)
+#
+#   Reserved names
+#
+keywords = ['all', 'everyone', 'anyone', 'owner', 'founder',
+            # --------------------------------
+            'dkd', 'mkm', 'dimp', 'dim', 'dimt',
+            'rsa', 'ecc', 'aes', 'des', 'btc', 'eth',
+            # --------------------------------
+            'crypto', 'key', 'symmetric', 'asymmetric',
+            'public', 'private', 'secret', 'password',
+            'id', 'address', 'meta', 'profile',
+            'entity', 'user', 'group', 'contact',
+            # --------------------------------
+            'member', 'admin', 'administrator', 'assistant',
+            'main', 'polylogue', 'chatroom',
+            'social', 'organization',
+            'company', 'school', 'government', 'department',
+            'provider', 'station', 'thing', 'robot',
+            # --------------------------------
+            'message', 'instant', 'secure', 'reliable',
+            'envelope', 'sender', 'receiver', 'time',
+            'content', 'forward', 'command', 'history',
+            'keys', 'data', 'signature',
+            # --------------------------------
+            'type', 'serial', 'sn',
+            'text', 'file', 'image', 'audio', 'video', 'page',
+            'handshake', 'receipt', 'block', 'mute',
+            'register', 'suicide', 'found', 'abdicate',
+            'invite', 'expel', 'join', 'quit', 'reset', 'query',
+            'hire', 'fire', 'resign',
+            # --------------------------------
+            'server', 'client', 'terminal', 'local', 'remote',
+            'barrack', 'cache', 'transceiver',
+            'ans', 'facebook', 'store', 'messenger',
+            'root', 'supervisor',
+            ]
 
 
 class AddressNameService:
 
     def __init__(self):
         super().__init__()
-        # Constant ID
-        moky = ID.new(name='moky', address=ANYWHERE)
-        # Reserved names
-        keywords = ['all', 'everyone', 'anyone', 'owner', 'founder',
-                    'root', 'admin', 'administrator', 'assistant',
-                    'dkd', 'mkm', 'dimp', 'dim', 'dimt',
-                    ]
-        self.__reversed = keywords
         # ANS records
         self.__caches = {
             'all': EVERYONE,
             'everyone': EVERYONE,
             'anyone': ANYONE,
             'owner': ANYONE,
-            'founder': moky,
+            'founder': founder,
         }
 
-    def save_record(self, name: str, identifier: ID=None) -> bool:
-        """ Save ANS record """
-        if name in self.__reversed:
+    def cache(self, name: str, identifier: ID=None) -> bool:
+        if name in keywords:
             # this name is reserved, cannot register
             return False
         if identifier is None:
             self.__caches.pop(name, None)
         else:
             self.__caches[name] = identifier
-        # TODO: save this record into database
         return True
 
-    def record(self, name: str) -> Optional[ID]:
+    def save(self, name: str, identifier: ID=None) -> bool:
+        """ Save ANS record """
+        if not self.cache(name=name, identifier=identifier):
+            return False
+        # NOTICE: save this record into database by subclass
+
+    def identifier(self, name: str) -> Optional[ID]:
         """ Get ID by short name """
         return self.__caches.get(name)
 

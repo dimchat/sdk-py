@@ -15,9 +15,13 @@ from dimsdk import *
 from mkm.crypto.utils import base64_encode
 from mkm.immortals import Immortals
 
-immortals = Immortals()
-moki_id = immortals.identifier(string='moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
-hulk_id = immortals.identifier(string='hulk@4YeVEN3aUnvC1DNUufCq1bs9zoBSJTzVEj')
+from tests.database import Database
+
+g_facebook = Database()
+
+g_immortals = Immortals()
+moki_id = g_immortals.identifier(string='moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
+hulk_id = g_immortals.identifier(string='hulk@4YeVEN3aUnvC1DNUufCq1bs9zoBSJTzVEj')
 
 
 def print_data(data: CAData):
@@ -85,7 +89,7 @@ class CATestCase(unittest.TestCase):
     def test3_key(self):
         print('\n---------------- %s' % self)
 
-        moki_meta = immortals.meta(identifier=moki_id)
+        moki_meta = g_immortals.meta(identifier=moki_id)
         moki_pk = moki_meta.key
         key = moki_pk
         common['key'] = PublicKey(key)
@@ -103,7 +107,7 @@ class CATestCase(unittest.TestCase):
         common['info'] = CAData(info)
         print_data(common['info'])
 
-        moki = immortals.user(identifier=moki_id)
+        moki = g_immortals.user(identifier=moki_id)
 
         string = json.dumps(common['info']).encode('utf-8')
         signature = moki.sign(string)
@@ -122,9 +126,8 @@ class EntityTestCase(unittest.TestCase):
     def test1_immortals(self):
         print('\n---------------- %s' % self)
 
-        facebook = Facebook()
-        id1 = facebook.identifier('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
-        moki = facebook.user(identifier=id1)
+        id1 = g_facebook.identifier('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
+        moki = g_facebook.user(identifier=id1)
         print('moki: ', moki)
 
 
