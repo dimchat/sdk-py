@@ -325,7 +325,7 @@ class Facebook(Barrack):
                 # if the user's public key matches with the group's meta,
                 # it means this meta was generate by the user's private key
                 for item in members:
-                    m = self.meta(identifier=item)
+                    m = self.meta(identifier=self.identifier(item))
                     if m is not None and meta.match_public_key(m.key):
                         # got it
                         return item
