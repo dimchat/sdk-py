@@ -28,23 +28,24 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .mars import NetMsgHead, NetMsg
-from .apns import ApplePushNotificationService
+"""
+    Chat Bot
+    ~~~~~~~~
 
-from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
-from .station import ServiceProvider, Station
+    AI chat bots
+"""
 
-__all__ = [
+from abc import ABCMeta, abstractmethod
 
-    # Data packing
-    'NetMsgHead', 'NetMsg',
 
-    # APNs
-    'ApplePushNotificationService',
+class ChatBot(metaclass=ABCMeta):
 
-    # CA
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
+    @abstractmethod
+    def ask(self, question: str, user: str=None) -> str:
+        """Talking with the chat bot
 
-    # Roles
-    'ServiceProvider', 'Station',
-]
+            :param question - text message string
+            :param user - sender ID number
+            :return answer string
+        """
+        pass

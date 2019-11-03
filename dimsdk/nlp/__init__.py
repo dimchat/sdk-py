@@ -28,23 +28,19 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .mars import NetMsgHead, NetMsg
-from .apns import ApplePushNotificationService
+"""
+    Natural Language Processing
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
-from .station import ServiceProvider, Station
+    AI chat bots
+"""
+
+from .dialog import Dialog
+from .chatbot import ChatBot
+from .tuling import Tuling
+from .xiaoi import XiaoI
 
 __all__ = [
-
-    # Data packing
-    'NetMsgHead', 'NetMsg',
-
-    # APNs
-    'ApplePushNotificationService',
-
-    # CA
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
-
-    # Roles
-    'ServiceProvider', 'Station',
+    'Dialog', 'ChatBot',
+    'Tuling', 'XiaoI',
 ]

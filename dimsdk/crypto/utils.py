@@ -28,23 +28,21 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .mars import NetMsgHead, NetMsg
-from .apns import ApplePushNotificationService
+import hashlib
 
-from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
-from .station import ServiceProvider, Station
+from binascii import b2a_hex, a2b_hex
 
-__all__ = [
 
-    # Data packing
-    'NetMsgHead', 'NetMsg',
+def sha1(data: bytes) -> bytes:
+    """ SHA1 Digest """
+    return hashlib.sha1(data).digest()
 
-    # APNs
-    'ApplePushNotificationService',
 
-    # CA
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
+def hex_encode(data: bytes) -> str:
+    """ HEX Encode """
+    return b2a_hex(data).decode('utf-8')
 
-    # Roles
-    'ServiceProvider', 'Station',
-]
+
+def hex_decode(string: str) -> bytes:
+    """ HEX Decode """
+    return a2b_hex(string)

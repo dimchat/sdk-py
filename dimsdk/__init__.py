@@ -33,7 +33,10 @@ from dimp import *
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
 
+from .nlp import Dialog, ChatBot, Tuling, XiaoI
+
 from .network import NetMsgHead, NetMsg
+from .network import ApplePushNotificationService
 from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station
 
@@ -107,8 +110,12 @@ __all__ = [
     'ReceiptCommand',
     'BlockCommand', 'MuteCommand',
 
+    # NLP
+    'Dialog', 'ChatBot', 'Tuling', 'XiaoI',
+
     # network
     'NetMsgHead', 'NetMsg',
+    'ApplePushNotificationService',
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
     'ServiceProvider', 'Station',
 
