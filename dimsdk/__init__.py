@@ -30,15 +30,17 @@
 
 from dimp import *
 
-from .protocol import ReceiptCommand
-from .protocol import BlockCommand, MuteCommand
+from .notification import Notification, Observer, NotificationCenter
+from .notification import ApplePushNotificationService
 
 from .nlp import Dialog, ChatBot, Tuling, XiaoI
 
 from .network import NetMsgHead, NetMsg
-from .network import ApplePushNotificationService
 from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station
+
+from .protocol import ReceiptCommand
+from .protocol import BlockCommand, MuteCommand
 
 from .delegate import Callback, CompletionHandler, MessengerDelegate
 
@@ -106,18 +108,21 @@ __all__ = [
     #   DIM SDK
     #
 
-    # protocol
-    'ReceiptCommand',
-    'BlockCommand', 'MuteCommand',
+    # notification
+    'Notification', 'Observer', 'NotificationCenter',
+    'ApplePushNotificationService',
 
     # NLP
     'Dialog', 'ChatBot', 'Tuling', 'XiaoI',
 
     # network
     'NetMsgHead', 'NetMsg',
-    'ApplePushNotificationService',
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
     'ServiceProvider', 'Station',
+
+    # protocol
+    'ReceiptCommand',
+    'BlockCommand', 'MuteCommand',
 
     # delegate
     'Callback', 'CompletionHandler', 'MessengerDelegate',

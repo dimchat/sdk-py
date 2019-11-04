@@ -28,19 +28,50 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .mars import NetMsgHead, NetMsg
+from abc import ABCMeta, abstractmethod
+from typing import Optional
 
-from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
-from .station import ServiceProvider, Station
+"""
+    Notification observer
+    ~~~~~~~~~~~~~~~~~~~~~
 
-__all__ = [
+    Notification object with name, sender and extra info
+"""
 
-    # Data packing
-    'NetMsgHead', 'NetMsg',
 
-    # CA
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
+class Notification:
 
-    # Roles
-    'ServiceProvider', 'Station',
-]
+    def __init__(self, name: str, sender: object, info: dict=None):
+        super().__init__()
+        self.__name = name
+        self.__sender = sender
+        self.__info = info
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @property
+    def sender(self) -> object:
+        return self.__sender
+
+    @property
+    def info(self) -> Optional[dict]:
+        return self.__info
+
+    @info.setter
+    def info(self, value: dict):
+        self.__info = value
+
+
+class Observer(metaclass=ABCMeta):
+
+    @abstractmethod
+    def received_notification(self, notification: Notification):
+        """
+        Callback for notification
+
+        :param notification: notification with name, sender and extra info
+        :return:
+        """
+        pass
