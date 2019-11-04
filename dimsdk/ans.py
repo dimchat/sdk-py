@@ -47,39 +47,40 @@ founder = ID.new(name='moky', address=ANYWHERE)
 #
 #   Reserved names
 #
-keywords = ['all', 'everyone', 'anyone', 'owner', 'founder',
-            # --------------------------------
-            'dkd', 'mkm', 'dimp', 'dim', 'dimt',
-            'rsa', 'ecc', 'aes', 'des', 'btc', 'eth',
-            # --------------------------------
-            'crypto', 'key', 'symmetric', 'asymmetric',
-            'public', 'private', 'secret', 'password',
-            'id', 'address', 'meta', 'profile',
-            'entity', 'user', 'group', 'contact',
-            # --------------------------------
-            'member', 'admin', 'administrator', 'assistant',
-            'main', 'polylogue', 'chatroom',
-            'social', 'organization',
-            'company', 'school', 'government', 'department',
-            'provider', 'station', 'thing', 'robot',
-            # --------------------------------
-            'message', 'instant', 'secure', 'reliable',
-            'envelope', 'sender', 'receiver', 'time',
-            'content', 'forward', 'command', 'history',
-            'keys', 'data', 'signature',
-            # --------------------------------
-            'type', 'serial', 'sn',
-            'text', 'file', 'image', 'audio', 'video', 'page',
-            'handshake', 'receipt', 'block', 'mute',
-            'register', 'suicide', 'found', 'abdicate',
-            'invite', 'expel', 'join', 'quit', 'reset', 'query',
-            'hire', 'fire', 'resign',
-            # --------------------------------
-            'server', 'client', 'terminal', 'local', 'remote',
-            'barrack', 'cache', 'transceiver',
-            'ans', 'facebook', 'store', 'messenger',
-            'root', 'supervisor',
-            ]
+keywords = [
+    "all", "everyone", "anyone", "owner", "founder",
+    # --------------------------------
+    "dkd", "mkm", "dimp", "dim", "dimt",
+    "rsa", "ecc", "aes", "des", "btc", "eth",
+    # --------------------------------
+    "crypto", "key", "symmetric", "asymmetric",
+    "public", "private", "secret", "password",
+    "id", "address", "meta", "profile",
+    "entity", "user", "group", "contact",
+    # --------------------------------
+    "member", "admin", "administrator", "assistant",
+    "main", "polylogue", "chatroom",
+    "social", "organization",
+    "company", "school", "government", "department",
+    "provider", "station", "thing", "robot",
+    # --------------------------------
+    "message", "instant", "secure", "reliable",
+    "envelope", "sender", "receiver", "time",
+    "content", "forward", "command", "history",
+    "keys", "data", "signature",
+    # --------------------------------
+    "type", "serial", "sn",
+    "text", "file", "image", "audio", "video", "page",
+    "handshake", "receipt", "block", "mute",
+    "register", "suicide", "found", "abdicate",
+    "invite", "expel", "join", "quit", "reset", "query",
+    "hire", "fire", "resign",
+    # --------------------------------
+    "server", "client", "terminal", "local", "remote",
+    "barrack", "cache", "transceiver",
+    "ans", "facebook", "store", "messenger",
+    "root", "supervisor",
+]
 
 
 class AddressNameService:
@@ -95,8 +96,24 @@ class AddressNameService:
             'founder': founder,
         }
 
+    @staticmethod
+    def is_reserved(name: str) -> bool:
+        return name in keywords
+
+    def identifier(self, name: str) -> Optional[ID]:
+        """ Get ID by short name """
+        return self.__caches.get(name)
+
+    # def names(self, identifier: ID) -> Optional[list]:
+    #     """ Get all short names with this ID """
+    #     array = []
+    #     for (key, value) in self.__caches.items():
+    #         if key == identifier:
+    #             array.append(value)
+    #     return array
+
     def cache(self, name: str, identifier: ID=None) -> bool:
-        if name in keywords:
+        if self.is_reserved(name):
             # this name is reserved, cannot register
             return False
         if identifier is None:
@@ -110,15 +127,3 @@ class AddressNameService:
         if not self.cache(name=name, identifier=identifier):
             return False
         # NOTICE: save this record into database by subclass
-
-    def identifier(self, name: str) -> Optional[ID]:
-        """ Get ID by short name """
-        return self.__caches.get(name)
-
-    def names(self, identifier: ID) -> Optional[list]:
-        """ Get all short names with this ID """
-        array = []
-        for (key, value) in self.__caches.items():
-            if key == identifier:
-                array.append(value)
-        return array

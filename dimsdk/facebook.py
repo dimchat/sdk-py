@@ -65,8 +65,6 @@ class Facebook(Barrack):
         return meta.match_identifier(identifier)
 
     def cache_meta(self, meta: Meta, identifier: ID) -> bool:
-        if meta is None:
-            return False
         if not self.verify_meta(meta=meta, identifier=identifier):
             return False
         return super().cache_meta(meta=meta, identifier=identifier)
@@ -322,8 +320,8 @@ class Facebook(Barrack):
         if members is not None:
             meta = self.meta(identifier=identifier)
             if meta is not None:
-                # if the user's public key matches with the group's meta,
-                # it means this meta was generate by the user's private key
+                # if the member's public key matches with the group's meta,
+                # it means this meta was generate by the member's private key
                 for item in members:
                     m = self.meta(identifier=self.identifier(item))
                     if m is not None and meta.match_public_key(m.key):
