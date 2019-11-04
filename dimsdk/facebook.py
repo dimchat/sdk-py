@@ -35,6 +35,7 @@
     Barrack for cache entities
 """
 
+import time
 from abc import abstractmethod
 from typing import Optional
 
@@ -45,6 +46,8 @@ from .ans import AddressNameService
 
 
 class Facebook(Barrack):
+
+    EXPIRES = 3600  # profile expires (1 hour)
 
     def __init__(self):
         super().__init__()
@@ -118,7 +121,8 @@ class Facebook(Barrack):
             return False
         if identifier is None:
             identifier = self.identifier(string=profile.identifier)
-        # TODO: set expired time
+        # set expired time
+        profile['expires'] = time.time() + self.EXPIRES
         self.__profiles[identifier] = profile
 
     @abstractmethod
@@ -264,8 +268,10 @@ class Facebook(Barrack):
             # get from cache
             info = self.__profiles.get(identifier)
         if info is not None:
-            # TODO: check expired time
-            return info
+            # check expired time
+            expires = info.get('expires')
+            if expires < time.time():
+                return info
         # load from local storage
         info = self.load_profile(identifier=identifier)
         if self.cache_profile(profile=info, identifier=identifier):
