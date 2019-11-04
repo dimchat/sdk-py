@@ -33,6 +33,8 @@ from .mars import NetMsgHead, NetMsg
 from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
 from .station import ServiceProvider, Station
 
+from .session import Session, SessionServer
+
 __all__ = [
 
     # Data packing
@@ -43,4 +45,7 @@ __all__ = [
 
     # Roles
     'ServiceProvider', 'Station',
+
+    # Session
+    'Session', 'SessionServer',
 ]

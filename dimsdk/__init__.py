@@ -38,6 +38,7 @@ from .nlp import Dialog, ChatBot, Tuling, XiaoI
 from .network import NetMsgHead, NetMsg
 from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station
+from .network import Session, SessionServer
 
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
@@ -119,6 +120,7 @@ __all__ = [
     'NetMsgHead', 'NetMsg',
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
     'ServiceProvider', 'Station',
+    'Session', 'SessionServer',
 
     # protocol
     'ReceiptCommand',
