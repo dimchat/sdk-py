@@ -245,15 +245,12 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param data: message data
         :return: True on success
         """
-        try:
-            # deserialize message
-            r_msg = self.deserialize_message(data=data)
-            # process message
-            return self.process_message(msg=r_msg)
-        except ValueError:
-            return None
+        r_msg = self.deserialize_message(data=data)
+        msg_r = self.process_message(msg=r_msg)
+        if msg_r is not None:
+            return self.serialize_message(msg=msg_r)
 
-    def process_message(self, msg: ReliableMessage) -> Optional[bytes]:
+    def process_message(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
         # verify
         s_msg = self.verify_message(msg=msg)
         if s_msg is None:
@@ -269,7 +266,11 @@ class Messenger(Transceiver, ConnectionDelegate):
             return self.forward_message(msg=content.forward)
         # process
         sender = self.barrack.identifier(msg.envelope.sender)
-        return self.cpu().process(content=content, sender=sender, msg=i_msg)
+        receiver = self.barrack.identifier(msg.envelope.receiver)
+        res = self.cpu().process(content=content, sender=sender, msg=i_msg)
+        if res is not None:
+            new_msg = InstantMessage.new(content=res, sender=receiver, receiver=sender)
+            return self.encrypt_sign(msg=new_msg)
 
     @abstractmethod
     def deliver_message(self, msg: ReliableMessage) -> Optional[bytes]:
