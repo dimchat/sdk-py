@@ -97,7 +97,8 @@ class Messenger(Transceiver, ConnectionDelegate):
             # [Forward Protocol]
             # do it again to drop the wrapper,
             # the secret inside the content is the real message
-            s_msg = self.verify_message(msg=content.forward)
+            r_msg = content.forward
+            s_msg = self.verify_message(msg=r_msg)
             if s_msg is not None:
                 # verify OK, try to decrypt
                 secret = self.decrypt_message(msg=s_msg)
@@ -107,8 +108,7 @@ class Messenger(Transceiver, ConnectionDelegate):
                 # NOTICE: decrypt failed, not for you?
                 #         check content type in subclass, if it's a 'forward' message,
                 #         it means you are asked to re-pack and forward this message
-                receiver = self.barrack.identifier(s_msg.envelope.receiver)
-                self.send_content(content=content, receiver=receiver)
+                self.forward_message(msg=r_msg)
         return i_msg
 
     def encrypt_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
@@ -238,7 +238,7 @@ class Messenger(Transceiver, ConnectionDelegate):
     #
     #   Received message
     #
-    def received_package(self, data: bytes) -> bool:
+    def received_package(self, data: bytes) -> Optional[bytes]:
         """
         Processing received message package
 
@@ -251,9 +251,9 @@ class Messenger(Transceiver, ConnectionDelegate):
             # process message
             return self.process_message(msg=r_msg)
         except ValueError:
-            return False
+            return None
 
-    def process_message(self, msg: ReliableMessage) -> bool:
+    def process_message(self, msg: ReliableMessage) -> Optional[bytes]:
         # verify
         s_msg = self.verify_message(msg=msg)
         if s_msg is None:
@@ -272,7 +272,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         return self.cpu().process(content=content, sender=sender, msg=i_msg)
 
     @abstractmethod
-    def deliver_message(self, msg: ReliableMessage) -> bool:
+    def deliver_message(self, msg: ReliableMessage) -> Optional[bytes]:
         """
         Deliver message to the receiver, or broadcast to neighbours
 
@@ -282,7 +282,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         pass
 
     @abstractmethod
-    def forward_message(self, msg: ReliableMessage) -> bool:
+    def forward_message(self, msg: ReliableMessage) -> Optional[bytes]:
         """
         Re-pack and deliver (Top-Secret) message to the real receiver
 

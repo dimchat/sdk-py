@@ -46,7 +46,7 @@ from .command import CommandProcessor
 
 class MetaCommandProcessor(CommandProcessor):
 
-    def __query(self, identifier: ID) -> Content:
+    def __get(self, identifier: ID) -> Content:
         # querying meta for ID
         self.info('search meta %s' % identifier)
         meta = self.facebook.meta(identifier=identifier)
@@ -56,7 +56,7 @@ class MetaCommandProcessor(CommandProcessor):
         else:
             return TextContent.new(text='Sorry, meta for %s not found.' % identifier)
 
-    def __upload(self, identifier: ID, meta: Meta) -> Content:
+    def __put(self, identifier: ID, meta: Meta) -> Content:
         # received a meta for ID
         self.info('received meta %s' % identifier)
         if self.facebook.save_meta(identifier=identifier, meta=meta):
@@ -69,18 +69,16 @@ class MetaCommandProcessor(CommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != MetaCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, MetaCommand), 'command error: %s' % content
         identifier = self.facebook.identifier(content.identifier)
         meta = content.meta
         if meta is None:
-            response = self.__query(identifier=identifier)
+            return self.__get(identifier=identifier)
         else:
-            response = self.__upload(identifier=identifier, meta=meta)
-        # response to sender
-        return self.messenger.send_content(content=response, receiver=sender)
+            return self.__put(identifier=identifier, meta=meta)
 
 
 # register

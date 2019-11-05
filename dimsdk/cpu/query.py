@@ -46,17 +46,16 @@ from .group import GroupCommandProcessor
 
 class QueryCommandProcessor(GroupCommandProcessor):
 
-    def __response(self, group: ID, receiver: ID) -> bool:
+    def __response(self, group: ID, receiver: ID) -> Content:
         members = self.facebook.members(identifier=group)
         if members is None or len(members) == 0:
-            return False
-        cmd = GroupCommand.reset(group=group, members=members)
-        return self.messenger.send_content(content=cmd, receiver=receiver)
+            raise ValueError('group members not found: %s' % group)
+        return GroupCommand.reset(group=group, members=members)
 
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != QueryCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, QueryCommand), 'group command error: %s' % content
@@ -64,8 +63,7 @@ class QueryCommandProcessor(GroupCommandProcessor):
         # 1. check permission
         if not self.exists_member(member=sender, group=group):
             if not self.exists_assistant(member=sender, group=group):
-                self.error('only member/assistant can query: %s' % msg)
-                return False
+                raise AssertionError('only member/assistant can query: %s' % msg)
         # 2. response group members for sender
         return self.__response(group=group, receiver=sender)
 

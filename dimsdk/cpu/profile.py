@@ -46,7 +46,7 @@ from .command import CommandProcessor
 
 class ProfileCommandProcessor(CommandProcessor):
 
-    def __query(self, identifier: ID) -> Content:
+    def __get(self, identifier: ID) -> Content:
         # querying profile for ID
         self.info('search meta %s' % identifier)
         profile = self.facebook.profile(identifier=identifier)
@@ -56,7 +56,7 @@ class ProfileCommandProcessor(CommandProcessor):
         else:
             return TextContent.new(text='Sorry, profile for %s not found.' % identifier)
 
-    def __upload(self, identifier: ID, meta: Meta, profile: Profile) -> Content:
+    def __put(self, identifier: ID, meta: Meta, profile: Profile) -> Content:
         if meta is not None:
             # received a meta for ID
             if self.facebook.save_meta(identifier=identifier, meta=meta):
@@ -76,7 +76,7 @@ class ProfileCommandProcessor(CommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != ProfileCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, ProfileCommand), 'command error: %s' % content
@@ -84,11 +84,9 @@ class ProfileCommandProcessor(CommandProcessor):
         meta = content.meta
         profile = content.profile
         if profile is None:
-            response = self.__query(identifier=identifier)
+            return self.__get(identifier=identifier)
         else:
-            response = self.__upload(identifier=identifier, meta=meta, profile=profile)
-        # response to sender
-        return self.messenger.send_content(content=response, receiver=sender)
+            return self.__put(identifier=identifier, meta=meta, profile=profile)
 
 
 # register

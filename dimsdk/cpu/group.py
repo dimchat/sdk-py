@@ -97,11 +97,15 @@ class GroupCommandProcessor(HistoryCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != GroupCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, GroupCommand), 'group command error: %s' % content
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
-        if cpu is not None:
-            return cpu.process(content=content, sender=sender, msg=msg)
+        if cpu is None:
+            raise NotImplementedError('command (%s) not support yet!' % content.command)
+        if cpu is self:
+            raise AssertionError('Dead cycle! group command: %s' % content)
+        # process by subclass
+        return cpu.process(content=content, sender=sender, msg=msg)

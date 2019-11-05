@@ -83,23 +83,18 @@ class CommandProcessor(ContentProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != CommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
         if cpu is None:
-            self.error('command (%s) not support yet!' % content.command)
-            return False
+            raise NotImplementedError('command (%s) not support yet!' % content.command)
         if cpu is self:
             raise AssertionError('Dead cycle! command: %s' % content)
-        try:
-            # process by subclass
-            return cpu.process(content=content, sender=sender, msg=msg)
-        except Exception as error:
-            self.error('command error: %s' % error)
-            return False
+        # process by subclass
+        return cpu.process(content=content, sender=sender, msg=msg)
 
 
 class HistoryCommandProcessor(CommandProcessor):
@@ -118,7 +113,7 @@ class HistoryCommandProcessor(CommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != HistoryCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, HistoryCommand), 'history error: %s' % content
@@ -127,8 +122,12 @@ class HistoryCommandProcessor(CommandProcessor):
             return self.gpu().process(content=content, sender=sender, msg=msg)
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
-        if cpu is not None:
-            return cpu.process(content=content, sender=sender, msg=msg)
+        if cpu is None:
+            raise NotImplementedError('command (%s) not support yet!' % content.command)
+        if cpu is self:
+            raise AssertionError('Dead cycle! history: %s' % content)
+        # process by subclass
+        return cpu.process(content=content, sender=sender, msg=msg)
 
 
 # register

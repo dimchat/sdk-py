@@ -41,6 +41,7 @@ from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
 from dimp import GroupCommand, QuitCommand
+from dimsdk import ReceiptCommand
 
 from .group import GroupCommandProcessor
 
@@ -50,21 +51,18 @@ class QuitCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != QuitCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, QuitCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 1. check permission
         if self.is_owner(member=sender, group=group):
-            self.error('owner cannot quit: %s' % msg)
-            return False
+            raise AssertionError('owner cannot quit: %s' % msg)
         if self.exists_assistant(member=sender, group=group):
-            self.error('assistant cannot quit: %s' % msg)
-            return False
+            raise AssertionError('assistant cannot quit: %s' % msg)
         if not self.exists_member(member=sender, group=group):
-            self.error('not a member yet: %s' % msg)
-            return False
+            raise AssertionError('not a member yet: %s' % msg)
         # 2. remove sender from group members
         members: list = self.facebook.members(identifier=group)
         if members is None:
@@ -72,7 +70,9 @@ class QuitCommandProcessor(GroupCommandProcessor):
         assert sender in members, 'quit command error: %s' % msg
         members.remove(sender)
         # 3. save
-        return self.facebook.save_members(members=members, identifier=group)
+        if self.facebook.save_members(members=members, identifier=group):
+            text = 'Group command received: %s quit' % sender
+            return ReceiptCommand.new(message=text)
 
 
 # register

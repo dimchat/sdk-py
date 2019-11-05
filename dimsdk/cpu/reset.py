@@ -45,6 +45,7 @@ from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
 from dimp import GroupCommand, ResetCommand
+from dimsdk import ReceiptCommand
 
 from .group import GroupCommandProcessor
 
@@ -58,15 +59,14 @@ class ResetCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != ResetCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, ResetCommand), 'group command error: %s' % content
         # new members
         new_members: list = self.members(content=content)
         if new_members is None or len(new_members) == 0:
-            self.error('reset group command error: %s' % content)
-            return False
+            raise ValueError('reset group command error: %s' % content)
         # existed members
         group: ID = self.facebook.identifier(content.group)
         members: list = self.facebook.members(identifier=group)
@@ -78,15 +78,14 @@ class ResetCommandProcessor(GroupCommandProcessor):
             # FIXME: group profile lost?
             # FIXME: how to avoid strangers impersonating group members?
             if not self.contains_owner(members=new_members, group=group):
-                self.error('owner not found, reject this command: %s' % content)
                 # query the sender to reset with full member-list
-                return self.__query(group=group, receiver=sender)
+                self.__query(group=group, receiver=sender)
+                raise AssertionError('owner not found, reject this command: %s' % content)
             # now this new member-list contains the group owner
             # TODO: if the sender is not owner, query the owner for newest member list
         elif not self.is_owner(member=sender, group=group):
             if not self.exists_assistant(member=sender, group=group):
-                self.error('only owner/assistant can reset: %s' % msg)
-                return False
+                raise AssertionError('only owner/assistant can reset: %s' % msg)
         # 2.1. check removed member(s)
         remove_list = []
         for item in members:
@@ -106,10 +105,9 @@ class ResetCommandProcessor(GroupCommandProcessor):
         if len(remove_list) > 0:
             content['removed'] = remove_list
         if len(add_list) > 0 or len(remove_list) > 0:
-            return self.facebook.save_members(members=new_members, identifier=group)
-        else:
-            # nothing changed
-            return True
+            if self.facebook.save_members(members=new_members, identifier=group):
+                text = 'Group command received: reset %d member(s)' % len(new_members)
+                return ReceiptCommand.new(message=text)
 
 
 # register

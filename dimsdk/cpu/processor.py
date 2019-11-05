@@ -103,7 +103,7 @@ class ContentProcessor:
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != ContentProcessor:
             raise AssertionError('override me!')
         group = self.facebook.identifier(content.group)
@@ -116,7 +116,7 @@ class ContentProcessor:
                     # NOTICE: if meta for group not found,
                     #         the client will query it automatically
                     # TODO: insert the message to a temporary queue to waiting meta
-                    return False
+                    raise LookupError('group meta not found: %s' % group)
             # check whether the group members info needs update
             grp = self.facebook.group(identifier=group)
             assert grp is not None, 'group meta error: %s' % group
@@ -137,13 +137,8 @@ class ContentProcessor:
         # process content by type
         cpu: ContentProcessor = self.cpu(content_type=content.type)
         if cpu is None:
-            self.error('content (type: %d) not support yet!' % content.type)
-            return False
+            raise NotImplementedError('content (type: %d) not support yet!' % content.type)
         if cpu is self:
             raise AssertionError('Dead cycle! content: %s' % content)
-        try:
-            # process by subclass
-            return cpu.process(content=content, sender=sender, msg=msg)
-        except Exception as error:
-            self.error('content error: %s' % error)
-            return False
+        # process by subclass
+        return cpu.process(content=content, sender=sender, msg=msg)

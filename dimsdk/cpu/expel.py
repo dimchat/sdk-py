@@ -40,6 +40,7 @@ from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
 from dimp import GroupCommand, ExpelCommand
+from dimsdk import ReceiptCommand
 
 from .group import GroupCommandProcessor
 
@@ -49,15 +50,14 @@ class ExpelCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != ExpelCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, ExpelCommand), 'group command error: %s' % content
         # expelling members
         expel_list: list = self.members(content=content)
         if expel_list is None or len(expel_list) == 0:
-            self.error('expel command error: %s' % content)
-            return False
+            raise ValueError('expel command error: %s' % content)
         # existed members
         group: ID = self.facebook.identifier(content.group)
         members: list = self.facebook.members(identifier=group)
@@ -66,8 +66,7 @@ class ExpelCommandProcessor(GroupCommandProcessor):
         # 1. check permission
         if not self.is_owner(member=sender, group=group):
             if not self.exists_assistant(member=sender, group=group):
-                self.error('only owner/assistant can expel: %s' % msg)
-                return False
+                raise AssertionError('only owner/assistant can expel: %s' % msg)
         # 2. check removed member(s)
         remove_list = []
         for item in expel_list:
@@ -79,10 +78,9 @@ class ExpelCommandProcessor(GroupCommandProcessor):
         # 3. save
         if len(remove_list) > 0:
             content['removed'] = remove_list
-            return self.facebook.save_members(members=members, identifier=group)
-        else:
-            # nothing changed
-            return True
+            if self.facebook.save_members(members=members, identifier=group):
+                text = 'Group command received: expel %d member(s)' % len(expel_list)
+                return ReceiptCommand.new(message=text)
 
 
 # register
