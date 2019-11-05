@@ -1,0 +1,89 @@
+# -*- coding: utf-8 -*-
+#
+#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#
+#                                Written in 2019 by Moky <albert.moky@gmail.com>
+#
+# ==============================================================================
+# MIT License
+#
+# Copyright (c) 2019 Albert Moky
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# ==============================================================================
+
+"""
+    Expel Group Command Processor
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    1. remove group member(s)
+    2. only group owner or assistant can expel member
+"""
+
+from dimp import ID
+from dimp import InstantMessage
+from dimp import Content
+from dimp import GroupCommand, ExpelCommand
+
+from .group import GroupCommandProcessor
+
+
+class ExpelCommandProcessor(GroupCommandProcessor):
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+        if type(self) != ExpelCommandProcessor:
+            raise AssertionError('override me!')
+        assert isinstance(content, ExpelCommand), 'group command error: %s' % content
+        # expelling members
+        expel_list: list = self.members(content=content)
+        if expel_list is None or len(expel_list) == 0:
+            self.error('expel command error: %s' % content)
+            return False
+        # existed members
+        group: ID = self.facebook.identifier(content.group)
+        members: list = self.facebook.members(identifier=group)
+        if members is None:
+            members = []
+        # 1. check permission
+        if not self.is_owner(member=sender, group=group):
+            if not self.exists_assistant(member=sender, group=group):
+                self.error('only owner/assistant can expel: %s' % msg)
+                return False
+        # 2. check removed member(s)
+        remove_list = []
+        for item in expel_list:
+            if item not in members:
+                continue
+            # expelled member found
+            remove_list.append(item)
+            members.remove(item)
+        # 3. save
+        if len(remove_list) > 0:
+            content['removed'] = remove_list
+            return self.facebook.save_members(members=members, identifier=group)
+        else:
+            # nothing changed
+            return True
+
+
+# register
+GroupCommandProcessor.register(command=GroupCommand.EXPEL, processor_class=ExpelCommandProcessor)

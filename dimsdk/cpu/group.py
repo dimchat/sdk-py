@@ -29,23 +29,79 @@
 # ==============================================================================
 
 """
-    Group Command Processors
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+    Group Command Processor
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
 """
 
-from dimp import Envelope, Content, GroupCommand
+from typing import Optional
+
+from dimp import NetworkID, ID
+from dimp import InstantMessage
+from dimp import Content
+from dimp import GroupCommand
 
 from .command import CommandProcessor, HistoryCommandProcessor
 
 
 class GroupCommandProcessor(HistoryCommandProcessor):
 
-    def process(self, content: Content, envelope: Envelope) -> bool:
+    def id_list(self, array: list) -> list:
+        results = []
+        for item in array:
+            results.append(self.facebook.identifier(item))
+        return results
+
+    def is_founder(self, member: ID, group: ID) -> bool:
+        founder = self.facebook.founder(identifier=group)
+        if founder is not None:
+            return founder == member
+        g_meta = self.facebook.meta(identifier=group)
+        if g_meta is not None:
+            meta = self.facebook.meta(identifier=member)
+            if meta is not None:
+                return g_meta.match_public_key(meta.key)
+
+    def is_owner(self, member: ID, group: ID) -> bool:
+        if group.type == NetworkID.Polylogue:
+            return self.is_founder(member=member, group=group)
+
+    def contains_owner(self, members: list, group: ID) -> bool:
+        for item in members:
+            user = self.facebook.identifier(item)
+            if self.is_owner(member=user, group=group):
+                return True
+
+    def exists_member(self, member: ID, group: ID) -> bool:
+        owner = self.facebook.owner(identifier=group)
+        if owner is not None and owner == member:
+            return True
+        members = self.facebook.members(identifier=group)
+        if members is not None:
+            return member in members
+
+    def exists_assistant(self, member: ID, group: ID) -> bool:
+        assistants = self.facebook.assistants(identifier=group)
+        if assistants is not None:
+            return member in assistants
+
+    def members(self, content: GroupCommand) -> Optional[list]:
+        array = content.members
+        if array is not None:
+            return self.id_list(array=array)
+        member = content.member
+        if member is not None:
+            member = self.facebook.identifier(member)
+            return [member]
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
         if type(self) != GroupCommandProcessor:
             raise AssertionError('override me!')
-        assert isinstance(content, GroupCommand)
+        assert isinstance(content, GroupCommand), 'group command error: %s' % content
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
         if cpu is not None:
-            return cpu.process(content=content, envelope=envelope)
+            return cpu.process(content=content, sender=sender, msg=msg)

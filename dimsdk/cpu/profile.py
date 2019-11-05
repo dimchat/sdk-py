@@ -35,7 +35,9 @@
 """
 
 from dimp import ID, Meta, Profile
-from dimp import Envelope, Content, TextContent, ProfileCommand
+from dimp import InstantMessage
+from dimp import Content
+from dimp import TextContent, Command, ProfileCommand
 
 from ..protocol import ReceiptCommand
 
@@ -71,10 +73,13 @@ class ProfileCommandProcessor(CommandProcessor):
             self.error('profile not valid %s' % profile)
             return TextContent.new(text='Profile signature not match %s!' % identifier)
 
-    def process(self, content: Content, envelope: Envelope) -> bool:
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
         if type(self) != ProfileCommandProcessor:
             raise AssertionError('override me!')
-        assert isinstance(content, ProfileCommand)
+        assert isinstance(content, ProfileCommand), 'command error: %s' % content
         identifier = self.facebook.identifier(content.identifier)
         meta = content.meta
         profile = content.profile
@@ -83,4 +88,8 @@ class ProfileCommandProcessor(CommandProcessor):
         else:
             response = self.__upload(identifier=identifier, meta=meta, profile=profile)
         # response to sender
-        return self.messenger.send_content(content=response, receiver=envelope.sender)
+        return self.messenger.send_content(content=response, receiver=sender)
+
+
+# register
+CommandProcessor.register(command=Command.PROFILE, processor_class=ProfileCommandProcessor)

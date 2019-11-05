@@ -35,7 +35,9 @@
 """
 
 from dimp import ID, Meta
-from dimp import Envelope, Content, TextContent, MetaCommand
+from dimp import InstantMessage
+from dimp import Content
+from dimp import TextContent, Command, MetaCommand
 
 from ..protocol import ReceiptCommand
 
@@ -64,10 +66,13 @@ class MetaCommandProcessor(CommandProcessor):
             self.error('meta not match %s, %s' % (identifier, meta))
             return TextContent.new(text='Meta not match %s!' % identifier)
 
-    def process(self, content: Content, envelope: Envelope) -> bool:
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
         if type(self) != MetaCommandProcessor:
             raise AssertionError('override me!')
-        assert isinstance(content, MetaCommand)
+        assert isinstance(content, MetaCommand), 'command error: %s' % content
         identifier = self.facebook.identifier(content.identifier)
         meta = content.meta
         if meta is None:
@@ -75,4 +80,8 @@ class MetaCommandProcessor(CommandProcessor):
         else:
             response = self.__upload(identifier=identifier, meta=meta)
         # response to sender
-        return self.messenger.send_content(content=response, receiver=envelope.sender)
+        return self.messenger.send_content(content=response, receiver=sender)
+
+
+# register
+CommandProcessor.register(command=Command.META, processor_class=MetaCommandProcessor)

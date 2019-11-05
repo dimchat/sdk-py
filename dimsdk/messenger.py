@@ -56,7 +56,12 @@ class Messenger(Transceiver, ConnectionDelegate):
     def __init__(self):
         super().__init__()
         self.delegate: MessengerDelegate = None
-        self.__processor = ContentProcessor(messenger=self)
+        self.__cpu: ContentProcessor = None
+
+    def cpu(self) -> ContentProcessor:
+        if self.__cpu is None:
+            self.__cpu = ContentProcessor(messenger=self, context={})
+        return self.__cpu
 
     #
     #  Transform
@@ -254,7 +259,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         if isinstance(content, ForwardContent):
             # this top-secret message was delegated to you to forward it
             return self.forward_message(msg=content.forward)
-        return self.__processor.process(content=content, envelope=i_msg.envelope)
+        return self.cpu().process(content=content, envelope=i_msg.envelope)
 
     @abstractmethod
     def deliver_message(self, msg: ReliableMessage) -> bool:

@@ -38,6 +38,11 @@
 from .processor import ContentProcessor
 from .command import CommandProcessor, HistoryCommandProcessor
 from .group import GroupCommandProcessor
+from .invite import InviteCommandProcessor
+from .expel import ExpelCommandProcessor
+from .quit import QuitCommandProcessor
+from .reset import ResetCommandProcessor
+from .query import QueryCommandProcessor
 
 from .meta import MetaCommandProcessor
 from .profile import ProfileCommandProcessor
@@ -47,6 +52,8 @@ __all__ = [
     'ContentProcessor',
     'CommandProcessor', 'HistoryCommandProcessor',
     'GroupCommandProcessor',
+    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
+    'ResetCommandProcessor', 'QueryCommandProcessor',
 
     'MetaCommandProcessor',
     'ProfileCommandProcessor',

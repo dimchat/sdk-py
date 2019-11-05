@@ -45,6 +45,8 @@ from .protocol import BlockCommand, MuteCommand
 
 from .cpu import ContentProcessor
 from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
+from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProcessor
+from .cpu import ResetCommandProcessor, QueryCommandProcessor
 from .cpu import MetaCommandProcessor, ProfileCommandProcessor
 
 from .delegate import Callback, CompletionHandler, MessengerDelegate
@@ -133,6 +135,8 @@ __all__ = [
     # cpu
     'ContentProcessor',
     'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
+    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
+    'ResetCommandProcessor', 'QueryCommandProcessor',
     'MetaCommandProcessor', 'ProfileCommandProcessor',
 
     # delegate

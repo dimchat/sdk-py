@@ -34,46 +34,20 @@
 
 """
 
-from dimp import Envelope, Content, Command, HistoryCommand
+from dimp import ID
+from dimp import InstantMessage
+from dimp import Content, ContentType
+from dimp import Command, HistoryCommand
 
 from .processor import ContentProcessor
 
 
 class CommandProcessor(ContentProcessor):
 
-    def __init__(self, messenger):
-        super().__init__(messenger)
-        # command processing units
-        self.__processors = {}
-
-    def cpu(self, command: str):
-        cpu = self.__processors.get(command)
-        if cpu is not None:
-            return cpu
-        # try to create new processor
-        clazz = self.processor_class(command=command)
-        if clazz is not None:
-            cpu = clazz(self.messenger)
-            self.__processors[command] = cpu
-            return cpu
-
-    def process(self, content: Content, envelope: Envelope) -> bool:
-        if type(self) != CommandProcessor:
-            raise AssertionError('override me!')
-        assert isinstance(content, Command)
-        # process command by name
-        cpu: CommandProcessor = self.cpu(command=content.command)
-        if cpu is None:
-            self.error('command (%s) not support yet!' % content.command)
-            return False
-        if cpu is self:
-            raise AssertionError('Dead cycle! command: %s' % content)
-        try:
-            # process by subclass
-            return cpu.process(content=content, envelope=envelope)
-        except Exception as error:
-            self.error('command error: %s' % error)
-            return False
+    def __init__(self, context: dict):
+        super().__init__(context=context)
+        # sub-command processing units pool
+        self.__pool = {}
 
     #
     #   Runtime
@@ -91,26 +65,72 @@ class CommandProcessor(ContentProcessor):
         return True
 
     @classmethod
-    def processor_class(cls, command: str):
+    def cpu_class(cls, command: str):
         return cls.__command_processor_classes.get(command)
+
+    def cpu(self, command: str):
+        cpu = self.__pool.get(command)
+        if cpu is not None:
+            return cpu
+        # try to create new processor with command name
+        clazz = self.cpu_class(command=command)
+        if clazz is not None:
+            assert issubclass(clazz, ContentProcessor), 'processor error: %s' % clazz
+            cpu = clazz(context=self.context)
+            self.__pool[command] = cpu
+            return cpu
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
+        if type(self) != CommandProcessor:
+            raise AssertionError('override me!')
+        assert isinstance(content, Command), 'command error: %s' % content
+        # process command by name
+        cpu: CommandProcessor = self.cpu(command=content.command)
+        if cpu is None:
+            self.error('command (%s) not support yet!' % content.command)
+            return False
+        if cpu is self:
+            raise AssertionError('Dead cycle! command: %s' % content)
+        try:
+            # process by subclass
+            return cpu.process(content=content, sender=sender, msg=msg)
+        except Exception as error:
+            self.error('command error: %s' % error)
+            return False
 
 
 class HistoryCommandProcessor(CommandProcessor):
 
-    def __init__(self, messenger):
-        super().__init__(messenger)
-        # command processing units
-        from .group import GroupCommandProcessor
-        self.__gpu = GroupCommandProcessor(self.messenger)
+    def __init__(self, context: dict):
+        super().__init__(context=context)
+        # lazy
+        self.__gpu = None
 
-    def process(self, content: Content, envelope: Envelope) -> bool:
+    def gpu(self):  # GroupCommandProcessor
+        if self.__gpu is None:
+            from .group import GroupCommandProcessor
+            self.__gpu = GroupCommandProcessor(context=self.context)
+        return self.__gpu
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
         if type(self) != HistoryCommandProcessor:
             raise AssertionError('override me!')
-        assert isinstance(content, HistoryCommand)
+        assert isinstance(content, HistoryCommand), 'history error: %s' % content
         if content.group is not None:
             # group command
-            return self.__gpu.process(content=content, envelope=envelope)
+            return self.gpu().process(content=content, sender=sender, msg=msg)
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
         if cpu is not None:
-            return cpu.process(content=content, envelope=envelope)
+            return cpu.process(content=content, sender=sender, msg=msg)
+
+
+# register
+ContentProcessor.register(content_type=ContentType.Command, processor_class=CommandProcessor)
+ContentProcessor.register(content_type=ContentType.History, processor_class=HistoryCommandProcessor)

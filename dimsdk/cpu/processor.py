@@ -34,42 +34,78 @@
 
 """
 
-from dimp import Envelope, Content, ContentType
+from dimp import ID
+from dimp import InstantMessage
+from dimp import Content, ContentType
 from dimp import HistoryCommand, GroupCommand
 
 
 class ContentProcessor:
 
-    def __init__(self, messenger):
+    DEBUG = True
+
+    def __init__(self, context: dict):
         super().__init__()
         from ..messenger import Messenger
         from ..facebook import Facebook
-        self.messenger: Messenger = messenger
-        self.facebook: Facebook = messenger.barrack
-        # content processing units
-        self.__processors = {}
+        # sub-content processing units pool
+        self.__pool: dict = {}
+        # context
+        self.context: dict = context
+        # messenger
+        self.messenger: Messenger = context.get('messenger')
+        # facebook
+        facebook = context.get('facebook')
+        if facebook is None:
+            self.facebook: Facebook = self.messenger.barrack
+        else:
+            self.facebook: Facebook = facebook
 
     def info(self, msg: str):
-        print('%s:\t%s' % (self.__class__.__name__, msg))
+        if self.DEBUG:
+            print('%s:\t%s' % (self.__class__.__name__, msg))
 
     def error(self, msg: str):
-        print('%s ERROR:\t%s' % (self.__class__.__name__, msg))
+        if self.DEBUG:
+            print('%s ERROR:\t%s' % (self.__class__.__name__, msg))
+
+    #
+    #   Runtime
+    #
+    __content_processor_classes = {}  # class map
+
+    @classmethod
+    def register(cls, content_type: ContentType, processor_class=None) -> bool:
+        if processor_class is None:
+            cls.__content_processor_classes.pop(content_type, None)
+        elif issubclass(processor_class, ContentProcessor):
+            cls.__content_processor_classes[content_type] = processor_class
+        else:
+            raise TypeError('%s must be subclass of ContentProcessor' % processor_class)
+        return True
+
+    @classmethod
+    def cpu_class(cls, content_type: ContentType):
+        return cls.__content_processor_classes.get(content_type)
 
     def cpu(self, content_type: ContentType):
-        cpu = self.__processors.get(content_type)
-        if cpu is not None:
-            return cpu
-        # try to create new processor
-        clazz = self.processor_class(content_type=content_type)
+        processor = self.__pool.get(content_type)
+        if processor is not None:
+            return processor
+        # try to create new processor with content type
+        clazz = self.cpu_class(content_type=content_type)
         if clazz is not None:
-            cpu = clazz(self.messenger)
-            self.__processors[content_type] = cpu
-            return cpu
+            assert issubclass(clazz, ContentProcessor), 'processor error: %s' % clazz
+            processor = clazz(context=self.context)
+            self.__pool[content_type] = processor
+            return processor
 
-    def process(self, content: Content, envelope: Envelope) -> bool:
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> bool:
         if type(self) != ContentProcessor:
             raise AssertionError('override me!')
-        sender = self.facebook.identifier(envelope.sender)
         group = self.facebook.identifier(content.group)
         if group is not None:
             # check meta for new group ID
@@ -107,26 +143,7 @@ class ContentProcessor:
             raise AssertionError('Dead cycle! content: %s' % content)
         try:
             # process by subclass
-            return cpu.process(content=content, envelope=envelope)
+            return cpu.process(content=content, sender=sender, msg=msg)
         except Exception as error:
             self.error('content error: %s' % error)
             return False
-
-    #
-    #   Runtime
-    #
-    __content_processor_classes = {}  # class map
-
-    @classmethod
-    def register(cls, content_type: ContentType, processor_class=None) -> bool:
-        if processor_class is None:
-            cls.__content_processor_classes.pop(content_type, None)
-        elif issubclass(processor_class, ContentProcessor):
-            cls.__content_processor_classes[content_type] = processor_class
-        else:
-            raise TypeError('%s must be subclass of ContentProcessor' % processor_class)
-        return True
-
-    @classmethod
-    def processor_class(cls, content_type: ContentType):
-        return cls.__content_processor_classes.get(content_type)

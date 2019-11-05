@@ -356,3 +356,10 @@ class Facebook(Barrack):
         array = self.load_members(identifier=identifier)
         if self.cache_members(members=array, identifier=identifier):
             return array
+
+    def assistants(self, identifier: ID) -> Optional[list]:
+        """ Group Assistant Bots """
+        assert identifier.type.is_group(), 'group ID error: %s' % identifier
+        ass = self.ans.identifier(name='assistant')
+        if ass is not None:
+            return [ass]
