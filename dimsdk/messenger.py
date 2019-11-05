@@ -36,22 +36,27 @@
 """
 
 import json
+from abc import abstractmethod
 from typing import Optional
 
-from dimp import Meta, SymmetricKey
-from dimp import ContentType, Content, ForwardContent, FileContent
+from dimp import SymmetricKey, ID, Meta
 from dimp import InstantMessage, SecureMessage, ReliableMessage
+from dimp import ContentType, Content, ForwardContent, FileContent
 from dimp import Transceiver
 
-from .delegate import Callback, CompletionHandler, MessengerDelegate
+from .cpu import ContentProcessor
+
+from .delegate import Callback, CompletionHandler
+from .delegate import MessengerDelegate, ConnectionDelegate
 from .facebook import Facebook
 
 
-class Messenger(Transceiver):
+class Messenger(Transceiver, ConnectionDelegate):
 
     def __init__(self):
         super().__init__()
         self.delegate: MessengerDelegate = None
+        self.__processor = ContentProcessor(messenger=self)
 
     #
     #  Transform
@@ -205,6 +210,71 @@ class Messenger(Transceiver):
         handler = MessageCallback(msg=msg, cb=callback)
         delegate: MessengerDelegate = self.delegate
         return delegate.send_package(data=data, handler=handler)
+
+    @abstractmethod
+    def send_content(self, content: Content, receiver: ID) -> bool:
+        """
+        Send content to receiver
+
+        :param content: message content
+        :param receiver: receiver ID
+        :return: True on success
+        """
+        pass
+
+    #
+    #   Received message
+    #
+    def received_package(self, data: bytes) -> bool:
+        """
+        Processing received message package
+
+        :param data: message data
+        :return: True on success
+        """
+        try:
+            # deserialize message
+            r_msg = self.deserialize_message(data=data)
+            # process message
+            return self.process_message(msg=r_msg)
+        except ValueError:
+            return False
+
+    def process_message(self, msg: ReliableMessage) -> bool:
+        # verify
+        s_msg = self.verify_message(msg=msg)
+        if s_msg is None:
+            raise ValueError('failed to verify message: %s' % msg)
+        # decrypt
+        i_msg = self.decrypt_message(msg=s_msg)
+        if i_msg is None:
+            # cannot decrypt this message, not for you?
+            return self.deliver_message(msg=msg)
+        content = i_msg.content
+        if isinstance(content, ForwardContent):
+            # this top-secret message was delegated to you to forward it
+            return self.forward_message(msg=content.forward)
+        return self.__processor.process(content=content, envelope=i_msg.envelope)
+
+    @abstractmethod
+    def deliver_message(self, msg: ReliableMessage) -> bool:
+        """
+        Deliver message to the receiver, or broadcast to neighbours
+
+        :param msg: reliable message
+        :return: True on success
+        """
+        pass
+
+    @abstractmethod
+    def forward_message(self, msg: ReliableMessage) -> bool:
+        """
+        Re-pack and deliver (Top-Secret) message to the real receiver
+
+        :param msg: top-secret message
+        :return: True on success
+        """
+        pass
 
 
 class MessageCallback(CompletionHandler):

@@ -124,6 +124,7 @@ class Facebook(Barrack):
         # set expired time
         profile['expires'] = time.time() + self.EXPIRES
         self.__profiles[identifier] = profile
+        return True
 
     @abstractmethod
     def save_profile(self, profile: Profile, identifier: ID=None) -> bool:

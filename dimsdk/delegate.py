@@ -93,3 +93,15 @@ class MessengerDelegate(metaclass=ABCMeta):
         :return:        False on data/delegate error
         """
         pass
+
+
+class ConnectionDelegate(metaclass=ABCMeta):
+
+    @abstractmethod
+    def received_package(self, data: bytes) -> bool:
+        """ Receive data package
+
+        :param data: data package
+        :return:
+        """
+        pass

@@ -43,6 +43,10 @@ from .network import Session, SessionServer
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
 
+from .cpu import ContentProcessor
+from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
+from .cpu import MetaCommandProcessor, ProfileCommandProcessor
+
 from .delegate import Callback, CompletionHandler, MessengerDelegate
 
 from .ans import AddressNameService
@@ -125,6 +129,11 @@ __all__ = [
     # protocol
     'ReceiptCommand',
     'BlockCommand', 'MuteCommand',
+
+    # cpu
+    'ContentProcessor',
+    'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
+    'MetaCommandProcessor', 'ProfileCommandProcessor',
 
     # delegate
     'Callback', 'CompletionHandler', 'MessengerDelegate',
