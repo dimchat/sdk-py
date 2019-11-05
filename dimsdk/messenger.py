@@ -35,13 +35,12 @@
     Transform and send message
 """
 
-import json
 from abc import abstractmethod
 from typing import Optional
 
 from dimp import SymmetricKey, ID, Meta
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import ContentType, Content, ForwardContent, FileContent
+from dimp import Content, ForwardContent, FileContent
 from dimp import Transceiver
 
 from .cpu import ContentProcessor
@@ -60,13 +59,18 @@ class Messenger(Transceiver, ConnectionDelegate):
 
     def cpu(self) -> ContentProcessor:
         if self.__cpu is None:
-            self.__cpu = ContentProcessor(messenger=self, context={})
+            context = {
+                'messenger': self,
+                'facebook': self.barrack,
+            }
+            self.__cpu = ContentProcessor(context=context)
         return self.__cpu
 
     #
     #  Transform
     #
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
+        # NOTICE: check meta before calling me
         facebook: Facebook = self.barrack
         sender = facebook.identifier(msg.envelope.sender)
         meta = Meta(msg.meta)
@@ -84,18 +88,27 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().verify_message(msg=msg)
 
     def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
+        # NOTICE: trim for group message before calling me
+        #         if there are more than 1 local user, check which is the group member
         i_msg = super().decrypt_message(msg=msg)
         # check: top-secret message
-        if i_msg.content.type == ContentType.Forward:
+        content = i_msg.content
+        if isinstance(content, ForwardContent):
             # [Forward Protocol]
             # do it again to drop the wrapper,
             # the secret inside the content is the real message
-            content: ForwardContent = i_msg.content
-            r_msg = content.forward
-            secret = self.verify_decrypt(msg=r_msg)
-            if secret is not None:
-                return secret
-            # FIXME: not for you?
+            s_msg = self.verify_message(msg=content.forward)
+            if s_msg is not None:
+                # verify OK, try to decrypt
+                secret = self.decrypt_message(msg=s_msg)
+                if secret is not None:
+                    # decrypt success
+                    return secret
+                # NOTICE: decrypt failed, not for you?
+                #         check content type in subclass, if it's a 'forward' message,
+                #         it means you are asked to re-pack and forward this message
+                receiver = self.barrack.identifier(s_msg.envelope.receiver)
+                self.send_content(content=content, receiver=receiver)
         return i_msg
 
     def encrypt_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
@@ -157,13 +170,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         # 1. verify 'data' with 'signature'
         s_msg = self.verify_message(msg=msg)
         if s_msg is None:
-            raise ValueError('failed to verify message: %s' % msg)
-        # 2. check group message
-        receiver = self.barrack.identifier(msg.envelope.receiver)
-        if receiver.type.is_group():
-            # TODO: split it
-            pass
-        # 3. decrypt 'data' to 'content'
+            # failed to verify message
+            return None
+        # 2. decrypt 'data' to 'content'
         i_msg = self.decrypt_message(msg=s_msg)
         # OK
         return i_msg
@@ -211,10 +220,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         return ok
 
     def __send_message(self, msg: ReliableMessage, callback: Callback) -> bool:
-        data = json.dumps(msg).encode('utf-8')
+        data = self.serialize_message(msg=msg)
         handler = MessageCallback(msg=msg, cb=callback)
-        delegate: MessengerDelegate = self.delegate
-        return delegate.send_package(data=data, handler=handler)
+        return self.delegate.send_package(data=data, handler=handler)
 
     @abstractmethod
     def send_content(self, content: Content, receiver: ID) -> bool:
@@ -259,7 +267,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         if isinstance(content, ForwardContent):
             # this top-secret message was delegated to you to forward it
             return self.forward_message(msg=content.forward)
-        return self.cpu().process(content=content, envelope=i_msg.envelope)
+        # process
+        sender = self.barrack.identifier(msg.envelope.sender)
+        return self.cpu().process(content=content, sender=sender, msg=i_msg)
 
     @abstractmethod
     def deliver_message(self, msg: ReliableMessage) -> bool:
