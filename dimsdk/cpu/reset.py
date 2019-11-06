@@ -52,9 +52,55 @@ from .group import GroupCommandProcessor
 
 class ResetCommandProcessor(GroupCommandProcessor):
 
+    def __is_empty(self, group: ID) -> bool:
+        """
+        Check whether group info empty (lost)
+
+        :param group: group ID
+        :return: True on members, owner not found
+        """
+        members = self.facebook.members(identifier=group)
+        if members is None or len(members) == 0:
+            return True
+        owner = self.facebook.owner(identifier=group)
+        if owner is None:
+            return True
+
     def __query(self, group: ID, receiver: ID) -> bool:
         cmd = GroupCommand.query(group=group)
         return self.messenger.send_content(content=cmd, receiver=receiver)
+
+    def __temporary(self, sender: ID, members: list, group: ID) -> bool:
+        if self.contains_owner(members=members, group=group):
+            # temporary save
+            if self.facebook.save_members(members=members, identifier=group):
+                owner = self.facebook.owner(identifier=group)
+                if owner is not None and owner != sender:
+                    # NOTICE: to prevent counterfeit,
+                    #         query the owner for newest member-list
+                    self.__query(group=group, receiver=owner)
+                return True
+
+    def __reset(self, new_members: list, group: ID) -> (list, list):
+        # existed members
+        members: list = self.facebook.members(identifier=group)
+        if members is None:
+            members = []
+        # removed member(s)
+        remove_list = []
+        for item in members:
+            if item not in new_members:
+                # found
+                remove_list.append(item)
+        # added member(s)
+        add_list = []
+        for item in new_members:
+            if item not in members:
+                # found
+                add_list.append(item)
+        if len(add_list) > 0 or len(remove_list) > 0:
+            if self.facebook.save_members(members=new_members, identifier=group):
+                return add_list, remove_list
 
     #
     #   main
@@ -67,47 +113,30 @@ class ResetCommandProcessor(GroupCommandProcessor):
         new_members: list = self.members(content=content)
         if new_members is None or len(new_members) == 0:
             raise ValueError('reset group command error: %s' % content)
-        # existed members
         group: ID = self.facebook.identifier(content.group)
-        members: list = self.facebook.members(identifier=group)
-        if members is None:
-            members = []
-        # 1. check permission
-        founder: ID = self.facebook.founder(identifier=group)
-        if founder is None and len(members) == 0:
+        # 0. check whether group info empty
+        if self.__is_empty(group=group):
             # FIXME: group profile lost?
             # FIXME: how to avoid strangers impersonating group members?
-            if not self.contains_owner(members=new_members, group=group):
-                # query the sender to reset with full member-list
-                self.__query(group=group, receiver=sender)
-                raise AssertionError('owner not found, reject this command: %s' % content)
-            # now this new member-list contains the group owner
-            # TODO: if the sender is not owner, query the owner for newest member list
-        elif not self.is_owner(member=sender, group=group):
-            if not self.exists_assistant(member=sender, group=group):
-                raise AssertionError('only owner/assistant can reset: %s' % msg)
-        # 2.1. check removed member(s)
-        remove_list = []
-        for item in members:
-            if item in new_members:
-                continue
-            remove_list.append(item)
-        # 2.2. check added member(s)
-        add_list = []
-        for item in new_members:
-            if item in members:
-                continue
-            # new member found
-            add_list.append(item)
-        # 3. save
-        if len(add_list) > 0:
-            content['added'] = add_list
-        if len(remove_list) > 0:
-            content['removed'] = remove_list
-        if len(add_list) > 0 or len(remove_list) > 0:
-            if self.facebook.save_members(members=new_members, identifier=group):
+            if self.__temporary(sender=sender, members=new_members, group=group):
                 text = 'Group command received: reset %d member(s)' % len(new_members)
                 return ReceiptCommand.new(message=text)
+            else:
+                # NOTICE: this is a partial member-list
+                #         query the sender for full-list
+                return GroupCommand.query(group=group)
+        # 1. check permission
+        if not self.is_owner(member=sender, group=group):
+            if not self.exists_assistant(member=sender, group=group):
+                raise AssertionError('only owner/assistant can reset: %s' % msg)
+        # 2. reset
+        added, removed = self.__reset(new_members=new_members, group=group)
+        if len(added) > 0:
+            content['added'] = added
+        if len(removed) > 0:
+            content['removed'] = removed
+        text = 'Group command received: reset %d member(s)' % len(new_members)
+        return ReceiptCommand.new(message=text)
 
 
 # register

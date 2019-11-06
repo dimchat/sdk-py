@@ -48,6 +48,15 @@ from .group import GroupCommandProcessor
 
 class QuitCommandProcessor(GroupCommandProcessor):
 
+    def __remove(self, sender: ID, group: ID) -> bool:
+        members = self.facebook.members(identifier=group)
+        if members is None:
+            return False
+        if sender not in members:
+            return False
+        members.remove(sender)
+        return self.facebook.save_members(members=members, identifier=group)
+
     #
     #   main
     #
@@ -64,13 +73,7 @@ class QuitCommandProcessor(GroupCommandProcessor):
         if not self.exists_member(member=sender, group=group):
             raise AssertionError('not a member yet: %s' % msg)
         # 2. remove sender from group members
-        members: list = self.facebook.members(identifier=group)
-        if members is None:
-            raise AssertionError('members error: %s' % group)
-        assert sender in members, 'quit command error: %s' % msg
-        members.remove(sender)
-        # 3. save
-        if self.facebook.save_members(members=members, identifier=group):
+        if self.__remove(sender=sender, group=group):
             text = 'Group command received: %s quit' % sender
             return ReceiptCommand.new(message=text)
 

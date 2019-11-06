@@ -36,7 +36,7 @@
 
 from dimp import ID
 from dimp import InstantMessage
-from dimp import Content, ContentType
+from dimp import ContentType, Content, TextContent
 from dimp import Command, HistoryCommand
 
 from .processor import ContentProcessor
@@ -66,19 +66,22 @@ class CommandProcessor(ContentProcessor):
 
     @classmethod
     def cpu_class(cls, command: str):
-        return cls.__command_processor_classes.get(command)
+        clazz = cls.__command_processor_classes.get(command)
+        if clazz is None:
+            clazz = cls.__command_processor_classes[DefaultCommandName]
+        assert issubclass(clazz, CommandProcessor), 'error: %s, %s' % (command, clazz)
+        return clazz
 
     def cpu(self, command: str):
-        cpu = self.__pool.get(command)
-        if cpu is not None:
-            return cpu
+        processor = self.__pool.get(command)
+        if processor is not None:
+            return processor
         # try to create new processor with command name
         clazz = self.cpu_class(command=command)
-        if clazz is not None:
-            assert issubclass(clazz, ContentProcessor), 'processor error: %s' % clazz
-            cpu = clazz(context=self.context)
-            self.__pool[command] = cpu
-            return cpu
+        assert clazz is not None, 'failed to get command processor class: %s' % command
+        processor = clazz(context=self.context)
+        self.__pool[command] = processor
+        return processor
 
     #
     #   main
@@ -89,11 +92,7 @@ class CommandProcessor(ContentProcessor):
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
-        if cpu is None:
-            raise NotImplementedError('command (%s) not support yet!' % content.command)
-        if cpu is self:
-            raise AssertionError('Dead cycle! command: %s' % content)
-        # process by subclass
+        assert cpu is not self, 'Dead cycle! command: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
 
 
@@ -116,20 +115,36 @@ class HistoryCommandProcessor(CommandProcessor):
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != HistoryCommandProcessor:
             raise AssertionError('override me!')
-        assert isinstance(content, HistoryCommand), 'history error: %s' % content
+        assert isinstance(content, Command), 'history error: %s' % content
         if content.group is not None:
             # group command
             return self.gpu().process(content=content, sender=sender, msg=msg)
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
-        if cpu is None:
-            raise NotImplementedError('command (%s) not support yet!' % content.command)
-        if cpu is self:
-            raise AssertionError('Dead cycle! history: %s' % content)
-        # process by subclass
+        assert cpu is not self, 'Dead cycle! history: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
 
 
 # register
 ContentProcessor.register(content_type=ContentType.Command, processor_class=CommandProcessor)
 ContentProcessor.register(content_type=ContentType.History, processor_class=HistoryCommandProcessor)
+
+
+#
+#   Default Command Processor
+#
+class _DefaultCommandProcessor(CommandProcessor):
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+        if type(self) != _DefaultCommandProcessor:
+            raise AssertionError('override me!')
+        assert isinstance(content, Command), 'command error: %s' % content
+        return TextContent.new(text='command (%s) not support yet!' % content.command)
+
+
+# register
+DefaultCommandName = 'default'
+CommandProcessor.register(command=DefaultCommandName, processor_class=_DefaultCommandProcessor)

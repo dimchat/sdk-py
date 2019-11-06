@@ -36,7 +36,7 @@
 
 from dimp import ID
 from dimp import InstantMessage
-from dimp import Content, ContentType
+from dimp import ContentType, Content, TextContent
 from dimp import HistoryCommand, GroupCommand
 
 
@@ -86,19 +86,24 @@ class ContentProcessor:
 
     @classmethod
     def cpu_class(cls, content_type: ContentType):
-        return cls.__content_processor_classes.get(content_type)
+        clazz = cls.__content_processor_classes.get(content_type)
+        if clazz is None:
+            # processor not defined, use default
+            clazz = cls.__content_processor_classes[DefaultContentType]
+        assert issubclass(clazz, ContentProcessor), 'error: %d, %s' % (content_type, clazz)
+        return clazz
 
     def cpu(self, content_type: ContentType):
         processor = self.__pool.get(content_type)
         if processor is not None:
+            # got from cache
             return processor
         # try to create new processor with content type
         clazz = self.cpu_class(content_type=content_type)
-        if clazz is not None:
-            assert issubclass(clazz, ContentProcessor), 'processor error: %s' % clazz
-            processor = clazz(context=self.context)
-            self.__pool[content_type] = processor
-            return processor
+        assert clazz is not None, 'failed to get content processor class: %d' % content_type
+        processor = clazz(context=self.context)
+        self.__pool[content_type] = processor
+        return processor
 
     #
     #   main
@@ -136,9 +141,24 @@ class ContentProcessor:
                 self.messenger.send_content(content=query, receiver=sender)
         # process content by type
         cpu: ContentProcessor = self.cpu(content_type=content.type)
-        if cpu is None:
-            raise NotImplementedError('content (type: %d) not support yet!' % content.type)
-        if cpu is self:
-            raise AssertionError('Dead cycle! content: %s' % content)
-        # process by subclass
+        assert cpu is not self, 'Dead cycle! content: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
+
+
+#
+#   Default Content Processor
+#
+class _DefaultContentProcessor(ContentProcessor):
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+        if type(self) != _DefaultContentProcessor:
+            raise AssertionError('override me!')
+        return TextContent.new(text='content (type: %d) not support yet!' % content.type)
+
+
+# register
+DefaultContentType = ContentType(0)
+ContentProcessor.register(content_type=DefaultContentType, processor_class=_DefaultContentProcessor)

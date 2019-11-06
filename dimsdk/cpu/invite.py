@@ -36,6 +36,8 @@
     2. any member or assistant can invite new member
 """
 
+from typing import Optional
+
 from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
@@ -48,10 +50,63 @@ from .group import GroupCommandProcessor
 
 class InviteCommandProcessor(GroupCommandProcessor):
 
+    def __is_empty(self, group: ID) -> bool:
+        """
+        Check whether group info empty (lost)
+
+        :param group: group ID
+        :return: True on members, owner not found
+        """
+        members = self.facebook.members(identifier=group)
+        if members is None or len(members) == 0:
+            return True
+        owner = self.facebook.owner(identifier=group)
+        if owner is None:
+            return True
+
+    def __is_reset(self, sender: ID, group: ID, invite_list: list) -> bool:
+        """
+        Check whether this is a 'reset' command
+
+        :param sender:      owner ID?
+        :param group:       group ID
+        :param invite_list: new members list
+        :return: True on owner invites owner
+        """
+        if self.is_owner(member=sender, group=group):
+            if self.contains_owner(members=invite_list, group=group):
+                return True
+
     def __reset(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+        """
+        Call reset command processor
+
+        :param content: invite(reset) command
+        :param sender:  owner ID?
+        :param msg:     instant message
+        :return: response from invite command processor
+        """
         cpu: CommandProcessor = self.cpu(command=GroupCommand.RESET)
         assert cpu is not None, 'failed to get "invite" command processor'
         return cpu.process(content=content, sender=sender, msg=msg)
+
+    def __add(self, invite_list: list, group: ID) -> Optional[list]:
+        # existed members
+        members: list = self.facebook.members(identifier=group)
+        if members is None:
+            members = []
+        # added member(s)
+        add_list = []
+        for item in invite_list:
+            if item in members:
+                continue
+            # new member found
+            add_list.append(item)
+            members.append(item)
+        # response added-list after changed
+        if len(add_list) > 0:
+            if self.facebook.save_members(members=members, identifier=group):
+                return add_list
 
     #
     #   main
@@ -60,46 +115,34 @@ class InviteCommandProcessor(GroupCommandProcessor):
         if type(self) != InviteCommandProcessor:
             raise AssertionError('override me!')
         assert isinstance(content, InviteCommand), 'group command error: %s' % content
-        # inviting members
-        invite_list: list = self.members(content=content)
-        if invite_list is None or len(invite_list) == 0:
-            raise ValueError('invite command error: %s' % content)
-        # existed members
         group: ID = self.facebook.identifier(content.group)
-        members: list = self.facebook.members(identifier=group)
-        if members is None:
-            members = []
-        # 1. check permission
-        founder: ID = self.facebook.founder(identifier=group)
-        if founder is None and len(members) == 0:
+        # 0. check whether group info empty
+        if self.__is_empty(group=group):
             # NOTICE:
-            #     group profile lost?
+            #     group membership lost?
             #     reset group members
             return self.__reset(content=content, sender=sender, msg=msg)
+        # 1. check permission
         if not self.exists_member(member=sender, group=group):
             if not self.exists_assistant(member=sender, group=group):
                 raise AssertionError('only member/assistant can invite: %s' % msg)
-        # 1.1. check founder for reset command
-        if self.is_owner(member=sender, group=group):
-            if self.contains_owner(members=invite_list, group=group):
-                # NOTICE:
-                #     owner invites owner?
-                #     it means this should be a 'reset' command
-                return self.__reset(content=content, sender=sender, msg=msg)
-        # 2. check added member(s)
-        add_list = []
-        for item in invite_list:
-            if item in members:
-                continue
-            # new member found
-            add_list.append(item)
-            members.append(item)
-        # 3. save
-        if len(add_list) > 0:
+        # 2. get inviting members
+        invite_list: list = self.members(content=content)
+        if invite_list is None or len(invite_list) == 0:
+            raise ValueError('invite command error: %s' % content)
+        # 2.1. check founder for reset command
+        if self.__is_reset(sender=sender, group=group, invite_list=invite_list):
+            # NOTICE:
+            #     owner invites owner?
+            #     it means this should be a 'reset' command
+            return self.__reset(content=content, sender=sender, msg=msg)
+        # 2.2. get invited-list
+        add_list = self.__add(invite_list=invite_list, group=group)
+        if add_list is not None:
             content['added'] = add_list
-            if self.facebook.save_members(members=members, identifier=group):
-                text = 'Group command received: invite %d member(s)' % len(invite_list)
-                return ReceiptCommand.new(message=text)
+        # 3. response
+        text = 'Group command received: invite %d member(s)' % len(invite_list)
+        return ReceiptCommand.new(message=text)
 
 
 # register

@@ -39,7 +39,7 @@ from typing import Optional
 from dimp import NetworkID, ID
 from dimp import InstantMessage
 from dimp import Content
-from dimp import GroupCommand
+from dimp import Command, GroupCommand
 
 from .command import CommandProcessor, HistoryCommandProcessor
 
@@ -100,12 +100,8 @@ class GroupCommandProcessor(HistoryCommandProcessor):
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
         if type(self) != GroupCommandProcessor:
             raise AssertionError('override me!')
-        assert isinstance(content, GroupCommand), 'group command error: %s' % content
+        assert isinstance(content, Command), 'group command error: %s' % content
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
-        if cpu is None:
-            raise NotImplementedError('command (%s) not support yet!' % content.command)
-        if cpu is self:
-            raise AssertionError('Dead cycle! group command: %s' % content)
-        # process by subclass
+        assert cpu is not self, 'Dead cycle! group command: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)

@@ -265,30 +265,30 @@ class Messenger(Transceiver, ConnectionDelegate):
             # this top-secret message was delegated to you to forward it
             return self.forward_message(msg=content.forward)
         # process
-        sender = self.barrack.identifier(msg.envelope.sender)
-        receiver = self.barrack.identifier(msg.envelope.receiver)
+        sender = self.barrack.identifier(i_msg.envelope.sender)
+        receiver = self.barrack.identifier(i_msg.envelope.receiver)
         res = self.cpu().process(content=content, sender=sender, msg=i_msg)
         if res is not None:
             new_msg = InstantMessage.new(content=res, sender=receiver, receiver=sender)
             return self.encrypt_sign(msg=new_msg)
 
     @abstractmethod
-    def deliver_message(self, msg: ReliableMessage) -> Optional[bytes]:
+    def deliver_message(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
         """
         Deliver message to the receiver, or broadcast to neighbours
 
         :param msg: reliable message
-        :return: True on success
+        :return: message to response
         """
         pass
 
     @abstractmethod
-    def forward_message(self, msg: ReliableMessage) -> Optional[bytes]:
+    def forward_message(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
         """
         Re-pack and deliver (Top-Secret) message to the real receiver
 
         :param msg: top-secret message
-        :return: True on success
+        :return: message to response
         """
         pass
 

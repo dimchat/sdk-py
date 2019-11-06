@@ -38,19 +38,13 @@
 
 from dimp import ID
 from dimp import InstantMessage
-from dimp import Content
+from dimp import Content, TextContent
 from dimp import GroupCommand, QueryCommand
 
 from .group import GroupCommandProcessor
 
 
 class QueryCommandProcessor(GroupCommandProcessor):
-
-    def __response(self, group: ID, receiver: ID) -> Content:
-        members = self.facebook.members(identifier=group)
-        if members is None or len(members) == 0:
-            raise ValueError('group members not found: %s' % group)
-        return GroupCommand.reset(group=group, members=members)
 
     #
     #   main
@@ -65,7 +59,12 @@ class QueryCommandProcessor(GroupCommandProcessor):
             if not self.exists_assistant(member=sender, group=group):
                 raise AssertionError('only member/assistant can query: %s' % msg)
         # 2. response group members for sender
-        return self.__response(group=group, receiver=sender)
+        members = self.facebook.members(identifier=group)
+        if members is None or len(members) == 0:
+            text = 'Group members not found: %s' % group
+            return TextContent.new(text=text)
+        else:
+            return GroupCommand.reset(group=group, members=members)
 
 
 # register

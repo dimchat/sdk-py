@@ -36,6 +36,8 @@
     2. only group owner or assistant can expel member
 """
 
+from typing import Optional
+
 from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
@@ -47,27 +49,12 @@ from .group import GroupCommandProcessor
 
 class ExpelCommandProcessor(GroupCommandProcessor):
 
-    #
-    #   main
-    #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != ExpelCommandProcessor:
-            raise AssertionError('override me!')
-        assert isinstance(content, ExpelCommand), 'group command error: %s' % content
-        # expelling members
-        expel_list: list = self.members(content=content)
-        if expel_list is None or len(expel_list) == 0:
-            raise ValueError('expel command error: %s' % content)
+    def __remove(self, expel_list: list, group: ID) -> Optional[list]:
         # existed members
-        group: ID = self.facebook.identifier(content.group)
         members: list = self.facebook.members(identifier=group)
         if members is None:
             members = []
-        # 1. check permission
-        if not self.is_owner(member=sender, group=group):
-            if not self.exists_assistant(member=sender, group=group):
-                raise AssertionError('only owner/assistant can expel: %s' % msg)
-        # 2. check removed member(s)
+        # removed member(s)
         remove_list = []
         for item in expel_list:
             if item not in members:
@@ -75,12 +62,34 @@ class ExpelCommandProcessor(GroupCommandProcessor):
             # expelled member found
             remove_list.append(item)
             members.remove(item)
-        # 3. save
+        # response removed-list after changed
         if len(remove_list) > 0:
-            content['removed'] = remove_list
             if self.facebook.save_members(members=members, identifier=group):
-                text = 'Group command received: expel %d member(s)' % len(expel_list)
-                return ReceiptCommand.new(message=text)
+                return remove_list
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+        if type(self) != ExpelCommandProcessor:
+            raise AssertionError('override me!')
+        assert isinstance(content, ExpelCommand), 'group command error: %s' % content
+        group: ID = self.facebook.identifier(content.group)
+        # 1. check permission
+        if not self.is_owner(member=sender, group=group):
+            if not self.exists_assistant(member=sender, group=group):
+                raise AssertionError('only owner/assistant can expel: %s' % msg)
+        # 2.1. get expelling members
+        expel_list: list = self.members(content=content)
+        if expel_list is None or len(expel_list) == 0:
+            raise ValueError('expel command error: %s' % content)
+        # 2.2. get removed-list
+        remove_list = self.__remove(expel_list=expel_list, group=group)
+        if remove_list is not None:
+            content['removed'] = remove_list
+        # 3. response
+        text = 'Group command received: expel %d member(s)' % len(expel_list)
+        return ReceiptCommand.new(message=text)
 
 
 # register
