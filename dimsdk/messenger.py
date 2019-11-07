@@ -57,12 +57,18 @@ class Messenger(Transceiver, ConnectionDelegate):
         self.delegate: MessengerDelegate = None
         self.__cpu: ContentProcessor = None
 
-    def cpu(self) -> ContentProcessor:
+    def cpu(self, context: dict=None) -> ContentProcessor:
         if self.__cpu is None:
-            context = {
-                'messenger': self,
-                'facebook': self.barrack,
-            }
+            if context is None:
+                context = {
+                    'messenger': self,
+                    'facebook': self.barrack,
+                }
+            else:
+                if 'messenger' not in context:
+                    context['messenger'] = self
+                if 'facebook' not in context:
+                    context['facebook'] = self.barrack
             self.__cpu = ContentProcessor(context=context)
         return self.__cpu
 
