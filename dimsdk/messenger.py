@@ -314,12 +314,12 @@ class Messenger(Transceiver, ConnectionDelegate):
             return self.forward_message(msg=content.forward)
         # process
         sender = self.facebook.identifier(i_msg.envelope.sender)
-        receiver = self.facebook.identifier(i_msg.envelope.receiver)
-        if receiver.is_broadcast:
-            # switch broadcast ID to current user ID
-            receiver = self.current_user
         res = self.cpu().process(content=content, sender=sender, msg=i_msg)
         if res is not None:
+            receiver = self.facebook.identifier(i_msg.envelope.receiver)
+            if receiver.is_broadcast:
+                # switch broadcast ID to current user ID
+                receiver = self.current_user.identifier
             new_msg = InstantMessage.new(content=res, sender=receiver, receiver=sender)
             return self.encrypt_sign(msg=new_msg)
 
