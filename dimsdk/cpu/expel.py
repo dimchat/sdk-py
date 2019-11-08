@@ -44,7 +44,7 @@ from dimp import Content
 from dimp import GroupCommand, ExpelCommand
 from dimsdk import ReceiptCommand
 
-from .group import GroupCommandProcessor
+from .history import GroupCommandProcessor
 
 
 class ExpelCommandProcessor(GroupCommandProcessor):
@@ -70,9 +70,7 @@ class ExpelCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != ExpelCommandProcessor:
-            raise AssertionError('override me!')
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, ExpelCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 1. check permission

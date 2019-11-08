@@ -36,12 +36,14 @@
     2. any existed member or assistant can query group members-list
 """
 
+from typing import Optional
+
 from dimp import ID
 from dimp import InstantMessage
 from dimp import Content, TextContent
 from dimp import GroupCommand, QueryCommand
 
-from .group import GroupCommandProcessor
+from .history import GroupCommandProcessor
 
 
 class QueryCommandProcessor(GroupCommandProcessor):
@@ -49,9 +51,7 @@ class QueryCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != QueryCommandProcessor:
-            raise AssertionError('override me!')
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, QueryCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 1. check permission

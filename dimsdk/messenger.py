@@ -57,18 +57,23 @@ class Messenger(Transceiver, ConnectionDelegate):
         self.delegate: MessengerDelegate = None
         self.__cpu: ContentProcessor = None
 
+    @property
+    def facebook(self) -> Facebook:
+        assert isinstance(self.barrack, Facebook), 'messenger delegate error: %s' % self.barrack
+        return self.barrack
+
     def cpu(self, context: dict=None) -> ContentProcessor:
         if self.__cpu is None:
             if context is None:
                 context = {
                     'messenger': self,
-                    'facebook': self.barrack,
+                    'facebook': self.facebook,
                 }
             else:
                 if 'messenger' not in context:
                     context['messenger'] = self
                 if 'facebook' not in context:
-                    context['facebook'] = self.barrack
+                    context['facebook'] = self.facebook
             self.__cpu = ContentProcessor(context=context)
         return self.__cpu
 
@@ -77,11 +82,10 @@ class Messenger(Transceiver, ConnectionDelegate):
     #
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         # NOTICE: check meta before calling me
-        facebook: Facebook = self.barrack
-        sender = facebook.identifier(msg.envelope.sender)
+        sender = self.facebook.identifier(msg.envelope.sender)
         meta = Meta(msg.meta)
         if meta is None:
-            meta = facebook.meta(identifier=sender)
+            meta = self.facebook.meta(identifier=sender)
             if meta is None:
                 # TODO: query meta for sender from DIM network
                 #       (do it by application)
@@ -89,7 +93,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         else:
             # [Meta Protocol]
             # save meta for sender
-            if not facebook.save_meta(meta=meta, identifier=sender):
+            if not self.facebook.save_meta(meta=meta, identifier=sender):
                 raise ValueError('save meta error: %s, %s' % (sender, meta))
         return super().verify_message(msg=msg)
 
@@ -201,9 +205,9 @@ class Messenger(Transceiver, ConnectionDelegate):
             raise AssertionError('failed to encrypt and sign message: %s' % msg)
         # trying to send out
         ok = True
-        receiver = self.barrack.identifier(msg.envelope.receiver)
+        receiver = self.facebook.identifier(msg.envelope.receiver)
         if split and receiver.type.is_group():
-            group = self.barrack.group(identifier=receiver)
+            group = self.facebook.group(identifier=receiver)
             if group is None:
                 raise LookupError('failed to create group: %s' % receiver)
             members = group.members
@@ -271,8 +275,8 @@ class Messenger(Transceiver, ConnectionDelegate):
             # this top-secret message was delegated to you to forward it
             return self.forward_message(msg=content.forward)
         # process
-        sender = self.barrack.identifier(i_msg.envelope.sender)
-        receiver = self.barrack.identifier(i_msg.envelope.receiver)
+        sender = self.facebook.identifier(i_msg.envelope.sender)
+        receiver = self.facebook.identifier(i_msg.envelope.receiver)
         res = self.cpu().process(content=content, sender=sender, msg=i_msg)
         if res is not None:
             new_msg = InstantMessage.new(content=res, sender=receiver, receiver=sender)

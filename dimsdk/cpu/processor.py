@@ -34,10 +34,12 @@
 
 """
 
+from typing import Optional
+
 from dimp import ID
 from dimp import InstantMessage
 from dimp import ContentType, Content, TextContent
-from dimp import HistoryCommand, GroupCommand
+from dimp import GroupCommand, InviteCommand
 
 
 class ContentProcessor:
@@ -95,54 +97,73 @@ class ContentProcessor:
 
     def cpu(self, content_type: ContentType):
         processor = self.__pool.get(content_type)
-        if processor is not None:
-            # got from cache
-            return processor
-        # try to create new processor with content type
-        clazz = self.cpu_class(content_type=content_type)
-        assert clazz is not None, 'failed to get content processor class: %d' % content_type
-        processor = clazz(context=self.context)
-        self.__pool[content_type] = processor
+        if processor is None:
+            # try to create new processor with content type
+            clazz = self.cpu_class(content_type=content_type)
+            assert clazz is not None, 'failed to get content processor class: %d' % content_type
+            processor = clazz(context=self.context)
+            self.__pool[content_type] = processor
         return processor
 
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != ContentProcessor:
-            raise AssertionError('override me!')
-        group = self.facebook.identifier(content.group)
-        if group is not None:
-            # check meta for new group ID
-            if not group.is_broadcast:
-                # check meta
-                meta = self.facebook.meta(identifier=group)
-                if meta is None:
-                    # NOTICE: if meta for group not found,
-                    #         the client will query it automatically
-                    # TODO: insert the message to a temporary queue to waiting meta
-                    raise LookupError('group meta not found: %s' % group)
-            # check whether the group members info needs update
-            grp = self.facebook.group(identifier=group)
-            assert grp is not None, 'group meta error: %s' % group
-            # if the group info not found, and this is not an 'invite' command
-            #     query group info from the sender
-            needs_update = grp.founder is None
-            if isinstance(content, HistoryCommand):
-                if GroupCommand.INVITE == content.command:
-                    # FIXME: can we trust this stranger?
-                    #        may be we should keep this members list temporary,
-                    #        and send 'query' to the founder immediately.
-                    # TODO: check whether the members list is a full list,
-                    #       it should contain the group owner(founder)
-                    needs_update = False
-            if needs_update:
-                query = GroupCommand.query(group=group)
-                self.messenger.send_content(content=query, receiver=sender)
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+        assert type(self) == ContentProcessor, 'override me!'
+        assert isinstance(content, Content), 'message content error: %s' % content
+        self.__check_group(content=content, sender=sender)
         # process content by type
         cpu: ContentProcessor = self.cpu(content_type=content.type)
         assert cpu is not self, 'Dead cycle! content: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
+
+    def __check_group(self, content: Content, sender: ID) -> bool:
+        """
+        Check if it is a group message, and whether the group members info needs update
+
+        :param content: message content
+        :param sender:  message sender
+        :return: True on updating
+        """
+        group = self.facebook.identifier(content.group)
+        if group is None or group.is_broadcast:
+            # 1. personal message
+            # 2. broadcast message
+            return False
+        # check meta for new group ID
+        meta = self.facebook.meta(identifier=group)
+        if meta is None:
+            # NOTICE: if meta for group not found,
+            #         facebook should query it from DIM network automatically
+            # TODO: insert the message to a temporary queue to wait meta
+            raise LookupError('group meta not found: %s' % group)
+        # NOTICE: if the group info not found, and this is not an 'invite' command
+        #         query group info from the sender
+        needs_update = self.__is_empty(group=group)
+        if isinstance(content, InviteCommand):
+            # FIXME: can we trust this stranger?
+            #        may be we should keep this members list temporary,
+            #        and send 'query' to the owner immediately.
+            # TODO: check whether the members list is a full list,
+            #       it should contain the group owner(owner)
+            needs_update = False
+        if needs_update:
+            query = GroupCommand.query(group=group)
+            return self.messenger.send_content(content=query, receiver=sender)
+
+    def __is_empty(self, group: ID) -> bool:
+        """
+        Check whether group info empty (lost)
+
+        :param group: group ID
+        :return: True on members, owner not found
+        """
+        members = self.facebook.members(identifier=group)
+        if members is None or len(members) == 0:
+            return True
+        owner = self.facebook.owner(identifier=group)
+        if owner is None:
+            return True
 
 
 #
@@ -154,11 +175,9 @@ class _DefaultContentProcessor(ContentProcessor):
     #   main
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != _DefaultContentProcessor:
-            raise AssertionError('override me!')
         return TextContent.new(text='content (type: %d) not support yet!' % content.type)
 
 
 # register
-DefaultContentType = ContentType(0)
+DefaultContentType = ContentType.Unknown
 ContentProcessor.register(content_type=DefaultContentType, processor_class=_DefaultContentProcessor)

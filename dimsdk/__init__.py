@@ -133,8 +133,8 @@ __all__ = [
     'BlockCommand', 'MuteCommand',
 
     # cpu
-    'ContentProcessor',
-    'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
+    'ContentProcessor', 'CommandProcessor',
+    'HistoryCommandProcessor', 'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
     'MetaCommandProcessor', 'ProfileCommandProcessor',

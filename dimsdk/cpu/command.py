@@ -29,15 +29,17 @@
 # ==============================================================================
 
 """
-    Command Processors
-    ~~~~~~~~~~~~~~~~~~
+    Command Processor
+    ~~~~~~~~~~~~~~~~~
 
 """
 
+from typing import Optional
+
 from dimp import ID
 from dimp import InstantMessage
-from dimp import ContentType, Content, TextContent
-from dimp import Command, HistoryCommand
+from dimp import ContentType, Content
+from dimp import Command
 
 from .processor import ContentProcessor
 
@@ -67,84 +69,31 @@ class CommandProcessor(ContentProcessor):
     @classmethod
     def cpu_class(cls, command: str):
         clazz = cls.__command_processor_classes.get(command)
-        if clazz is None:
-            clazz = cls.__command_processor_classes[DefaultCommandName]
-        assert issubclass(clazz, CommandProcessor), 'error: %s, %s' % (command, clazz)
-        return clazz
+        if clazz is not None:
+            assert issubclass(clazz, CommandProcessor), 'error: %s, %s' % (command, clazz)
+            return clazz
 
     def cpu(self, command: str):
         processor = self.__pool.get(command)
-        if processor is not None:
-            return processor
-        # try to create new processor with command name
-        clazz = self.cpu_class(command=command)
-        assert clazz is not None, 'failed to get command processor class: %s' % command
-        processor = clazz(context=self.context)
-        self.__pool[command] = processor
+        if processor is None:
+            # try to create new processor with command name
+            clazz = self.cpu_class(command=command)
+            if clazz is not None:
+                processor = clazz(context=self.context)
+                self.__pool[command] = processor
         return processor
 
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != CommandProcessor:
-            raise AssertionError('override me!')
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
         cpu: CommandProcessor = self.cpu(command=content.command)
-        assert cpu is not self, 'Dead cycle! command: %s' % content
-        return cpu.process(content=content, sender=sender, msg=msg)
-
-
-class HistoryCommandProcessor(CommandProcessor):
-
-    def __init__(self, context: dict):
-        super().__init__(context=context)
-        # lazy
-        self.__gpu = None
-
-    def gpu(self):  # GroupCommandProcessor
-        if self.__gpu is None:
-            from .group import GroupCommandProcessor
-            self.__gpu = GroupCommandProcessor(context=self.context)
-        return self.__gpu
-
-    #
-    #   main
-    #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != HistoryCommandProcessor:
-            raise AssertionError('override me!')
-        assert isinstance(content, Command), 'history error: %s' % content
-        if content.group is not None:
-            # group command
-            return self.gpu().process(content=content, sender=sender, msg=msg)
-        # process command by name
-        cpu: CommandProcessor = self.cpu(command=content.command)
-        assert cpu is not self, 'Dead cycle! history: %s' % content
-        return cpu.process(content=content, sender=sender, msg=msg)
+        if cpu is not None:
+            assert cpu is not self, 'Dead cycle! command: %s' % content
+            return cpu.process(content=content, sender=sender, msg=msg)
 
 
 # register
 ContentProcessor.register(content_type=ContentType.Command, processor_class=CommandProcessor)
-ContentProcessor.register(content_type=ContentType.History, processor_class=HistoryCommandProcessor)
-
-
-#
-#   Default Command Processor
-#
-class _DefaultCommandProcessor(CommandProcessor):
-
-    #
-    #   main
-    #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != _DefaultCommandProcessor:
-            raise AssertionError('override me!')
-        assert isinstance(content, Command), 'command error: %s' % content
-        return TextContent.new(text='command (%s) not support yet!' % content.command)
-
-
-# register
-DefaultCommandName = 'default'
-CommandProcessor.register(command=DefaultCommandName, processor_class=_DefaultCommandProcessor)

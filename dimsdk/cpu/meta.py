@@ -34,6 +34,8 @@
 
 """
 
+from typing import Optional
+
 from dimp import ID, Meta
 from dimp import InstantMessage
 from dimp import Content
@@ -69,9 +71,7 @@ class MetaCommandProcessor(CommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != MetaCommandProcessor:
-            raise AssertionError('override me!')
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, MetaCommand), 'command error: %s' % content
         identifier = self.facebook.identifier(content.identifier)
         meta = content.meta

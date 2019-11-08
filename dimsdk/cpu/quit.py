@@ -37,13 +37,15 @@
     3. assistant can be hired/fired by owner
 """
 
+from typing import Optional
+
 from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
 from dimp import GroupCommand, QuitCommand
 from dimsdk import ReceiptCommand
 
-from .group import GroupCommandProcessor
+from .history import GroupCommandProcessor
 
 
 class QuitCommandProcessor(GroupCommandProcessor):
@@ -60,9 +62,7 @@ class QuitCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != QuitCommandProcessor:
-            raise AssertionError('override me!')
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, QuitCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 1. check permission

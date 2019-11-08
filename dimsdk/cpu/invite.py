@@ -44,8 +44,7 @@ from dimp import Content
 from dimp import GroupCommand, InviteCommand
 from dimsdk import ReceiptCommand
 
-from .command import CommandProcessor
-from .group import GroupCommandProcessor
+from .history import GroupCommandProcessor
 
 
 class InviteCommandProcessor(GroupCommandProcessor):
@@ -73,8 +72,10 @@ class InviteCommandProcessor(GroupCommandProcessor):
         :param invite_list: new members list
         :return: True on owner invites owner
         """
-        if self.is_owner(member=sender, group=group):
-            if self.contains_owner(members=invite_list, group=group):
+        if self.contains_owner(members=invite_list, group=group):
+            if self.is_owner(member=sender, group=group):
+                return True
+            if self.exists_assistant(member=sender, group=group):
                 return True
 
     def __reset(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
@@ -86,8 +87,8 @@ class InviteCommandProcessor(GroupCommandProcessor):
         :param msg:     instant message
         :return: response from invite command processor
         """
-        cpu: CommandProcessor = self.cpu(command=GroupCommand.RESET)
-        assert cpu is not None, 'failed to get "invite" command processor'
+        cpu: GroupCommandProcessor = self.cpu(command=GroupCommand.RESET)
+        assert cpu is not None, 'failed to get "reset" command processor'
         return cpu.process(content=content, sender=sender, msg=msg)
 
     def __add(self, invite_list: list, group: ID) -> Optional[list]:
@@ -111,9 +112,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        if type(self) != InviteCommandProcessor:
-            raise AssertionError('override me!')
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, InviteCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 0. check whether group info empty
