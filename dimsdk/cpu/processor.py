@@ -55,7 +55,7 @@ class ContentProcessor:
         # context
         self.context: dict = context
         # messenger
-        self.messenger: Messenger = context.get('messenger')
+        self.messenger: Messenger = context['messenger']
         # facebook
         facebook = context.get('facebook')
         if facebook is None:

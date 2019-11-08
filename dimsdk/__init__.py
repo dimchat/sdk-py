@@ -49,7 +49,7 @@ from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProce
 from .cpu import ResetCommandProcessor, QueryCommandProcessor
 from .cpu import MetaCommandProcessor, ProfileCommandProcessor
 
-from .delegate import Callback, CompletionHandler, MessengerDelegate
+from .delegate import Callback, CompletionHandler, MessengerDelegate, ConnectionDelegate
 
 from .ans import AddressNameService
 from .facebook import Facebook
@@ -140,7 +140,7 @@ __all__ = [
     'MetaCommandProcessor', 'ProfileCommandProcessor',
 
     # delegate
-    'Callback', 'CompletionHandler', 'MessengerDelegate',
+    'Callback', 'CompletionHandler', 'MessengerDelegate', 'ConnectionDelegate',
 
     'AddressNameService', 'Facebook', 'KeyStore', 'Messenger',
 ]

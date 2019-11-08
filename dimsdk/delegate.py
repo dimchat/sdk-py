@@ -62,13 +62,13 @@ class CompletionHandler(metaclass=ABCMeta):
 class MessengerDelegate(metaclass=ABCMeta):
 
     @abstractmethod
-    def upload_data(self, data: bytes, msg: InstantMessage) -> Optional[str]:
+    def upload_data(self, data: bytes, msg: InstantMessage) -> str:
         """
         Upload encrypted data to CDN
 
         :param data: encrypted file data
         :param msg:  instant message
-        :return:     download URL
+        :return: download URL
         """
         pass
 
@@ -79,7 +79,7 @@ class MessengerDelegate(metaclass=ABCMeta):
 
         :param url: download URL
         :param msg: instant message
-        :return:    encrypted file data
+        :return: encrypted file data
         """
         pass
 
@@ -90,7 +90,7 @@ class MessengerDelegate(metaclass=ABCMeta):
 
         :param data:    package data
         :param handler: completion handler
-        :return:        False on data/delegate error
+        :return: False on data/delegate error
         """
         pass
 
@@ -98,10 +98,10 @@ class MessengerDelegate(metaclass=ABCMeta):
 class ConnectionDelegate(metaclass=ABCMeta):
 
     @abstractmethod
-    def received_package(self, data: bytes) -> bool:
+    def received_package(self, data: bytes) -> Optional[bytes]:
         """ Receive data package
 
         :param data: data package
-        :return:
+        :return: response to sender
         """
         pass
