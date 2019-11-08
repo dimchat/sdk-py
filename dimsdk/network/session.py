@@ -182,4 +182,5 @@ class SessionServer:
                 if item.valid and item.active:
                     # got it
                     array.append(identifier)
+                    break
         return array
