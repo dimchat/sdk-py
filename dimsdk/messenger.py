@@ -38,7 +38,7 @@
 from abc import abstractmethod
 from typing import Optional
 
-from dimp import SymmetricKey, ID, Meta
+from dimp import SymmetricKey, ID, Meta, User
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Content, ForwardContent, FileContent
 from dimp import Transceiver
@@ -56,12 +56,50 @@ class Messenger(Transceiver, ConnectionDelegate):
         super().__init__()
         self.delegate: MessengerDelegate = None
         self.__cpu: ContentProcessor = None
+        self.__context: dict = {}
+
+    @property
+    def context(self) -> dict:
+        return self.__context
 
     @property
     def facebook(self) -> Facebook:
-        assert isinstance(self.barrack, Facebook), 'messenger delegate error: %s' % self.barrack
-        return self.barrack
+        barrack = self.__context.get('facebook')
+        if barrack is None:
+            barrack = self.barrack
+            assert isinstance(barrack, Facebook), 'messenger delegate error: %s' % barrack
+        return barrack
 
+    #
+    #   All local users (for decrypting received message)
+    #
+    @property
+    def local_users(self) -> list:
+        array = self.context.get('local_users')
+        if array is None:
+            array = []
+            self.context['local_users'] = array
+        return array
+
+    @local_users.setter
+    def local_users(self, value: list):
+        if value is None:
+            self.context.pop('local_users', None)
+        else:
+            self.context['local_users'] = value
+
+    #
+    #   Current user (for signing and sending message)
+    #
+    @property
+    def current_user(self) -> Optional[User]:
+        users = self.local_users
+        if len(users) > 0:
+            return users[0]
+
+    #
+    #   Content Processing Units
+    #
     def cpu(self, context: dict=None) -> ContentProcessor:
         if self.__cpu is None:
             if context is None:
@@ -277,6 +315,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         # process
         sender = self.facebook.identifier(i_msg.envelope.sender)
         receiver = self.facebook.identifier(i_msg.envelope.receiver)
+        if receiver.is_broadcast:
+            # switch broadcast ID to current user ID
+            receiver = self.current_user
         res = self.cpu().process(content=content, sender=sender, msg=i_msg)
         if res is not None:
             new_msg = InstantMessage.new(content=res, sender=receiver, receiver=sender)
