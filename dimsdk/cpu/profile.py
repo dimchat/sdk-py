@@ -50,7 +50,7 @@ class ProfileCommandProcessor(CommandProcessor):
 
     def __get(self, identifier: ID) -> Content:
         # querying profile for ID
-        self.info('search meta %s' % identifier)
+        self.info('search profile %s' % identifier)
         profile = self.facebook.profile(identifier=identifier)
         # response
         if profile is not None:

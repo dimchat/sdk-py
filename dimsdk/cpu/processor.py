@@ -48,20 +48,31 @@ class ContentProcessor:
 
     def __init__(self, context: dict):
         super().__init__()
-        from ..messenger import Messenger
-        from ..facebook import Facebook
         # sub-content processing units pool
         self.__pool: dict = {}
         # context
-        self.context: dict = context
+        self._context: dict = context
         # messenger
-        self.messenger: Messenger = context['messenger']
+        messenger = context['messenger']
+        self._messenger = messenger
         # facebook
         facebook = context.get('facebook')
         if facebook is None:
-            self.facebook: Facebook = self.messenger.barrack
+            self._facebook = messenger.barrack
         else:
-            self.facebook: Facebook = facebook
+            self._facebook = facebook
+
+    @property
+    def context(self) -> dict:
+        return self._context
+
+    @property
+    def messenger(self):  # Messenger
+        return self._messenger
+
+    @property
+    def facebook(self):  # Facebook
+        return self._facebook
 
     def info(self, msg: str):
         if self.DEBUG:
