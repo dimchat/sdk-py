@@ -38,7 +38,8 @@
 from abc import ABCMeta, abstractmethod
 from typing import Optional
 
-from dimp import InstantMessage
+from dimp import InstantMessage, ReliableMessage
+from dimp import Content
 
 
 class Callback(metaclass=ABCMeta):
@@ -90,7 +91,36 @@ class MessengerDelegate(metaclass=ABCMeta):
 
         :param data:    package data
         :param handler: completion handler
-        :return: False on data/delegate error
+        :return: True on success
+        """
+        pass
+
+    @abstractmethod
+    def broadcast_message(self, msg: ReliableMessage) -> Optional[Content]:
+        """
+        Deliver message to everyone@everywhere, including all neighbours
+
+        :param msg: broadcast message
+        :return: receipt on success
+        """
+
+    @abstractmethod
+    def deliver_message(self, msg: ReliableMessage) -> Optional[Content]:
+        """
+        Deliver message to the receiver, or broadcast to neighbours
+
+        :param msg: reliable message
+        :return: receipt on success
+        """
+        pass
+
+    @abstractmethod
+    def forward_message(self, msg: ReliableMessage) -> Optional[Content]:
+        """
+        Re-pack and deliver (Top-Secret) message to the real receiver
+
+        :param msg: top-secret message
+        :return: receipt on success
         """
         pass
 

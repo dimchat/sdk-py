@@ -156,7 +156,6 @@ class Messenger(Transceiver, ConnectionDelegate):
                 # NOTICE: decrypt failed, not for you?
                 #         check content type in subclass, if it's a 'forward' message,
                 #         it means you are asked to re-pack and forward this message
-                self.forward_message(msg=r_msg)
         return i_msg
 
     def encrypt_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
@@ -294,54 +293,50 @@ class Messenger(Transceiver, ConnectionDelegate):
         :return: True on success
         """
         r_msg = self.deserialize_message(data=data)
-        msg_r = self.process_message(msg=r_msg)
-        if msg_r is not None:
-            return self.serialize_message(msg=msg_r)
+        response = self.__process_message(msg=r_msg)
+        if response is None:
+            # nothing to response
+            return None
+        # response to the sender
+        sender = self.current_user.identifier
+        receiver = self.facebook.identifier(r_msg.envelope.sender)
+        i_msg = InstantMessage.new(content=response, sender=sender, receiver=receiver)
+        msg_r = self.encrypt_sign(msg=i_msg)
+        assert msg_r is not None, 'failed to response: %s' % i_msg
+        return self.serialize_message(msg=msg_r)
 
-    def process_message(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
+    def __process_message(self, msg: ReliableMessage) -> Optional[Content]:
         # verify
         s_msg = self.verify_message(msg=msg)
         if s_msg is None:
             raise ValueError('failed to verify message: %s' % msg)
-        # decrypt
+        receiver = self.facebook.identifier(msg.envelope.receiver)
+        #
+        # 1. check broadcast
+        #
+        if receiver.type.is_group() and receiver.is_broadcast:
+            # if it's a grouped broadcast id, then split and deliver to everyone
+            return self.delegate.broadcast_message(msg=msg)
+        #
+        # 2. try to decrypt
+        #
         i_msg = self.decrypt_message(msg=s_msg)
         if i_msg is None:
             # cannot decrypt this message, not for you?
-            return self.deliver_message(msg=msg)
+            # deliver to the receiver
+            return self.delegate.deliver_message(msg=msg)
+        #
+        # 3. check top-secret message
+        #
         content = i_msg.content
         if isinstance(content, ForwardContent):
-            # this top-secret message was delegated to you to forward it
-            return self.forward_message(msg=content.forward)
-        # process
-        sender = self.facebook.identifier(i_msg.envelope.sender)
-        res = self.cpu().process(content=content, sender=sender, msg=i_msg)
-        if res is not None:
-            receiver = self.facebook.identifier(i_msg.envelope.receiver)
-            if receiver.is_broadcast:
-                # switch broadcast ID to current user ID
-                receiver = self.current_user.identifier
-            new_msg = InstantMessage.new(content=res, sender=receiver, receiver=sender)
-            return self.encrypt_sign(msg=new_msg)
-
-    @abstractmethod
-    def deliver_message(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
-        """
-        Deliver message to the receiver, or broadcast to neighbours
-
-        :param msg: reliable message
-        :return: message to response
-        """
-        pass
-
-    @abstractmethod
-    def forward_message(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
-        """
-        Re-pack and deliver (Top-Secret) message to the real receiver
-
-        :param msg: top-secret message
-        :return: message to response
-        """
-        pass
+            # it's asking you to forward it
+            return self.delegate.forward_message(msg=content.forward)
+        #
+        # 4. process
+        #
+        sender = self.facebook.identifier(msg.envelope.sender)
+        return self.cpu().process(content=content, sender=sender, msg=i_msg)
 
 
 class MessageCallback(CompletionHandler):
