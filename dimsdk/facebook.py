@@ -57,6 +57,7 @@ class Facebook(Barrack):
         self.__private_keys: dict = {}
         self.__contacts: dict = {}
         self.__members: dict = {}
+        self.__assistants: dict = {}
 
     #
     #   Meta
@@ -79,12 +80,13 @@ class Facebook(Barrack):
             return True
         if not self.cache_meta(meta=meta, identifier=identifier):
             return False
-        # TODO: save meta into local storage
+        # return True to let subclass save meta into local storage
+        return True
 
     @abstractmethod
     def load_meta(self, identifier: ID) -> Optional[Meta]:
-        # TODO: load meta from local storage
-        pass
+        # return None to let subclass load meta from local storage
+        return super().meta(identifier=identifier)
 
     #
     #   Profile
@@ -130,18 +132,19 @@ class Facebook(Barrack):
     def save_profile(self, profile: Profile, identifier: ID=None) -> bool:
         if not self.cache_profile(profile=profile, identifier=identifier):
             return False
-        # TODO: save profile into database
+        # return True to let subclass save profile into database
+        return True
 
     @abstractmethod
     def load_profile(self, identifier: ID) -> Optional[Profile]:
-        # TODO: load profile from database
+        # return None to let subclass load profile from database
         pass
 
     #
     #   Private keys
     #
     def cache_private_key(self, key: PrivateKey, identifier: ID) -> bool:
-        assert identifier.type.is_user(), 'ID error: %s' % identifier
+        assert identifier.type.is_user(), 'user ID error: %s' % identifier
         if key is None:
             self.__private_keys.pop(identifier, None)
             return False
@@ -152,18 +155,19 @@ class Facebook(Barrack):
     def save_private_key(self, key: PrivateKey, identifier: ID) -> bool:
         if not self.cache_private_key(key=key, identifier=identifier):
             return False
-        # TODO: save private key into secret storage
+        # return True to let subclass save private key into secret storage
+        return True
 
     @abstractmethod
     def load_private_key(self, identifier: ID) -> Optional[PrivateKey]:
-        # TODO: load private key from secret storage
+        # return None to let subclass load private key from secret storage
         pass
 
     #
     #   Contacts
     #
     def cache_contacts(self, contacts: list, identifier: ID) -> bool:
-        assert identifier.type.is_user(), 'ID error: %s' % identifier
+        assert identifier.type.is_user(), 'user ID error: %s' % identifier
         if contacts is None:
             self.__contacts.pop(identifier, None)
             return False
@@ -174,18 +178,19 @@ class Facebook(Barrack):
     def save_contacts(self, contacts: list, identifier: ID) -> bool:
         if not self.cache_contacts(contacts=contacts, identifier=identifier):
             return False
-        # TODO: save contacts into database
+        # return True to let subclass save contacts into database
+        return True
 
     @abstractmethod
     def load_contacts(self, identifier: ID) -> Optional[list]:
-        # TODO: load contacts from database
+        # return None to let subclass load contacts from database
         pass
 
     #
     #   Members
     #
     def cache_members(self, members: list, identifier: ID) -> bool:
-        assert identifier.type.is_group(), 'ID error: %s' % identifier
+        assert identifier.type.is_group(), 'group ID error: %s' % identifier
         if members is None:
             self.__members.pop(identifier, None)
             return False
@@ -196,13 +201,36 @@ class Facebook(Barrack):
     def save_members(self, members: list, identifier: ID) -> bool:
         if not self.cache_members(members=members, identifier=identifier):
             return False
-        # TODO: save members into database
+        # return True to let subclass save members into database
+        return True
 
     @abstractmethod
     def load_members(self, identifier: ID) -> Optional[list]:
-        # TODO: load members from database
+        # return None to let subclass load members from database
         pass
 
+    #
+    #   Assistants (Robot account for group)
+    #
+    def cache_assistants(self, assistants: list, identifier: ID) -> bool:
+        assert identifier.type.is_group(), 'group ID error: %s' % identifier
+        if assistants is None:
+            self.__assistants.pop(identifier, None)
+            return False
+        self.__assistants[identifier] = assistants
+        return True
+
+    @abstractmethod
+    def save_assistants(self, assistants: list, identifier: ID) -> bool:
+        if not self.cache_assistants(assistants=assistants, identifier=identifier):
+            return False
+        # return True to let subclass save assistants into database
+        return True
+
+    @abstractmethod
+    def load_assistants(self, identifier: ID) -> Optional[list]:
+        # return None to let subclass load assistants from database
+        pass
 
     #
     #   SocialNetworkDataSource
@@ -334,7 +362,6 @@ class Facebook(Barrack):
                     if m is not None and meta.match_public_key(m.key):
                         # got it
                         return item
-        # TODO: load founder from database
 
     def owner(self, identifier: ID) -> ID:
         uid = super().owner(identifier=identifier)
@@ -343,7 +370,6 @@ class Facebook(Barrack):
         if identifier.type == NetworkID.Polylogue:
             # Polylogue's owner is its founder
             return self.founder(identifier=identifier)
-        # TODO: load owner from database
 
     def members(self, identifier: ID) -> Optional[list]:
         array = super().members(identifier=identifier)
@@ -358,8 +384,11 @@ class Facebook(Barrack):
             return array
 
     def assistants(self, identifier: ID) -> Optional[list]:
-        """ Group Assistant Bots """
-        assert identifier.type.is_group(), 'group ID error: %s' % identifier
-        ass = self.ans.identifier(name='assistant')
-        if ass is not None:
-            return [ass]
+        # get from cache
+        array = self.__assistants.get(identifier)
+        if array is not None:
+            return array
+        # load from local storage
+        array = self.load_assistants(identifier=identifier)
+        if self.cache_assistants(assistants=array, identifier=identifier):
+            return array
