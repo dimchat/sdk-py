@@ -128,7 +128,8 @@ class ResetCommandProcessor(GroupCommandProcessor):
     #   main
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
-        assert isinstance(content, ResetCommand), 'group command error: %s' % content
+        # assert isinstance(content, ResetCommand), 'group command error: %s' % content
+        assert isinstance(content, GroupCommand), 'group command error: %s' % content
         # new members
         new_members: list = self.members(content=content)
         if new_members is None or len(new_members) == 0:

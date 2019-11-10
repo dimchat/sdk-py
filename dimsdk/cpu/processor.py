@@ -52,15 +52,6 @@ class ContentProcessor:
         self.__pool: dict = {}
         # context
         self._context: dict = context
-        # messenger
-        messenger = context['messenger']
-        self._messenger = messenger
-        # facebook
-        facebook = context.get('facebook')
-        if facebook is None:
-            self._facebook = messenger.barrack
-        else:
-            self._facebook = facebook
 
     @property
     def context(self) -> dict:
@@ -68,11 +59,14 @@ class ContentProcessor:
 
     @property
     def messenger(self):  # Messenger
-        return self._messenger
+        return self.context['messenger']
 
     @property
     def facebook(self):  # Facebook
-        return self._facebook
+        barrack = self.context.get('facebook')
+        if barrack is None:
+            barrack = self.messenger.barrack
+        return barrack
 
     def info(self, msg: str):
         if self.DEBUG:
