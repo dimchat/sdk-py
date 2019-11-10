@@ -124,7 +124,8 @@ class ContentProcessor:
         assert isinstance(content, Content), 'message content error: %s' % content
         self.__check_group(content=content, sender=sender)
         # process content by type
-        cpu: ContentProcessor = self.cpu(content_type=content.type)
+        cpu = self.cpu(content_type=content.type)
+        assert isinstance(cpu, ContentProcessor), 'content processor error: %s' % cpu
         assert cpu is not self, 'Dead cycle! content: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
 

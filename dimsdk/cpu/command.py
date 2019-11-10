@@ -87,10 +87,12 @@ class CommandProcessor(ContentProcessor):
     #   main
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+        assert type(self) == CommandProcessor, 'override me!'
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
-        cpu: CommandProcessor = self.cpu(command=content.command)
+        cpu = self.cpu(command=content.command)
         if cpu is not None:
+            assert isinstance(cpu, CommandProcessor), 'command processor error: %s' % cpu
             assert cpu is not self, 'Dead cycle! command: %s' % content
             return cpu.process(content=content, sender=sender, msg=msg)
 

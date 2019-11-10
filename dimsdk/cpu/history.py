@@ -39,7 +39,7 @@ from typing import Optional
 from dimp import ID, NetworkID
 from dimp import InstantMessage
 from dimp import ContentType, Content
-from dimp import GroupCommand
+from dimp import Command, GroupCommand
 
 from .processor import ContentProcessor
 from .command import CommandProcessor
@@ -50,7 +50,7 @@ class HistoryCommandProcessor(CommandProcessor):
     def __init__(self, context: dict):
         super().__init__(context=context)
         # lazy
-        self.__gpu = None
+        self.__gpu: GroupCommandProcessor = None
 
     def gpu(self):  # GroupCommandProcessor
         if self.__gpu is None:
@@ -61,11 +61,17 @@ class HistoryCommandProcessor(CommandProcessor):
     #   main
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
-        if content.group is not None:
-            # group command
-            return self.gpu().process(content=content, sender=sender, msg=msg)
-        # process command by name
-        return super().process(content=content, sender=sender, msg=msg)
+        assert type(self) == HistoryCommandProcessor, 'override me!'
+        assert isinstance(content, Command), 'history cmd error: %s' % content
+        if content.group is None:
+            # get command processor
+            cpu = self.cpu(command=content.command)
+        else:
+            # get group command processor
+            cpu = self.gpu()
+        if cpu is not None:
+            assert cpu is not self, 'Dead cycle! history cmd: %s' % content
+            return cpu.process(content=content, sender=sender, msg=msg)
 
 
 class GroupCommandProcessor(HistoryCommandProcessor):
@@ -117,6 +123,18 @@ class GroupCommandProcessor(HistoryCommandProcessor):
         if member is not None:
             member = self.facebook.identifier(member)
             return [member]
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+        assert type(self) == GroupCommandProcessor, 'override me!'
+        assert isinstance(content, Command), 'group cmd error: %s' % content
+        # process command by name
+        cpu = self.cpu(command=content.command)
+        if cpu is not None:
+            assert cpu is not self, 'Dead cycle! group cmd: %s' % content
+            return cpu.process(content=content, sender=sender, msg=msg)
 
 
 # register
