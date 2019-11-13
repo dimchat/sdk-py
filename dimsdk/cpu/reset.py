@@ -46,33 +46,14 @@ from typing import Optional
 from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
-from dimp import GroupCommand, ResetCommand
-from dimsdk import ReceiptCommand
+from dimp import GroupCommand
 
 from .history import GroupCommandProcessor
 
 
 class ResetCommandProcessor(GroupCommandProcessor):
 
-    def __is_empty(self, group: ID) -> bool:
-        """
-        Check whether group info empty (lost)
-
-        :param group: group ID
-        :return: True on members, owner not found
-        """
-        owner = self.facebook.owner(identifier=group)
-        if owner is None:
-            return True
-        members = self.facebook.members(identifier=group)
-        if members is None or len(members) == 0:
-            return True
-
-    def __query(self, group: ID, receiver: ID) -> bool:
-        cmd = GroupCommand.query(group=group)
-        return self.messenger.send_content(content=cmd, receiver=receiver)
-
-    def __temporary(self, sender: ID, members: list, group: ID) -> Content:
+    def __temporary(self, sender: ID, members: list, group: ID) -> Optional[Content]:
         if self.contains_owner(members=members, group=group):
             # temporary save
             if self.facebook.save_members(members=members, identifier=group):
@@ -80,18 +61,16 @@ class ResetCommandProcessor(GroupCommandProcessor):
                 if owner is not None and owner != sender:
                     # NOTICE: to prevent counterfeit,
                     #         query the owner for newest member-list
-                    self.__query(group=group, receiver=owner)
-                text = 'Group command received: reset %d member(s)' % len(members)
-                return ReceiptCommand.new(message=text)
-            else:
-                text = 'Group command received: reset %d member(s) failed' % len(members)
-                return ReceiptCommand.new(message=text)
+                    cmd = GroupCommand.query(group=group)
+                    self.messenger.send_content(content=cmd, receiver=owner)
+            # response (no need to response this group command)
+            return None
         else:
             # NOTICE: this is a partial member-list
             #         query the sender for full-list
             return GroupCommand.query(group=group)
 
-    def __reset(self, new_members: list, group: ID) -> Content:
+    def __reset(self, new_members: list, group: ID) -> (list, list):
         # existed members
         members: list = self.facebook.members(identifier=group)
         if members is None:
@@ -110,19 +89,9 @@ class ResetCommandProcessor(GroupCommandProcessor):
                 add_list.append(item)
         # save changes
         if len(add_list) > 0 or len(remove_list) > 0:
-            if self.facebook.save_members(members=new_members, identifier=group):
-                text = 'Group command received: reset %d member(s)' % len(new_members)
-            else:
-                text = 'Group command received: reset %d member(s) failed' % len(new_members)
-        else:
-            text = 'Group command received: reset'
-        # response
-        receipt = ReceiptCommand.new(message=text)
-        if len(add_list) > 0:
-            receipt['added'] = add_list
-        if len(remove_list) > 0:
-            receipt['removed'] = remove_list
-        return receipt
+            if not self.facebook.save_members(members=new_members, identifier=group):
+                return None, None
+        return add_list, remove_list
 
     #
     #   main
@@ -136,16 +105,22 @@ class ResetCommandProcessor(GroupCommandProcessor):
             raise ValueError('reset group command error: %s' % content)
         group: ID = self.facebook.identifier(content.group)
         # 0. check whether group info empty
-        if self.__is_empty(group=group):
+        if self.is_empty(group=group):
             # FIXME: group profile lost?
             # FIXME: how to avoid strangers impersonating group members?
             return self.__temporary(sender=sender, members=new_members, group=group)
         # 1. check permission
-        if not self.is_owner(member=sender, group=group):
-            if not self.exists_assistant(member=sender, group=group):
+        if not self.facebook.is_owner(member=sender, group=group):
+            if not self.facebook.exists_assistant(member=sender, group=group):
                 raise AssertionError('only owner/assistant can reset: %s' % msg)
         # 2. reset
-        return self.__reset(new_members=new_members, group=group)
+        added, removed = self.__reset(new_members=new_members, group=group)
+        if added is not None:
+            content['added'] = added
+        if removed is not None:
+            content['removed'] = removed
+        # 3. response (no need to response this group command)
+        return None
 
 
 # register

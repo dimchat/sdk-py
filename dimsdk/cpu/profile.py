@@ -50,7 +50,6 @@ class ProfileCommandProcessor(CommandProcessor):
 
     def __get(self, identifier: ID) -> Content:
         # querying profile for ID
-        self.info('search profile %s' % identifier)
         profile = self.facebook.profile(identifier=identifier)
         # response
         if profile is not None:
@@ -61,18 +60,12 @@ class ProfileCommandProcessor(CommandProcessor):
     def __put(self, identifier: ID, meta: Meta, profile: Profile) -> Content:
         if meta is not None:
             # received a meta for ID
-            if self.facebook.save_meta(identifier=identifier, meta=meta):
-                self.info('meta saved %s, %s' % (identifier, meta))
-            else:
-                self.error('meta not match %s, %s' % (identifier, meta))
+            if not self.facebook.save_meta(identifier=identifier, meta=meta):
                 return TextContent.new(text='Meta not match %s!' % identifier)
         # received a new profile for ID
-        self.info('received profile %s' % identifier)
         if self.facebook.save_profile(profile=profile):
-            self.info('profile saved %s' % profile)
             return ReceiptCommand.new(message='Profile of %s received!' % identifier)
         else:
-            self.error('profile not valid %s' % profile)
             return TextContent.new(text='Profile signature not match %s!' % identifier)
 
     #

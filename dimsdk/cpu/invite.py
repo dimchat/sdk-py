@@ -42,26 +42,11 @@ from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
 from dimp import GroupCommand, InviteCommand
-from dimsdk import ReceiptCommand
 
 from .history import GroupCommandProcessor
 
 
 class InviteCommandProcessor(GroupCommandProcessor):
-
-    def __is_empty(self, group: ID) -> bool:
-        """
-        Check whether group info empty (lost)
-
-        :param group: group ID
-        :return: True on members, owner not found
-        """
-        members = self.facebook.members(identifier=group)
-        if members is None or len(members) == 0:
-            return True
-        owner = self.facebook.owner(identifier=group)
-        if owner is None:
-            return True
 
     def __is_reset(self, sender: ID, group: ID, invite_list: list) -> bool:
         """
@@ -73,9 +58,9 @@ class InviteCommandProcessor(GroupCommandProcessor):
         :return: True on owner invites owner
         """
         if self.contains_owner(members=invite_list, group=group):
-            if self.is_owner(member=sender, group=group):
-                return True
-            if self.exists_assistant(member=sender, group=group):
+            # NOTICE: owner invite owner?
+            #         it's a Reset command!
+            if self.facebook.is_owner(member=sender, group=group):
                 return True
 
     def __reset(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
@@ -116,14 +101,14 @@ class InviteCommandProcessor(GroupCommandProcessor):
         assert isinstance(content, InviteCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 0. check whether group info empty
-        if self.__is_empty(group=group):
+        if self.is_empty(group=group):
             # NOTICE:
             #     group membership lost?
             #     reset group members
             return self.__reset(content=content, sender=sender, msg=msg)
         # 1. check permission
-        if not self.exists_member(member=sender, group=group):
-            if not self.exists_assistant(member=sender, group=group):
+        if not self.facebook.exists_member(member=sender, group=group):
+            if not self.facebook.exists_assistant(member=sender, group=group):
                 raise AssertionError('only member/assistant can invite: %s' % msg)
         # 2. get inviting members
         invite_list: list = self.members(content=content)
@@ -139,9 +124,8 @@ class InviteCommandProcessor(GroupCommandProcessor):
         add_list = self.__add(invite_list=invite_list, group=group)
         if add_list is not None:
             content['added'] = add_list
-        # 3. response
-        text = 'Group command received: invite %d member(s)' % len(invite_list)
-        return ReceiptCommand.new(message=text)
+        # 3. response (no need to response this group command)
+        return None
 
 
 # register

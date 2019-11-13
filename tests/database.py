@@ -2,11 +2,16 @@
 from typing import Optional
 
 from mkm import ID, PrivateKey, Profile, Meta
+from mkm.immortals import Immortals
 
 from dimsdk import Facebook
 
 
 class Database(Facebook):
+
+    def __init__(self):
+        super().__init__()
+        self.__immortals = Immortals()
 
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
         pass
@@ -43,3 +48,12 @@ class Database(Facebook):
 
     def load_assistants(self, identifier: ID) -> Optional[list]:
         pass
+
+    #
+    #   EntityDataSource
+    #
+    def meta(self, identifier: ID) -> Optional[Meta]:
+        info = super().meta(identifier=identifier)
+        if info is not None:
+            return info
+        return self.__immortals.meta(identifier=identifier)

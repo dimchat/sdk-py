@@ -42,7 +42,6 @@ from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
 from dimp import GroupCommand, ExpelCommand
-from dimsdk import ReceiptCommand
 
 from .history import GroupCommandProcessor
 
@@ -74,8 +73,8 @@ class ExpelCommandProcessor(GroupCommandProcessor):
         assert isinstance(content, ExpelCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 1. check permission
-        if not self.is_owner(member=sender, group=group):
-            if not self.exists_assistant(member=sender, group=group):
+        if not self.facebook.is_owner(member=sender, group=group):
+            if not self.facebook.exists_assistant(member=sender, group=group):
                 raise AssertionError('only owner/assistant can expel: %s' % msg)
         # 2.1. get expelling members
         expel_list: list = self.members(content=content)
@@ -85,9 +84,8 @@ class ExpelCommandProcessor(GroupCommandProcessor):
         remove_list = self.__remove(expel_list=expel_list, group=group)
         if remove_list is not None:
             content['removed'] = remove_list
-        # 3. response
-        text = 'Group command received: expel %d member(s)' % len(expel_list)
-        return ReceiptCommand.new(message=text)
+        # 3. response (no need to response this group command)
+        return None
 
 
 # register

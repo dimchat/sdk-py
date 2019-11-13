@@ -31,7 +31,7 @@
 from .mars import NetMsgHead, NetMsg
 
 from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
-from .station import ServiceProvider, Station
+from .station import ServiceProvider, Station, LocalStation
 
 from .session import Session, SessionServer
 
@@ -44,7 +44,7 @@ __all__ = [
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
 
     # Roles
-    'ServiceProvider', 'Station',
+    'ServiceProvider', 'Station', 'LocalStation',
 
     # Session
     'Session', 'SessionServer',

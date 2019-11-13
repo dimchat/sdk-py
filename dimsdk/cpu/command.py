@@ -38,7 +38,7 @@ from typing import Optional
 
 from dimp import ID
 from dimp import InstantMessage
-from dimp import ContentType, Content
+from dimp import ContentType, Content, TextContent
 from dimp import Command
 
 from .processor import ContentProcessor
@@ -46,10 +46,9 @@ from .processor import ContentProcessor
 
 class CommandProcessor(ContentProcessor):
 
-    def __init__(self, context: dict):
-        super().__init__(context=context)
-        # sub-command processing units pool
-        self.__pool = {}
+    def __init__(self, messenger):
+        super().__init__(messenger=messenger)
+        self.__command_processors: dict = {}
 
     #
     #   Runtime
@@ -60,10 +59,11 @@ class CommandProcessor(ContentProcessor):
     def register(cls, command: str, processor_class=None) -> bool:
         if processor_class is None:
             cls.__command_processor_classes.pop(command, None)
-        elif issubclass(processor_class, CommandProcessor):
-            cls.__command_processor_classes[command] = processor_class
+        elif processor_class == CommandProcessor:
+            raise TypeError('should not add CommandProcessor itself!')
         else:
-            raise TypeError('%s must be subclass of CommandProcessor' % processor_class)
+            assert issubclass(processor_class, CommandProcessor), 'cpu class error' % processor_class
+            cls.__command_processor_classes[command] = processor_class
         return True
 
     @classmethod
@@ -74,13 +74,13 @@ class CommandProcessor(ContentProcessor):
             return clazz
 
     def cpu(self, command: str):
-        processor = self.__pool.get(command)
+        processor = self.__command_processors.get(command)
         if processor is None:
             # try to create new processor with command name
             clazz = self.cpu_class(command=command)
             if clazz is not None:
-                processor = clazz(context=self.context)
-                self.__pool[command] = processor
+                processor = self._create_processor(clazz)
+                self.__command_processors[command] = processor
         return processor
 
     #
@@ -91,10 +91,10 @@ class CommandProcessor(ContentProcessor):
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
         cpu = self.cpu(command=content.command)
-        if cpu is not None:
-            assert isinstance(cpu, CommandProcessor), 'command processor error: %s' % cpu
-            assert cpu is not self, 'Dead cycle! command: %s' % content
-            return cpu.process(content=content, sender=sender, msg=msg)
+        if cpu is None:
+            return TextContent.new(text='Command (name: %s) not support yet!' % content.command)
+        assert cpu is not self, 'Dead cycle! command: %s' % content
+        return cpu.process(content=content, sender=sender, msg=msg)
 
 
 # register

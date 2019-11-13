@@ -55,8 +55,8 @@ class QueryCommandProcessor(GroupCommandProcessor):
         assert isinstance(content, QueryCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 1. check permission
-        if not self.exists_member(member=sender, group=group):
-            if not self.exists_assistant(member=sender, group=group):
+        if not self.facebook.exists_member(member=sender, group=group):
+            if not self.facebook.exists_assistant(member=sender, group=group):
                 raise AssertionError('only member/assistant can query: %s' % msg)
         # 2. response group members for sender
         members = self.facebook.members(identifier=group)

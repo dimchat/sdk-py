@@ -43,7 +43,6 @@ from dimp import ID
 from dimp import InstantMessage
 from dimp import Content
 from dimp import GroupCommand, QuitCommand
-from dimsdk import ReceiptCommand
 
 from .history import GroupCommandProcessor
 
@@ -66,16 +65,14 @@ class QuitCommandProcessor(GroupCommandProcessor):
         assert isinstance(content, QuitCommand), 'group command error: %s' % content
         group: ID = self.facebook.identifier(content.group)
         # 1. check permission
-        if self.is_owner(member=sender, group=group):
+        if self.facebook.is_owner(member=sender, group=group):
             raise AssertionError('owner cannot quit: %s' % msg)
-        if self.exists_assistant(member=sender, group=group):
+        if self.facebook.exists_assistant(member=sender, group=group):
             raise AssertionError('assistant cannot quit: %s' % msg)
-        if not self.exists_member(member=sender, group=group):
-            raise AssertionError('not a member yet: %s' % msg)
         # 2. remove sender from group members
-        if self.__remove(sender=sender, group=group):
-            text = 'Group command received: %s quit' % sender
-            return ReceiptCommand.new(message=text)
+        self.__remove(sender=sender, group=group)
+        # 3. response (no need to response this group command)
+        return None
 
 
 # register

@@ -50,7 +50,6 @@ class MetaCommandProcessor(CommandProcessor):
 
     def __get(self, identifier: ID) -> Content:
         # querying meta for ID
-        self.info('search meta %s' % identifier)
         meta = self.facebook.meta(identifier=identifier)
         # response
         if meta is not None:
@@ -60,12 +59,9 @@ class MetaCommandProcessor(CommandProcessor):
 
     def __put(self, identifier: ID, meta: Meta) -> Content:
         # received a meta for ID
-        self.info('received meta %s' % identifier)
         if self.facebook.save_meta(identifier=identifier, meta=meta):
-            self.info('meta saved %s, %s' % (identifier, meta))
             return ReceiptCommand.new(message='Meta for %s received!' % identifier)
         else:
-            self.error('meta not match %s, %s' % (identifier, meta))
             return TextContent.new(text='Meta not match %s!' % identifier)
 
     #

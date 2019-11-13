@@ -37,7 +37,7 @@
 """
 
 from dimp import PublicKey
-from dimp import ID, User, Group
+from dimp import ID, User, LocalUser, Group
 
 from .certificate import CertificateAuthority
 
@@ -96,6 +96,10 @@ class Station(User):
             return self
         else:
             raise ValueError('Station ID error')
+
+
+class LocalStation(Station, LocalUser):
+    pass
 
 
 class ServiceProvider(Group):
