@@ -36,6 +36,7 @@
 """
 
 import time
+import weakref
 from abc import abstractmethod
 from typing import Optional
 
@@ -52,12 +53,24 @@ class Facebook(Barrack):
 
     def __init__(self):
         super().__init__()
-        self.ans: AddressNameService = None
+        self.__ans: weakref.ReferenceType = None
         # caches
         self.__profiles: dict = {}
         self.__private_keys: dict = {}
         self.__contacts: dict = {}
         self.__members: dict = {}
+
+    @property
+    def ans(self) -> AddressNameService:
+        if self.__ans is not None:
+            return self.__ans()
+
+    @ans.setter
+    def ans(self, value: AddressNameService):
+        if value is None:
+            self.__ans = None
+        else:
+            self.__ans = weakref.ref(value)
 
     #
     #   Meta

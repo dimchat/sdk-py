@@ -57,6 +57,12 @@ class ContentProcessor:
     def facebook(self):  # Facebook
         return self.messenger.facebook
 
+    def get_context(self, key: str):
+        return self.messenger.get_context(key)
+
+    def set_context(self, key: str, value):
+        return self.messenger.set_context(key=key, value=value)
+
     #
     #   Runtime
     #

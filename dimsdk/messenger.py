@@ -56,8 +56,8 @@ class Messenger(Transceiver, ConnectionDelegate):
 
     def __init__(self):
         super().__init__()
-        self.__delegate: weakref = None
-        self.__context: dict = weakref.WeakValueDictionary()
+        self.__delegate: weakref.ReferenceType = None
+        self.__context: dict = {}
         self.__cpu: ContentProcessor = None
 
     #
@@ -85,7 +85,7 @@ class Messenger(Transceiver, ConnectionDelegate):
     def get_context(self, key: str):
         return self.__context.get(key)
 
-    def set_context(self, key: str, value: Optional[object]):
+    def set_context(self, key: str, value):
         if value is None:
             self.__context.pop(key, None)
         else:
@@ -416,8 +416,15 @@ class Messenger(Transceiver, ConnectionDelegate):
 
     @abstractmethod
     def save_message(self, msg: InstantMessage) -> bool:
+        """
+        Save instant message
+
+        :param msg: instant message
+        :return: True on success
+        """
         pass
 
+    @abstractmethod
     def broadcast_message(self, msg: ReliableMessage) -> Optional[Content]:
         """
         Deliver message to everyone@everywhere, including all neighbours
@@ -427,6 +434,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         """
         pass
 
+    @abstractmethod
     def deliver_message(self, msg: ReliableMessage) -> Optional[Content]:
         """
         Deliver message to the receiver, or broadcast to neighbours
@@ -436,6 +444,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         """
         pass
 
+    @abstractmethod
     def forward_message(self, msg: ReliableMessage) -> Optional[Content]:
         """
         Re-pack and deliver (Top-Secret) message to the real receiver

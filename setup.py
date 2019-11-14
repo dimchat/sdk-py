@@ -12,7 +12,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.2.9'
+__version__ = '0.2.10'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -39,8 +39,8 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.7.8',
-        'mkm>=0.7.11',
+        'dimp>=0.7.10',
+        'mkm>=0.7.12',
         'apns2',  # 0.4.1
         'numpy',  # 1.15.4
     ]
