@@ -159,7 +159,8 @@ class Messenger(Transceiver, ConnectionDelegate):
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         # NOTICE: check meta before calling me
         sender = self.facebook.identifier(msg.envelope.sender)
-        meta = Meta(msg.meta)
+        # [Meta Protocol]
+        meta = msg.meta
         if meta is None:
             meta = self.facebook.meta(identifier=sender)
             if meta is None:
@@ -167,8 +168,8 @@ class Messenger(Transceiver, ConnectionDelegate):
                 #       (do it by application)
                 raise LookupError('failed to get meta for sender: %s' % sender)
         else:
-            # [Meta Protocol]
             # save meta for sender
+            meta = Meta(meta)
             if not self.facebook.save_meta(meta=meta, identifier=sender):
                 raise ValueError('save meta error: %s, %s' % (sender, meta))
         return super().verify_message(msg=msg)
@@ -414,6 +415,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         if self.save_message(msg=i_msg):
             return response
 
+    #
+    #   Message
+    #
     @abstractmethod
     def save_message(self, msg: InstantMessage) -> bool:
         """
@@ -421,16 +425,6 @@ class Messenger(Transceiver, ConnectionDelegate):
 
         :param msg: instant message
         :return: True on success
-        """
-        pass
-
-    @abstractmethod
-    def broadcast_message(self, msg: ReliableMessage) -> Optional[Content]:
-        """
-        Deliver message to everyone@everywhere, including all neighbours
-
-        :param msg: broadcast message
-        :return: receipt on success
         """
         pass
 
@@ -445,6 +439,15 @@ class Messenger(Transceiver, ConnectionDelegate):
         pass
 
     @abstractmethod
+    def broadcast_message(self, msg: ReliableMessage) -> Optional[Content]:
+        """
+        Deliver message to everyone@everywhere, including all neighbours
+
+        :param msg: broadcast message
+        :return: receipt on success
+        """
+        pass
+
     def forward_message(self, msg: ReliableMessage) -> Optional[Content]:
         """
         Re-pack and deliver (Top-Secret) message to the real receiver
@@ -452,7 +455,18 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param msg: top-secret message
         :return: receipt on success
         """
-        pass
+        user = self.current_user
+        assert user is not None, 'failed to get current user'
+        receiver = self.facebook.identifier(msg.envelope.receiver)
+        # repack the top-secret message
+        content = ForwardContent.new(message=msg)
+        i_msg = InstantMessage.new(content=content, sender=user.identifier, receiver=receiver)
+        # encrypt, sign & deliver it
+        s_msg = self.encrypt_message(msg=i_msg)
+        assert s_msg is not None, 'failed to encrypt message: %s' % i_msg
+        r_msg = self.sign_message(msg=s_msg)
+        assert r_msg is not None, 'failed to sign message: %s' % i_msg
+        return self.deliver_message(msg=r_msg)
 
 
 class MessageCallback(CompletionHandler):
