@@ -50,9 +50,9 @@ class ProfileCommandProcessor(CommandProcessor):
 
     def __get(self, identifier: ID) -> Content:
         # querying profile for ID
-        profile = self.facebook.profile(identifier=identifier)
+        profile: Profile = self.facebook.profile(identifier=identifier)
         # response
-        if profile is not None:
+        if profile is not None and profile.valid:
             return ProfileCommand.response(identifier=identifier, profile=profile)
         else:
             return TextContent.new(text='Sorry, profile for %s not found.' % identifier)
