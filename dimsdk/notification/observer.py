@@ -29,7 +29,7 @@
 # ==============================================================================
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional
+from typing import Optional, Any
 
 """
     Notification observer
@@ -41,7 +41,7 @@ from typing import Optional
 
 class Notification:
 
-    def __init__(self, name: str, sender: object, info: dict=None):
+    def __init__(self, name: str, sender: Any, info: dict=None):
         super().__init__()
         self.__name = name
         self.__sender = sender
@@ -52,7 +52,7 @@ class Notification:
         return self.__name
 
     @property
-    def sender(self) -> object:
+    def sender(self) -> Any:
         return self.__sender
 
     @property

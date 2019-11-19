@@ -39,7 +39,7 @@ import weakref
 from abc import abstractmethod
 from typing import Optional
 
-from dimp import SymmetricKey, ID, Meta, LocalUser
+from dimp import SymmetricKey, ID, Meta, User
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Content, ForwardContent, FileContent
 from dimp import GroupCommand, InviteCommand
@@ -117,13 +117,13 @@ class Messenger(Transceiver, ConnectionDelegate):
     #   Current user (for signing and sending message)
     #
     @property
-    def current_user(self) -> Optional[LocalUser]:
+    def current_user(self) -> Optional[User]:
         users = self.local_users
         if users is not None and len(users) > 0:
             return users[0]
 
     @current_user.setter
-    def current_user(self, value: LocalUser):
+    def current_user(self, value: User):
         users = self.local_users
         if users is None:
             # local_users not set

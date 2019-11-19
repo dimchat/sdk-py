@@ -37,14 +37,14 @@
 """
 
 from dimp import PublicKey
-from dimp import ID, User, LocalUser, Group
+from dimp import ID, User, Group
 
 from .certificate import CertificateAuthority
 
 
 class Station(User):
 
-    def __init__(self, identifier: ID, host: str, port: int=9394):
+    def __init__(self, identifier: ID, host: str='127.0.0.1', port: int=9394):
         super().__init__(identifier=identifier)
         self.host = host
         self.port = port
@@ -96,10 +96,6 @@ class Station(User):
             return self
         else:
             raise ValueError('Station ID error')
-
-
-class LocalStation(Station, LocalUser):
-    pass
 
 
 class ServiceProvider(Group):

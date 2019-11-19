@@ -28,27 +28,23 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .mars import NetMsgHead, NetMsg
+"""
+    Polylogue
+    ~~~~~~~~~
 
-from .session import Session, SessionServer
+    Simple group chat
+"""
 
-from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
-from .station import ServiceProvider, Station
+from dimp import ID, Group
 
-from .robot import Robot
 
-__all__ = [
+class Polylogue(Group):
 
-    # Data packing
-    'NetMsgHead', 'NetMsg',
-
-    # Session
-    'Session', 'SessionServer',
-
-    # CA
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
-
-    # Roles
-    'ServiceProvider', 'Station',
-    'Robot',
-]
+    @property
+    def owner(self) -> ID:
+        # polylogue's owner is founder
+        founder = super().owner
+        if founder is not None:
+            assert founder == self.founder
+            return founder
+        return self.founder

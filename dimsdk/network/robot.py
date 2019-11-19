@@ -28,27 +28,13 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .mars import NetMsgHead, NetMsg
+"""
+    Robot User
+    ~~~~~~~~~~
+"""
 
-from .session import Session, SessionServer
+from dimp import User
 
-from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
-from .station import ServiceProvider, Station
 
-from .robot import Robot
-
-__all__ = [
-
-    # Data packing
-    'NetMsgHead', 'NetMsg',
-
-    # Session
-    'Session', 'SessionServer',
-
-    # CA
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
-
-    # Roles
-    'ServiceProvider', 'Station',
-    'Robot',
-]
+class Robot(User):
+    pass

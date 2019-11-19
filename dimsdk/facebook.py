@@ -40,11 +40,15 @@ import weakref
 from abc import abstractmethod
 from typing import Optional
 
+from dimp import PrivateKey, SignKey
 from dimp import NetworkID, ID, Address
-from dimp import Meta, Profile, User, Group
-from dimp import Barrack, LocalUser, PrivateKey
+from dimp import User, Group
+from dimp import Meta, Profile
+from dimp import Barrack
 
 from .ans import AddressNameService
+from .network import ServiceProvider, Station, Robot
+from .group import Polylogue
 
 
 class Facebook(Barrack):
@@ -72,13 +76,17 @@ class Facebook(Barrack):
         else:
             self.__ans = weakref.ref(value)
 
+    def ans_get(self, name: str) -> ID:
+        ans = self.ans
+        if ans is not None:
+            return ans.identifier(name=name)
+
     #
     #   Meta
     #
     @staticmethod
     def verify_meta(meta: Meta, identifier: ID) -> bool:
-        if meta is None:
-            return False
+        assert meta is not None, 'meta should not be empty'
         return meta.match_identifier(identifier)
 
     def cache_meta(self, meta: Meta, identifier: ID) -> bool:
@@ -88,44 +96,62 @@ class Facebook(Barrack):
 
     @abstractmethod
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
-        if super().meta(identifier=identifier) is not None:
-            # meta already exists, no need to update again
-            return True
-        if not self.cache_meta(meta=meta, identifier=identifier):
-            return False
-        # return True to let subclass save meta into local storage
-        return True
+        """ Save meta into local storage """
+        raise NotImplemented
 
     @abstractmethod
     def load_meta(self, identifier: ID) -> Optional[Meta]:
-        # return None to let subclass load meta from local storage
-        return super().meta(identifier=identifier)
+        """ Load meta from local storage """
+        raise NotImplemented
 
     #
     #   Profile
     #
     def verify_profile(self, profile: Profile, identifier: ID=None) -> bool:
-        if profile is None:
-            return False
+        assert profile is not None, 'profile should not be empty'
         if identifier is not None and profile.identifier != identifier:
             # profile ID not match
             return False
-        if profile.valid:
-            # already verified
-            return True
         if identifier is None:
             identifier = self.identifier(profile.identifier)
-        # try to verify the profile
-        if identifier.type.is_user() or identifier.type.value == NetworkID.Polylogue:
-            # if this is a user profile,
-            #     verify it with the user's meta.key
-            # else if this is a polylogue profile,
-            #     verify it with the founder's meta.key (which equals to the group's meta.key)
-            meta = self.meta(identifier=identifier)
-            if meta is not None:
-                return profile.verify(public_key=meta.key)
+            assert identifier is not None, 'profile error: %s ' % profile
+        # NOTICE: if this is a user profile,
+        #             verify it with the user's meta.key
+        #         else if this is a polylogue profile,
+        #             verify it with the founder's meta.key
+        #             (which equals to the group's meta.key)
+        if identifier.type.is_group():
+            # polylogue
+            if identifier.type == NetworkID.Polylogue:
+                meta = self.meta(identifier=identifier)
+                if meta is not None and profile.verify(public_key=meta.key):
+                    return True
+            # check by each member
+            members = self.members(identifier=identifier)
+            if members is None or len(members) == 0:
+                raise LookupError('members not found: %s' % identifier)
+            for item in members:
+                meta = self.meta(identifier=item)
+                if meta is None:
+                    # FIXME: meta not found for this member
+                    continue
+                if profile.verify(public_key=meta.key):
+                    return True
+            # TODO: what to do about assistants?
+
+            # check by owner
+            owner = self.owner(identifier=identifier)
+            if owner is None:
+                raise LookupError('owner not found: %s' % identifier)
+            if owner in members:
+                # already checked
+                return False
+            meta = self.meta(identifier=owner)
         else:
-            raise NotImplementedError('unsupported profile ID: %s' % profile)
+            assert identifier.type.is_user(), 'profile ID error: %s' % identifier
+            meta = self.meta(identifier=identifier)
+        if meta is not None:
+            return profile.verify(public_key=meta.key)
 
     def cache_profile(self, profile: Profile, identifier: ID=None) -> bool:
         if profile is None:
@@ -141,15 +167,13 @@ class Facebook(Barrack):
 
     @abstractmethod
     def save_profile(self, profile: Profile, identifier: ID=None) -> bool:
-        if not self.cache_profile(profile=profile, identifier=identifier):
-            return False
-        # return True to let subclass save profile into database
-        return True
+        """ Save profile into database """
+        raise NotImplemented
 
     @abstractmethod
     def load_profile(self, identifier: ID) -> Optional[Profile]:
-        # return None to let subclass load profile from database
-        pass
+        """ Load profile from database """
+        raise NotImplemented
 
     #
     #   Private keys
@@ -164,15 +188,13 @@ class Facebook(Barrack):
 
     @abstractmethod
     def save_private_key(self, key: PrivateKey, identifier: ID) -> bool:
-        if not self.cache_private_key(key=key, identifier=identifier):
-            return False
-        # return True to let subclass save private key into secret storage
-        return True
+        """ Save private key into safety storage """
+        raise NotImplemented
 
     @abstractmethod
     def load_private_key(self, identifier: ID) -> Optional[PrivateKey]:
-        # return None to let subclass load private key from secret storage
-        pass
+        """ Load private key from safety storage """
+        raise NotImplemented
 
     #
     #   Contacts
@@ -187,15 +209,13 @@ class Facebook(Barrack):
 
     @abstractmethod
     def save_contacts(self, contacts: list, identifier: ID) -> bool:
-        if not self.cache_contacts(contacts=contacts, identifier=identifier):
-            return False
-        # return True to let subclass save contacts into database
-        return True
+        """ Save contacts into database """
+        raise NotImplemented
 
     @abstractmethod
     def load_contacts(self, identifier: ID) -> Optional[list]:
-        # return None to let subclass load contacts from database
-        pass
+        """ Load contacts from database """
+        raise NotImplemented
 
     #
     #   Members
@@ -210,15 +230,13 @@ class Facebook(Barrack):
 
     @abstractmethod
     def save_members(self, members: list, identifier: ID) -> bool:
-        if not self.cache_members(members=members, identifier=identifier):
-            return False
-        # return True to let subclass save members into database
-        return True
+        """ Save members into database """
+        raise NotImplemented
 
     @abstractmethod
     def load_members(self, identifier: ID) -> Optional[list]:
-        # return None to let subclass load members from database
-        pass
+        """ Load members from database """
+        raise NotImplemented
 
     def __identifier(self, address: Address) -> Optional[ID]:
         """ generate ID from meta with address """
@@ -234,64 +252,50 @@ class Facebook(Barrack):
         self.cache_id(identifier)
         return identifier
 
-    #
-    #   SocialNetworkDataSource
-    #
-    def identifier(self, string: str) -> Optional[ID]:
-        if string is None:
-            return None
+    def create_identifier(self, string: str) -> ID:
         if isinstance(string, Address):
-            # get ID with address
+            # convert Address to ID
             return self.__identifier(address=string)
-        if isinstance(string, ID):
-            # return ID object directly
-            return string
-        # check ANS
-        if self.ans is not None:
-            # try from ANS record
-            identifier = self.ans.identifier(name=string)
-            if identifier is not None:
-                return identifier
-        # get from barrack
-        return super().identifier(string=string)
+        # try from ANS record
+        identifier = self.ans_get(name=string)
+        if identifier is not None:
+            return identifier
+        # create by barrack
+        return super().create_identifier(string=string)
 
-    def user(self, identifier: ID) -> Optional[User]:
-        #  get from barrack cache
-        user = super().user(identifier=identifier)
-        if user is not None:
-            return user
-        # check meta and private key
-        meta = self.meta(identifier=identifier)
-        if meta is None:
-            raise LookupError('meta not found: %s' % identifier)
-        if identifier.type.is_person():
-            private_key = self.private_key_for_signature(identifier=identifier)
-            if private_key is None:
-                user = User(identifier=identifier)
-            else:
-                user = LocalUser(identifier=identifier)
-        else:
-            raise NotImplementedError('unsupported user type: %s' % identifier)
-        # cache it in barrack
-        self.cache_user(user=user)
-        return user
+    def create_user(self, identifier: ID) -> User:
+        assert identifier.type.is_user(), 'user ID error: %s' % identifier
+        if identifier.is_broadcast:
+            # create user 'anyone@anywhere'
+            return User(identifier=identifier)
+        # make sure meta exists
+        assert self.meta(identifier) is not None, 'failed to get meta for user: %s' % identifier
+        # TODO: check user type
+        u_type = identifier.type
+        if u_type.is_person():
+            return User(identifier=identifier)
+        if u_type.is_robot():
+            return Robot(identifier=identifier)
+        if u_type.is_station():
+            return Station(identifier=identifier)
+        raise TypeError('unsupported user type: %s' % u_type)
 
-    def group(self, identifier: ID) -> Optional[Group]:
-        # get from barrack cache
-        group = super().group(identifier=identifier)
-        if group is not None:
-            return group
-        # check meta
-        meta = self.meta(identifier=identifier)
-        if meta is None:
-            raise LookupError('meta not found: %s' % identifier)
-        if identifier.type == NetworkID.Polylogue:
-            group = Group(identifier=identifier)
-        else:
-            raise NotImplementedError('unsupported group type: %s' % identifier)
-        # cache it in barrack
-        self.cache_group(group=group)
-        return group
+    def create_group(self, identifier: ID) -> Group:
+        assert identifier.type.is_group(), 'group ID error: %s' % identifier
+        if identifier.is_broadcast:
+            # create group 'everyone@everywhere'
+            return Group(identifier=identifier)
+        # make sure meta exists
+        assert self.meta(identifier) is not None, 'failed to get meta for group: %s' % identifier
+        # TODO: check group type
+        g_type = identifier.type
+        if g_type == NetworkID.Polylogue:
+            return Polylogue(identifier=identifier)
+        if g_type == NetworkID.Chatroom:
+            raise NotImplementedError('Chatroom not implemented')
+        if g_type.is_provider():
+            return ServiceProvider(identifier=identifier)
+        raise TypeError('unsupported group type: %s' % g_type)
 
     #
     #   EntityDataSource
@@ -308,10 +312,7 @@ class Facebook(Barrack):
         return info
 
     def profile(self, identifier: ID) -> Optional[Profile]:
-        info = super().profile(identifier=identifier)
-        if info is None:
-            # get from cache
-            info = self.__profiles.get(identifier)
+        info = self.__profiles.get(identifier)
         if info is not None:
             # check expired time
             timestamp = time.time() + self.EXPIRES
@@ -333,11 +334,19 @@ class Facebook(Barrack):
     #
     #   UserDataSource
     #
-    def private_key_for_signature(self, identifier: ID) -> Optional[PrivateKey]:
-        key = super().private_key_for_signature(identifier=identifier)
-        if key is None:
-            # get from cache
-            key = self.__private_keys.get(identifier)
+    def contacts(self, identifier: ID) -> Optional[list]:
+        array = self.__contacts.get(identifier)
+        if array is not None:
+            return array
+        # load from local storage
+        array = self.load_contacts(identifier=identifier)
+        if array is None:
+            return None
+        self.cache_contacts(contacts=array, identifier=identifier)
+        return array
+
+    def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
+        key = self.__private_keys.get(identifier)
         if key is not None:
             return key
         # load from local storage
@@ -348,28 +357,11 @@ class Facebook(Barrack):
         return key
 
     def private_keys_for_decryption(self, identifier: ID) -> Optional[list]:
-        keys = super().private_keys_for_decryption(identifier=identifier)
-        if keys is None:
-            # DIMP v1.0:
-            #     decrypt key not found, use the same with sign key?
-            key = self.private_key_for_signature(identifier)
-            if key is not None:
-                keys = [key]
-        return keys
-
-    def contacts(self, identifier: ID) -> Optional[list]:
-        array = super().contacts(identifier=identifier)
-        if array is None:
-            # get from cache
-            array = self.__contacts.get(identifier)
-        if array is not None:
-            return array
-        # load from local storage
-        array = self.load_contacts(identifier=identifier)
-        if array is None:
-            return None
-        self.cache_contacts(contacts=array, identifier=identifier)
-        return array
+        # DIMP v1.0:
+        #     decrypt key not found, use the same with sign key?
+        key = self.private_key_for_signature(identifier)
+        if key is not None:
+            return [key]
 
     #
     #   GroupDataSource
@@ -390,14 +382,17 @@ class Facebook(Barrack):
                     if m is not None and meta.match_public_key(m.key):
                         # got it
                         return item
+        # TODO: load founder from database
 
     def owner(self, identifier: ID) -> ID:
         uid = super().owner(identifier=identifier)
         if uid is not None:
             return uid
+        # check group type
         if identifier.type == NetworkID.Polylogue:
             # Polylogue's owner is its founder
             return self.founder(identifier=identifier)
+        # TODO: load owner from database
 
     def members(self, identifier: ID) -> Optional[list]:
         array = super().members(identifier=identifier)
@@ -416,32 +411,33 @@ class Facebook(Barrack):
     def is_founder(self, member: ID, group: ID) -> bool:
         # check member's public key with group's meta.key
         g_meta = self.meta(identifier=group)
-        if g_meta is not None:
-            m_meta = self.meta(identifier=member)
-            if m_meta is not None:
-                return g_meta.match_public_key(m_meta.key)
+        if g_meta is None:
+            raise LookupError('failed to get meta for group: %s' % group)
+        m_meta = self.meta(identifier=member)
+        if m_meta is None:
+            raise LookupError('failed to get meta for member: %s' % member)
+        return g_meta.match_public_key(m_meta.key)
 
     def is_owner(self, member: ID, group: ID) -> bool:
         if group.type == NetworkID.Polylogue:
             return self.is_founder(member=member, group=group)
 
     def exists_member(self, member: ID, group: ID) -> bool:
-        owner = self.owner(identifier=group)
-        if owner is not None and owner == member:
-            return True
         members = self.members(identifier=group)
-        if members is not None:
-            return member in members
+        if member in members:
+            return True
+        owner = self.owner(identifier=group)
+        if member == owner:
+            return True
 
     #
     #   Group Assistants
     #
     def assistants(self, identifier: ID) -> Optional[list]:
         assert identifier.type.is_group(), 'Group ID error: %s' % identifier
-        if self.ans is not None:
-            identifier = self.ans.identifier(name='assistant')
-            if identifier is not None:
-                return [identifier]
+        identifier = self.ans_get(name='assistant')
+        if identifier is not None:
+            return [identifier]
 
     def exists_assistant(self, member: ID, group: ID) -> bool:
         assistants = self.assistants(identifier=group)

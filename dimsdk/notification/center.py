@@ -36,6 +36,7 @@
     Notification dispatcher
 """
 
+from typing import Any
 from weakref import WeakSet
 
 from .observer import Notification, Observer
@@ -94,7 +95,7 @@ class NotificationCenter:
             self.__remove(observer=observer, name=name)
 
     def post(self, notification: Notification=None,
-             name: str=None, sender: object=None, info: dict=None):
+             name: str=None, sender: Any=None, info: dict=None):
         """
         Post a notification (with name, sender and extra info)
 

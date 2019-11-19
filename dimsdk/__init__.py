@@ -36,9 +36,11 @@ from .notification import ApplePushNotificationService
 from .nlp import Dialog, ChatBot, Tuling, XiaoI
 
 from .network import NetMsgHead, NetMsg
-from .network import CASubject, CAValidity, CAData, CertificateAuthority
-from .network import ServiceProvider, Station
 from .network import Session, SessionServer
+from .network import CASubject, CAValidity, CAData, CertificateAuthority
+from .network import ServiceProvider, Station, Robot
+
+from .group import Polylogue
 
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
@@ -67,11 +69,12 @@ __all__ = [
     #
 
     # crypto
+    'SignKey', 'VerifyKey', 'EncryptKey', 'DecryptKey',
     'SymmetricKey', 'PrivateKey', 'PublicKey',
 
     # entity
     'NetworkID', 'Address', 'ID', 'Meta', 'Profile',
-    'Entity', 'User', 'LocalUser', 'Group',
+    'Entity', 'User', 'Group',
 
     # delegate
     'EntityDataSource', 'UserDataSource', 'GroupDataSource',
@@ -124,9 +127,12 @@ __all__ = [
 
     # network
     'NetMsgHead', 'NetMsg',
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
-    'ServiceProvider', 'Station',
     'Session', 'SessionServer',
+    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
+    'ServiceProvider', 'Station', 'Robot',
+
+    # group
+    'Polylogue',
 
     # protocol
     'ReceiptCommand',
