@@ -89,7 +89,7 @@ class ContentProcessor:
         if clazz is None:
             # processor not defined, use default
             clazz = cls.__content_processor_classes[DefaultContentType]
-        assert issubclass(clazz, ContentProcessor), 'error: %d, %s' % (content_type, clazz)
+        assert issubclass(clazz, ContentProcessor), 'error: %s, %s' % (content_type, clazz)
         return clazz
 
     def cpu(self, content_type: ContentType):
@@ -97,7 +97,7 @@ class ContentProcessor:
         if processor is None:
             # try to create new processor with content type
             clazz = self.cpu_class(content_type=content_type)
-            assert clazz is not None, 'failed to get content processor class: %d' % content_type
+            assert clazz is not None, 'failed to get content processor class: %s' % content_type
             processor = self._create_processor(clazz)
             self.__content_processors[content_type] = processor
         return processor
@@ -122,7 +122,12 @@ class _DefaultContentProcessor(ContentProcessor):
     #   main
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
-        return TextContent.new(text='Content (type: %d) not support yet!' % content.type)
+        res = TextContent.new(text='Content (type: %s) not support yet!' % content.type)
+        # check group message
+        group = content.group
+        if group is not None:
+            res.group = group
+        return res
 
 
 # register

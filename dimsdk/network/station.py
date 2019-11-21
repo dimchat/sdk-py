@@ -57,7 +57,7 @@ class Station(User):
         name = self.name
         host = self.host
         port = self.port
-        return '<%s: %s(%d|%d) "%s" host="%s" port=%d />' % (clazz, identifier, network, number, name, host, port)
+        return '<%s: %s(%s|%d) "%s" host="%s" port=%d />' % (clazz, identifier, network, number, name, host, port)
 
     @classmethod
     def new(cls, station: dict):
