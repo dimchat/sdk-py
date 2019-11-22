@@ -57,6 +57,7 @@ from .ans import AddressNameService
 from .facebook import Facebook
 from .keystore import KeyStore
 from .messenger import Messenger
+from .processor import MessageProcessor
 
 name = 'DIM-SDK'
 
@@ -149,4 +150,5 @@ __all__ = [
     'Callback', 'CompletionHandler', 'MessengerDelegate', 'ConnectionDelegate',
 
     'AddressNameService', 'Facebook', 'KeyStore', 'Messenger',
+    'MessageProcessor',
 ]
