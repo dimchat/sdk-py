@@ -31,8 +31,10 @@
 from .receipt import ReceiptCommand
 from .block import BlockCommand
 from .mute import MuteCommand
+from .storage import StorageCommand
 
 __all__ = [
     'ReceiptCommand',
     'BlockCommand', 'MuteCommand',
+    'StorageCommand',
 ]

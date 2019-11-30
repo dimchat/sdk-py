@@ -44,6 +44,7 @@ from .group import Polylogue
 
 from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
+from .protocol import StorageCommand
 
 from .cpu import ContentProcessor
 from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
@@ -138,6 +139,7 @@ __all__ = [
     # protocol
     'ReceiptCommand',
     'BlockCommand', 'MuteCommand',
+    'StorageCommand',
 
     # cpu
     'ContentProcessor', 'CommandProcessor',
