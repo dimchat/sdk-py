@@ -58,13 +58,18 @@ class QueryCommandProcessor(GroupCommandProcessor):
         if not self.facebook.exists_member(member=sender, group=group):
             if not self.facebook.exists_assistant(member=sender, group=group):
                 raise AssertionError('only member/assistant can query: %s' % msg)
-        # 2. response group members for sender
+        # 2. get group members
         members = self.facebook.members(identifier=group)
         if members is None or len(members) == 0:
             text = 'Group members not found: %s' % group
             return TextContent.new(text=text)
-        else:
+        # 3. response group members for sender
+        user = self.messenger.current_user
+        assert user is not None, 'current user not set'
+        if self.facebook.is_owner(member=user.identifier, group=group):
             return GroupCommand.reset(group=group, members=members)
+        else:
+            return GroupCommand.invite(group=group, members=members)
 
 
 # register
