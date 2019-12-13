@@ -63,7 +63,7 @@ class QueryCommandProcessor(GroupCommandProcessor):
         if members is None or len(members) == 0:
             text = 'Group members not found: %s' % group
             return TextContent.new(text=text)
-        # 3. response group members for sender
+        # 3. respond group members for sender
         user = self.messenger.current_user
         assert user is not None, 'current user not set'
         if self.facebook.is_owner(member=user.identifier, group=group):

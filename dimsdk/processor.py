@@ -37,21 +37,29 @@ import weakref
 from typing import Optional
 
 from dimp import ID
-from dimp import InstantMessage, ReliableMessage
+from dimp import ReliableMessage
 from dimp import Content, ForwardContent
 from dimp import GroupCommand, InviteCommand
 
 from .cpu import ContentProcessor
-from .delegate import ConnectionDelegate
 from .facebook import Facebook
 
 
-class MessageProcessor(ConnectionDelegate):
+class MessageProcessor():
 
     def __init__(self, messenger):
         super().__init__()
         self.__messenger = weakref.ref(messenger)
         self.__cpu: ContentProcessor = None
+
+    #
+    #   Content Processing Units
+    #
+    @property
+    def cpu(self) -> ContentProcessor:
+        if self.__cpu is None:
+            self.__cpu = ContentProcessor(messenger=self.messenger)
+        return self.__cpu
 
     @property
     def messenger(self):  # Messenger
@@ -60,14 +68,6 @@ class MessageProcessor(ConnectionDelegate):
     @property
     def facebook(self) -> Facebook:
         return self.messenger.facebook
-
-    #
-    #   Content Processing Units
-    #
-    def cpu(self) -> ContentProcessor:
-        if self.__cpu is None:
-            self.__cpu = ContentProcessor(messenger=self.messenger)
-        return self.__cpu
 
     def __is_empty(self, group: ID) -> bool:
         """
@@ -102,7 +102,8 @@ class MessageProcessor(ConnectionDelegate):
             # NOTICE: if meta for group not found,
             #         facebook should query it from DIM network automatically
             # TODO: insert the message to a temporary queue to wait meta
-            raise LookupError('group meta not found: %s' % group)
+            # raise LookupError('group meta not found: %s' % group)
+            return True
         # NOTICE: if the group info not found, and this is not an 'invite' command
         #         query group info from the sender
         needs_update = self.__is_empty(group=group)
@@ -117,7 +118,7 @@ class MessageProcessor(ConnectionDelegate):
             query = GroupCommand.query(group=group)
             return self.messenger.send_content(content=query, receiver=sender)
 
-    def __process_message(self, msg: ReliableMessage) -> Optional[Content]:
+    def process_message(self, msg: ReliableMessage) -> Optional[Content]:
         messenger = self.messenger
         # verify
         s_msg = messenger.verify_message(msg=msg)
@@ -150,36 +151,11 @@ class MessageProcessor(ConnectionDelegate):
         #
         sender = self.facebook.identifier(msg.envelope.sender)
         if self.__check_group(content=content, sender=sender):
-            pass
+            # TODO: save this message in a queue to wait meta response
+            return None
         #
         #  5. process
         #
-        response = self.cpu().process(content=content, sender=sender, msg=i_msg)
+        response = self.cpu.process(content=content, sender=sender, msg=i_msg)
         if messenger.save_message(msg=i_msg):
             return response
-
-    #
-    #   ConnectionDelegate
-    #
-    def received_package(self, data: bytes) -> Optional[bytes]:
-        """
-        Processing received message package
-
-        :param data: message data
-        :return: response message data
-        """
-        messenger = self.messenger
-        r_msg = messenger.deserialize_message(data=data)
-        response = self.__process_message(msg=r_msg)
-        if response is None:
-            # nothing to response
-            return None
-        # response to the sender
-        user = messenger.current_user
-        assert user is not None, 'failed to get current user'
-        sender = self.facebook.identifier(r_msg.envelope.sender)
-        i_msg = InstantMessage.new(content=response, sender=user.identifier, receiver=sender)
-        s_msg = messenger.encrypt_message(msg=i_msg)
-        msg_r = messenger.sign_message(msg=s_msg)
-        assert msg_r is not None, 'failed to response: %s' % i_msg
-        return messenger.serialize_message(msg=msg_r)

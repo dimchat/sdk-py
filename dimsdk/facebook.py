@@ -115,38 +115,39 @@ class Facebook(Barrack):
         if identifier is None:
             identifier = self.identifier(profile.identifier)
             assert identifier is not None, 'profile error: %s ' % profile
-        # NOTICE: if this is a user profile,
+        # NOTICE: if this is a group profile,
+        #             verify it with each member's meta.key
+        #         else (this is a user profile)
         #             verify it with the user's meta.key
-        #         else if this is a polylogue profile,
-        #             verify it with the founder's meta.key
-        #             (which equals to the group's meta.key)
         if identifier.type.is_group():
-            # polylogue
-            if identifier.type == NetworkID.Polylogue:
-                meta = self.meta(identifier=identifier)
-                if meta is not None and profile.verify(public_key=meta.key):
-                    return True
             # check by each member
             members = self.members(identifier=identifier)
-            if members is None or len(members) == 0:
-                raise LookupError('members not found: %s' % identifier)
-            for item in members:
-                meta = self.meta(identifier=item)
-                if meta is None:
-                    # FIXME: meta not found for this member
-                    continue
-                if profile.verify(public_key=meta.key):
-                    return True
-            # TODO: what to do about assistants?
+            if members is not None:
+                for item in members:
+                    meta = self.meta(identifier=item)
+                    if meta is None:
+                        # FIXME: meta not found for this member
+                        continue
+                    if profile.verify(public_key=meta.key):
+                        return True
+            # DISCUSS: what to do about assistants?
 
             # check by owner
             owner = self.owner(identifier=identifier)
             if owner is None:
-                raise LookupError('owner not found: %s' % identifier)
-            if owner in members:
+                if identifier.type == NetworkID.Polylogue:
+                    # NOTICE: if this is a polylogue profile
+                    #             verify it with the founder's meta.key
+                    #             (which equals to the group's meta.key)
+                    meta = self.meta(identifier=identifier)
+                else:
+                    # FIXME: owner not found for this group
+                    return False
+            elif owner in members:
                 # already checked
                 return False
-            meta = self.meta(identifier=owner)
+            else:
+                meta = self.meta(identifier=owner)
         else:
             assert identifier.type.is_user(), 'profile ID error: %s' % identifier
             meta = self.meta(identifier=identifier)
@@ -238,6 +239,22 @@ class Facebook(Barrack):
         """ Load members from database """
         raise NotImplemented
 
+    #
+    #   All local users (for decrypting received message)
+    #
+    @property
+    def local_users(self) -> Optional[list]:
+        raise NotImplemented
+
+    #
+    #   Current user (for signing and sending message)
+    #
+    @property
+    def current_user(self) -> Optional[User]:
+        users = self.local_users
+        if users is not None and len(users) > 0:
+            return users[0]
+
     def __identifier(self, address: Address) -> Optional[ID]:
         """ generate ID from meta with address """
         identifier = ID.new(address=address)
@@ -248,7 +265,7 @@ class Facebook(Barrack):
         seed = meta.seed
         if seed is None or len(seed) == 0:
             return identifier
-        identifier = ID.new(name=seed, address=address)
+        identifier = meta.generate_identifier(address.network)
         self.cache_id(identifier)
         return identifier
 
@@ -308,18 +325,21 @@ class Facebook(Barrack):
         info = self.load_meta(identifier=identifier)
         if info is None:
             return None
-        self.cache_meta(meta=info, identifier=identifier)
+        # no need to verify meta from local storage
+        super().cache_meta(meta=info, identifier=identifier)
         return info
+
+    EXPIRES_KEY = 'expires'
 
     def profile(self, identifier: ID) -> Optional[Profile]:
         info = self.__profiles.get(identifier)
         if info is not None:
             # check expired time
             timestamp = time.time() + self.EXPIRES
-            expires = info.get('expires')
+            expires = info.get(self.EXPIRES_KEY)
             if expires is None:
                 # set expired time
-                info['expires'] = timestamp
+                info[self.EXPIRES_KEY] = timestamp
                 return info
             elif expires < timestamp:
                 # not expired yet
@@ -327,8 +347,11 @@ class Facebook(Barrack):
         # load from local storage
         info = self.load_profile(identifier=identifier)
         if info is None:
-            return None
-        self.cache_profile(profile=info, identifier=identifier)
+            info = Profile.new(identifier=identifier)
+        else:
+            info.pop(self.EXPIRES_KEY, None)
+        # no need to verify profile from local storage
+        self.__profiles[identifier] = info
         return info
 
     #
@@ -361,6 +384,8 @@ class Facebook(Barrack):
         #     decrypt key not found, use the same with sign key?
         key = self.private_key_for_signature(identifier)
         if key is not None:
+            # TODO: support profile.key
+            # assert isinstance(key, DecryptKey)
             return [key]
 
     #
@@ -421,6 +446,8 @@ class Facebook(Barrack):
     def is_owner(self, member: ID, group: ID) -> bool:
         if group.type == NetworkID.Polylogue:
             return self.is_founder(member=member, group=group)
+        else:
+            raise NotImplementedError('only Polylogue so far')
 
     def exists_member(self, member: ID, group: ID) -> bool:
         members = self.members(identifier=group)

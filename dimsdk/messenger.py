@@ -41,9 +41,10 @@ from typing import Optional
 
 from dimp import SymmetricKey, ID, Meta, User
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import Content, ForwardContent, FileContent
+from dimp import Content, ForwardContent, FileContent, TextContent
 from dimp import Transceiver
 
+from .protocol import ReceiptCommand
 from .delegate import Callback, CompletionHandler
 from .delegate import MessengerDelegate, ConnectionDelegate
 from .facebook import Facebook
@@ -106,51 +107,8 @@ class Messenger(Transceiver, ConnectionDelegate):
             assert isinstance(barrack, Facebook), 'messenger delegate error: %s' % barrack
         return barrack
 
-    #
-    #   All local users (for decrypting received message)
-    #
-    @property
-    def local_users(self) -> Optional[list]:
-        return self.get_context('local_users')
-
-    @local_users.setter
-    def local_users(self, value: Optional[list]):
-        self.set_context('local_users', value)
-
-    #
-    #   Current user (for signing and sending message)
-    #
-    @property
-    def current_user(self) -> Optional[User]:
-        users = self.local_users
-        if users is not None and len(users) > 0:
-            return users[0]
-
-    @current_user.setter
-    def current_user(self, value: User):
-        users = self.local_users
-        if users is None:
-            # local_users not set
-            self.set_context('local_users', [value])
-            return
-        elif len(users) == 0:
-            # local_users empty
-            users.append(value)
-            return
-        # search all users
-        for index, item in enumerate(users):
-            if item == value:
-                # got it
-                if index > 0:
-                    # move this user to the front
-                    users.pop(index)
-                    users.insert(0, value)
-                return
-        # user not exists, insert into the front
-        users.insert(0, value)
-
     def __select(self, receiver: ID) -> Optional[User]:
-        users = self.local_users
+        users = self.facebook.local_users
         if users is None or len(users) == 0:
             raise LookupError('current user should not be empty')
         elif receiver.is_broadcast:
@@ -167,6 +125,8 @@ class Messenger(Transceiver, ConnectionDelegate):
                     # set this item to be current user?
                     return item
         else:
+            # 1. personal message
+            # 2. split group message
             assert receiver.type.is_user(), 'receiver ID error: %s' % receiver
             for item in users:
                 if item.identifier == receiver:
@@ -184,31 +144,22 @@ class Messenger(Transceiver, ConnectionDelegate):
             msg = msg.trim(member=user.identifier)
         return msg
 
-    @abstractmethod
-    def query_meta(self, identifier: ID) -> bool:
-        """
-        Interface for client to query meta on station, or the station query on other station
-
-        :param identifier: entity ID
-        :return: True on success
-        """
-        pass
-
     #
     #  Transform
     #
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         # NOTICE: check meta before calling me
         sender = self.facebook.identifier(msg.envelope.sender)
-        # [Meta Protocol]
         meta = msg.meta
         if meta is None:
             meta = self.facebook.meta(identifier=sender)
             if meta is None:
-                self.query_meta(identifier=sender)
+                # NOTICE: the application will query meta automatically
                 # TODO: save this message in a queue to wait meta response
-                raise LookupError('failed to get meta for sender: %s' % sender)
+                # raise LookupError('failed to get meta for sender: %s' % sender)
+                return None
         else:
+            # [Meta Protocol]
             # save meta for sender
             meta = Meta(meta)
             if not self.facebook.save_meta(meta=meta, identifier=sender):
@@ -256,6 +207,9 @@ class Messenger(Transceiver, ConnectionDelegate):
                 #         it means you are asked to re-pack and forward this message
         return i_msg
 
+    #
+    #   InstantMessageDelegate
+    #
     def encrypt_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
         password = SymmetricKey(key=key)
         assert password == key, 'irregular symmetric key: %s' % key
@@ -268,6 +222,29 @@ class Messenger(Transceiver, ConnectionDelegate):
                 content.url = url
                 content.data = None
         return super().encrypt_content(content=content, key=password, msg=msg)
+
+    def encrypt_key(self, key: dict, receiver: str, msg: InstantMessage) -> Optional[bytes]:
+        to = self.facebook.identifier(receiver)
+        pk = self.facebook.public_key_for_encryption(identifier=to)
+        if pk is None:
+            meta = self.facebook.meta(identifier=to)
+            if meta is None:
+                # TODO: save this message in a queue waiting meta response
+                # raise LookupError('failed to get encrypt key for receiver: %s' % receiver)
+                return None
+        return super().encrypt_key(key=key, receiver=receiver, msg=msg)
+
+    #
+    #   SecureMessageDelegate
+    #
+    def decrypt_key(self, key: bytes, sender: str, receiver: str, msg: SecureMessage) -> Optional[dict]:
+        if key is not None:
+            to = self.facebook.identifier(msg.envelope.receiver)
+            keys = self.facebook.private_keys_for_decryption(identifier=to)
+            if keys is None or len(keys) == 0:
+                # FIXME: private key lost?
+                raise LookupError('failed to get decrypt keys for receiver: %s' % to)
+        return super().decrypt_key(key=key, sender=sender, receiver=receiver, msg=msg)
 
     def decrypt_content(self, data: bytes, key: dict, msg: SecureMessage) -> Optional[Content]:
         password = SymmetricKey(key=key)
@@ -302,7 +279,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param split:    if it's a group message, split it before sending out
         :return: True on success
         """
-        user = self.current_user
+        user = self.facebook.current_user
         assert user is not None, 'failed to get current user'
         i_msg = InstantMessage.new(content=content, sender=user.identifier, receiver=receiver)
         return self.send_message(msg=i_msg, callback=callback, split=split)
@@ -343,8 +320,8 @@ class Messenger(Transceiver, ConnectionDelegate):
         return ok
 
     def __send_message(self, msg: ReliableMessage, callback: Callback) -> bool:
-        data = self.serialize_message(msg=msg)
         handler = MessageCallback(msg=msg, cb=callback)
+        data = self.serialize_message(msg=msg)
         return self.delegate.send_package(data=data, handler=handler)
 
     #
@@ -357,18 +334,12 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param msg: top-secret message
         :return: receipt on success
         """
-        user = self.current_user
-        assert user is not None, 'failed to get current user'
         receiver = self.facebook.identifier(msg.envelope.receiver)
-        # repack the top-secret message
-        content = ForwardContent.new(message=msg)
-        i_msg = InstantMessage.new(content=content, sender=user.identifier, receiver=receiver)
-        # encrypt, sign & deliver it
-        s_msg = self.encrypt_message(msg=i_msg)
-        assert s_msg is not None, 'failed to encrypt message: %s' % i_msg
-        r_msg = self.sign_message(msg=s_msg)
-        assert r_msg is not None, 'failed to sign message: %s' % i_msg
-        return self.deliver_message(msg=r_msg)
+        secret = ForwardContent.new(message=msg)
+        if self.send_content(content=secret, receiver=receiver):
+            return ReceiptCommand.new(message='message forwarded')
+        else:
+            return TextContent.new(text='Sorry, failed to forward your message')
 
     @abstractmethod
     def broadcast_message(self, msg: ReliableMessage) -> Optional[Content]:
@@ -378,6 +349,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param msg: broadcast message
         :return: receipt on success
         """
+        # NOTICE: this function is for Station
+        #         if the receiver is a grouped broadcast ID,
+        #         split and deliver to everyone
         pass
 
     @abstractmethod
@@ -388,6 +362,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param msg: reliable message
         :return: receipt on success
         """
+        # NOTICE: this function is for Station
+        #         if the station cannot decrypt this message,
+        #         it means you should deliver it to the receiver
         pass
 
     @abstractmethod
@@ -398,14 +375,39 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param msg: instant message
         :return: True on success
         """
-        pass
+        raise NotImplemented
 
     #
     #   ConnectionDelegate
     #
     def received_package(self, data: bytes) -> Optional[bytes]:
-        # call message processor to do the job
-        return self.processor.received_package(data=data)
+        """
+        Processing received message package
+
+        :param data: message data
+        :return: response message data
+        """
+        # 1. deserialize message
+        r_msg = self.deserialize_message(data=data)
+        # 2. process message
+        response = self.process_message(msg=r_msg)
+        if response is None:
+            # nothing to response
+            return None
+        # 3. pack response
+        user = self.facebook.current_user
+        assert user is not None, 'failed to get current user'
+        sender = self.facebook.identifier(r_msg.envelope.sender)
+        i_msg = InstantMessage.new(content=response, sender=user.identifier, receiver=sender)
+        s_msg = self.encrypt_message(msg=i_msg)
+        msg_r = self.sign_message(msg=s_msg)
+        assert msg_r is not None, 'failed to response: %s' % i_msg
+        # serialize message
+        return self.serialize_message(msg=msg_r)
+
+    def process_message(self, msg: ReliableMessage) -> Content:
+        # NOTICE: if you want to filter the response, override me
+        return self.processor.process_message(msg=msg)
 
 
 class MessageCallback(CompletionHandler):
