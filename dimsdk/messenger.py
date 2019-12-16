@@ -40,7 +40,7 @@ from abc import abstractmethod
 from typing import Optional
 
 from dimp import SymmetricKey, ID, Meta, User
-from dimp import InstantMessage, SecureMessage, ReliableMessage
+from dimp import Message, InstantMessage, SecureMessage, ReliableMessage
 from dimp import Content, ForwardContent, FileContent, TextContent
 from dimp import Transceiver
 
@@ -155,7 +155,8 @@ class Messenger(Transceiver, ConnectionDelegate):
             meta = self.facebook.meta(identifier=sender)
             if meta is None:
                 # NOTICE: the application will query meta automatically
-                # TODO: save this message in a queue to wait meta response
+                # save this message in a queue waiting sender's meta response
+                self.suspend_message(msg=msg)
                 # raise LookupError('failed to get meta for sender: %s' % sender)
                 return None
         else:
@@ -229,7 +230,8 @@ class Messenger(Transceiver, ConnectionDelegate):
         if pk is None:
             meta = self.facebook.meta(identifier=to)
             if meta is None:
-                # TODO: save this message in a queue waiting meta response
+                # save this message in a queue waiting receiver's meta response
+                self.suspend_message(msg=msg)
                 # raise LookupError('failed to get encrypt key for receiver: %s' % receiver)
                 return None
         return super().encrypt_key(key=key, receiver=receiver, msg=msg)
@@ -377,6 +379,19 @@ class Messenger(Transceiver, ConnectionDelegate):
         """
         raise NotImplemented
 
+    @abstractmethod
+    def suspend_message(self, msg: Message) -> bool:
+        """
+        Suspend message for the contact's meta
+
+        :param msg: message received from network / instant message to be sent
+        :return: False on error
+        """
+        # NOTICE: this function is for Client
+        #         if the client cannot get verify/encrypt message for contact,
+        #         it means you should suspend it and query meta from DIM station first
+        pass
+
     #
     #   ConnectionDelegate
     #
@@ -405,7 +420,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         # serialize message
         return self.serialize_message(msg=msg_r)
 
-    def process_message(self, msg: ReliableMessage) -> Content:
+    def process_message(self, msg: ReliableMessage) -> Optional[Content]:
         # NOTICE: if you want to filter the response, override me
         return self.processor.process_message(msg=msg)
 

@@ -52,6 +52,7 @@ class HistoryCommandProcessor(CommandProcessor):
         # lazy
         self.__gpu: GroupCommandProcessor = None
 
+    @property
     def gpu(self):  # GroupCommandProcessor
         if self.__gpu is None:
             self.__gpu = self._create_processor(GroupCommandProcessor)
@@ -70,7 +71,7 @@ class HistoryCommandProcessor(CommandProcessor):
                 return TextContent.new(text='History command (name: %s) not support yet!' % content.command)
         else:
             # get group command processor
-            cpu = self.gpu()
+            cpu = self.gpu
         assert cpu is not self, 'Dead cycle! history cmd: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
 
