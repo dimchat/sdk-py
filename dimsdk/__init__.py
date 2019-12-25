@@ -114,7 +114,7 @@ __all__ = [
     'Barrack', 'KeyCache', 'Transceiver',
 
     # delegate
-    'SocialNetworkDelegate', 'CipherKeyDelegate',
+    'EntityDelegate', 'CipherKeyDelegate',
 
     #
     #   DIM SDK

@@ -88,18 +88,20 @@ class GroupCommandProcessor(HistoryCommandProcessor):
         return self.convert_members(array)
 
     def convert_members(self, array: list) -> list:
+        facebook = self.facebook
         results = []
         for item in array:
-            identifier = self.facebook.identifier(item)
+            identifier = facebook.identifier(item)
             if identifier is None:
                 raise ValueError('Member ID error: %s' % item)
             results.append(identifier)
         return results
 
     def contains_owner(self, members: list, group: ID) -> bool:
+        facebook = self.facebook
         for item in members:
-            user = self.facebook.identifier(item)
-            if self.facebook.is_owner(member=user, group=group):
+            user = facebook.identifier(item)
+            if facebook.is_owner(member=user, group=group):
                 return True
 
     def is_empty(self, group: ID) -> bool:
@@ -109,10 +111,11 @@ class GroupCommandProcessor(HistoryCommandProcessor):
         :param group: group ID
         :return: True on members, owner not found
         """
-        members = self.facebook.members(identifier=group)
+        facebook = self.facebook
+        members = facebook.members(identifier=group)
         if members is None or len(members) == 0:
             return True
-        owner = self.facebook.owner(identifier=group)
+        owner = facebook.owner(identifier=group)
         if owner is None:
             return True
 

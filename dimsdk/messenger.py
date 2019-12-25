@@ -108,7 +108,8 @@ class Messenger(Transceiver, ConnectionDelegate):
         return barrack
 
     def __select(self, receiver: ID) -> Optional[User]:
-        users = self.facebook.local_users
+        facebook = self.facebook
+        users = facebook.local_users
         if users is None or len(users) == 0:
             raise LookupError('current user should not be empty')
         elif receiver.is_broadcast:
@@ -116,7 +117,7 @@ class Messenger(Transceiver, ConnectionDelegate):
             return users[0]
         if receiver.type.is_group():
             # group message (recipient not designated)
-            members = self.facebook.members(identifier=receiver)
+            members = facebook.members(identifier=receiver)
             if members is None or len(members) == 0:
                 # TODO: query group members
                 return None
@@ -148,11 +149,12 @@ class Messenger(Transceiver, ConnectionDelegate):
     #  Transform
     #
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
+        facebook = self.facebook
         # NOTICE: check meta before calling me
-        sender = self.facebook.identifier(msg.envelope.sender)
+        sender = facebook.identifier(msg.envelope.sender)
         meta = msg.meta
         if meta is None:
-            meta = self.facebook.meta(identifier=sender)
+            meta = facebook.meta(identifier=sender)
             if meta is None:
                 # NOTICE: the application will query meta automatically
                 # save this message in a queue waiting sender's meta response
@@ -163,7 +165,7 @@ class Messenger(Transceiver, ConnectionDelegate):
             # [Meta Protocol]
             # save meta for sender
             meta = Meta(meta)
-            if not self.facebook.save_meta(meta=meta, identifier=sender):
+            if not facebook.save_meta(meta=meta, identifier=sender):
                 raise ValueError('save meta error: %s, %s' % (sender, meta))
         return super().verify_message(msg=msg)
 
@@ -225,10 +227,11 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().encrypt_content(content=content, key=password, msg=msg)
 
     def encrypt_key(self, key: dict, receiver: str, msg: InstantMessage) -> Optional[bytes]:
-        to = self.facebook.identifier(receiver)
-        pk = self.facebook.public_key_for_encryption(identifier=to)
+        facebook = self.facebook
+        to = facebook.identifier(receiver)
+        pk = facebook.public_key_for_encryption(identifier=to)
         if pk is None:
-            meta = self.facebook.meta(identifier=to)
+            meta = facebook.meta(identifier=to)
             if meta is None:
                 # save this message in a queue waiting receiver's meta response
                 self.suspend_message(msg=msg)
@@ -241,8 +244,9 @@ class Messenger(Transceiver, ConnectionDelegate):
     #
     def decrypt_key(self, key: bytes, sender: str, receiver: str, msg: SecureMessage) -> Optional[dict]:
         if key is not None:
-            to = self.facebook.identifier(msg.envelope.receiver)
-            keys = self.facebook.private_keys_for_decryption(identifier=to)
+            facebook = self.facebook
+            to = facebook.identifier(msg.envelope.receiver)
+            keys = facebook.private_keys_for_decryption(identifier=to)
             if keys is None or len(keys) == 0:
                 # FIXME: private key lost?
                 raise LookupError('failed to get decrypt keys for receiver: %s' % to)
@@ -295,14 +299,15 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param split:    if it's a group message, split it before sending out
         :return:         False on data/delegate error
         """
+        facebook = self.facebook
         # Send message (secured + certified) to target station
         s_msg = self.encrypt_message(msg=msg)
         r_msg = self.sign_message(msg=s_msg)
-        receiver = self.facebook.identifier(msg.envelope.receiver)
+        receiver = facebook.identifier(msg.envelope.receiver)
         ok = True
         if split and receiver.type.is_group():
             # split for each members
-            members = self.facebook.members(identifier=receiver)
+            members = facebook.members(identifier=receiver)
             if members is None or len(members) == 0:
                 # FIXME: query group members from sender
                 messages = None
@@ -410,9 +415,10 @@ class Messenger(Transceiver, ConnectionDelegate):
             # nothing to response
             return None
         # 3. pack response
-        user = self.facebook.current_user
+        facebook = self.facebook
+        user = facebook.current_user
         assert user is not None, 'failed to get current user'
-        sender = self.facebook.identifier(r_msg.envelope.sender)
+        sender = facebook.identifier(r_msg.envelope.sender)
         i_msg = InstantMessage.new(content=response, sender=user.identifier, receiver=sender)
         s_msg = self.encrypt_message(msg=i_msg)
         msg_r = self.sign_message(msg=s_msg)

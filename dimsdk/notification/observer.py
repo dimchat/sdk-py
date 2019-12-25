@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional, Any
 
 """
@@ -64,7 +64,7 @@ class Notification:
         self.__info = value
 
 
-class Observer(metaclass=ABCMeta):
+class Observer(ABC):
 
     @abstractmethod
     def received_notification(self, notification: Notification):

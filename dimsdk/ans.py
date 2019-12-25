@@ -35,6 +35,7 @@
     A map for short name to ID, just like DNS
 """
 
+from abc import ABC, abstractmethod
 from typing import Optional
 
 from mkm.address import ANYWHERE
@@ -83,7 +84,7 @@ keywords = [
 ]
 
 
-class AddressNameService:
+class AddressNameService(ABC):
 
     def __init__(self):
         super().__init__()
@@ -95,22 +96,14 @@ class AddressNameService:
             'owner': ANYONE,
             'founder': founder,
         }
+        # reserved names
+        reserved = {}
+        for name in keywords:
+            reserved[name] = True
+        self.__reserved = reserved
 
-    @staticmethod
-    def is_reserved(name: str) -> bool:
-        return name in keywords
-
-    def identifier(self, name: str) -> Optional[ID]:
-        """ Get ID by short name """
-        return self.__caches.get(name)
-
-    # def names(self, identifier: ID) -> Optional[list]:
-    #     """ Get all short names with this ID """
-    #     array = []
-    #     for (key, value) in self.__caches.items():
-    #         if key == identifier:
-    #             array.append(value)
-    #     return array
+    def is_reserved(self, name: str) -> bool:
+        return self.__reserved.get(name)
 
     def cache(self, name: str, identifier: ID=None) -> bool:
         if self.is_reserved(name):
@@ -122,8 +115,26 @@ class AddressNameService:
             self.__caches[name] = identifier
         return True
 
+    def identifier(self, name: str) -> Optional[ID]:
+        """ Get ID by short name """
+        return self.__caches.get(name)
+
+    def names(self, identifier: ID) -> Optional[list]:
+        """ Get all short names with the same ID """
+        array = []
+        for (key, value) in self.__caches.items():
+            if key == identifier:
+                array.append(value)
+        return array
+
+    @abstractmethod
     def save(self, name: str, identifier: ID=None) -> bool:
-        """ Save ANS record """
+        """
+        Save ANS record
+
+        :param name:       username
+        :param identifier: user ID; if empty, means delete this name
+        :return: True on success
+        """
         if not self.cache(name=name, identifier=identifier):
             return False
-        # NOTICE: save this record into database by subclass

@@ -57,16 +57,23 @@ class KeyStore(KeyCache):
 
     @user.setter
     def user(self, value: User):
-        if value is None:
+        if self.__user is not None:
             # save key map for old user
             self.flush()
+            if self.__user == value:
+                # user not changed
+                return
+        if value is None:
             self.__user = None
-        elif value != self.__user:
-            # load key map for new user
-            self.__user = value
-            dictionary = self.load_keys()
-            if dictionary is not None:
-                self.update_keys(dictionary)
+            return
+        # change current user
+        self.__user = value
+        keys = self.load_keys()
+        if keys is None:
+            # failed to load cached keys for new user
+            return
+        # update key map
+        self.update_keys(key_map=keys)
 
     @property
     def directory(self) -> str:
@@ -97,8 +104,9 @@ class KeyStore(KeyCache):
         return JSONFile(path).read()
 
     #
-    #   ICipherKeyDataSource
+    #   CipherKeyDelegate
     #
+
     def cipher_key(self, sender: ID, receiver: ID) -> Optional[SymmetricKey]:
         key = super().cipher_key(sender=sender, receiver=receiver)
         if key is None:
@@ -107,7 +115,3 @@ class KeyStore(KeyCache):
                 key = SymmetricKey({'algorithm': 'AES'})
                 self.cache_cipher_key(key=key, sender=sender, receiver=receiver)
         return key
-
-    def reuse_cipher_key(self, key: SymmetricKey, sender: ID, receiver: ID) -> Optional[SymmetricKey]:
-        # TODO: check reuse key
-        pass

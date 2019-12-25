@@ -49,8 +49,9 @@ from .command import CommandProcessor
 class ProfileCommandProcessor(CommandProcessor):
 
     def __get(self, identifier: ID) -> Content:
+        facebook = self.facebook
         # querying profile for ID
-        profile: Profile = self.facebook.profile(identifier=identifier)
+        profile: Profile = facebook.profile(identifier=identifier)
         # response
         if profile is not None and profile.valid:
             return ProfileCommand.response(identifier=identifier, profile=profile)
@@ -58,12 +59,13 @@ class ProfileCommandProcessor(CommandProcessor):
             return TextContent.new(text='Sorry, profile for %s not found.' % identifier)
 
     def __put(self, identifier: ID, meta: Meta, profile: Profile) -> Content:
+        facebook = self.facebook
         if meta is not None:
             # received a meta for ID
-            if not self.facebook.save_meta(identifier=identifier, meta=meta):
+            if not facebook.save_meta(identifier=identifier, meta=meta):
                 return TextContent.new(text='Meta not match %s!' % identifier)
         # received a new profile for ID
-        if self.facebook.save_profile(profile=profile):
+        if facebook.save_profile(profile=profile):
             return ReceiptCommand.new(message='Profile of %s received!' % identifier)
         else:
             return TextContent.new(text='Profile signature not match %s!' % identifier)
@@ -73,7 +75,8 @@ class ProfileCommandProcessor(CommandProcessor):
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, ProfileCommand), 'command error: %s' % content
-        identifier = self.facebook.identifier(content.identifier)
+        facebook = self.facebook
+        identifier = facebook.identifier(content.identifier)
         meta = content.meta
         profile = content.profile
         if profile is None:

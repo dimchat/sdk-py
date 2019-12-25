@@ -35,10 +35,10 @@
     AI chat bots
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 
-class ChatBot(metaclass=ABCMeta):
+class ChatBot(ABC):
 
     @abstractmethod
     def ask(self, question: str, user: str=None) -> str:

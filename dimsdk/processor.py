@@ -45,7 +45,7 @@ from .cpu import ContentProcessor
 from .facebook import Facebook
 
 
-class MessageProcessor():
+class MessageProcessor:
 
     def __init__(self, messenger):
         super().__init__()
@@ -76,10 +76,11 @@ class MessageProcessor():
         :param group: group ID
         :return: True on members, owner not found
         """
-        members = self.facebook.members(identifier=group)
+        facebook = self.facebook
+        members = facebook.members(identifier=group)
         if members is None or len(members) == 0:
             return True
-        owner = self.facebook.owner(identifier=group)
+        owner = facebook.owner(identifier=group)
         if owner is None:
             return True
 
@@ -91,13 +92,14 @@ class MessageProcessor():
         :param sender:  message sender
         :return: True on updating
         """
-        group = self.facebook.identifier(content.group)
+        facebook = self.facebook
+        group = facebook.identifier(content.group)
         if group is None or group.is_broadcast:
             # 1. personal message
             # 2. broadcast message
             return False
         # check meta for new group ID
-        meta = self.facebook.meta(identifier=group)
+        meta = facebook.meta(identifier=group)
         if meta is None:
             # NOTICE: if meta for group not found,
             #         facebook should query it from DIM network automatically
@@ -119,12 +121,13 @@ class MessageProcessor():
             return self.messenger.send_content(content=query, receiver=sender)
 
     def process_message(self, msg: ReliableMessage) -> Optional[Content]:
+        facebook = self.facebook
         messenger = self.messenger
         # verify
         s_msg = messenger.verify_message(msg=msg)
         if s_msg is None:
             raise ValueError('failed to verify message: %s' % msg)
-        receiver = self.facebook.identifier(msg.envelope.receiver)
+        receiver = facebook.identifier(msg.envelope.receiver)
         #
         #  1. check broadcast
         #
@@ -149,7 +152,7 @@ class MessageProcessor():
         #
         #  4. check group
         #
-        sender = self.facebook.identifier(msg.envelope.sender)
+        sender = facebook.identifier(msg.envelope.sender)
         if self.__check_group(content=content, sender=sender):
             # TODO: save this message in a queue to wait meta response
             return None

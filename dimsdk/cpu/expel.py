@@ -49,8 +49,9 @@ from .history import GroupCommandProcessor
 class ExpelCommandProcessor(GroupCommandProcessor):
 
     def __remove(self, expel_list: list, group: ID) -> Optional[list]:
+        facebook = self.facebook
         # existed members
-        members: list = self.facebook.members(identifier=group)
+        members: list = facebook.members(identifier=group)
         if members is None:
             members = []
         # removed member(s)
@@ -63,7 +64,7 @@ class ExpelCommandProcessor(GroupCommandProcessor):
             members.remove(item)
         # response removed-list after changed
         if len(remove_list) > 0:
-            if self.facebook.save_members(members=members, identifier=group):
+            if facebook.save_members(members=members, identifier=group):
                 return remove_list
 
     #
@@ -71,10 +72,11 @@ class ExpelCommandProcessor(GroupCommandProcessor):
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, ExpelCommand), 'group command error: %s' % content
-        group: ID = self.facebook.identifier(content.group)
+        facebook = self.facebook
+        group: ID = facebook.identifier(content.group)
         # 1. check permission
-        if not self.facebook.is_owner(member=sender, group=group):
-            if not self.facebook.exists_assistant(member=sender, group=group):
+        if not facebook.is_owner(member=sender, group=group):
+            if not facebook.exists_assistant(member=sender, group=group):
                 raise AssertionError('only owner/assistant can expel: %s' % msg)
         # 2.1. get expelling members
         expel_list: list = self.members(content=content)

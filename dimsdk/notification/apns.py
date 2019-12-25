@@ -35,7 +35,7 @@
     A service for pushing notification to offline device
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 from apns2.client import APNsClient, NotificationPriority
 from apns2.errors import APNsException
@@ -148,7 +148,7 @@ class ApplePushNotificationService:
             return True
 
 
-class IAPNsDelegate(metaclass=ABCMeta):
+class IAPNsDelegate(ABC):
     """
         APNs Delegate
         ~~~~~~~~~~~~~

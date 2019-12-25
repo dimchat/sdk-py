@@ -50,24 +50,26 @@ from .history import GroupCommandProcessor
 class QuitCommandProcessor(GroupCommandProcessor):
 
     def __remove(self, sender: ID, group: ID) -> bool:
-        members = self.facebook.members(identifier=group)
+        facebook = self.facebook
+        members = facebook.members(identifier=group)
         if members is None:
             return False
         if sender not in members:
             return False
         members.remove(sender)
-        return self.facebook.save_members(members=members, identifier=group)
+        return facebook.save_members(members=members, identifier=group)
 
     #
     #   main
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, QuitCommand), 'group command error: %s' % content
-        group: ID = self.facebook.identifier(content.group)
+        facebook = self.facebook
+        group: ID = facebook.identifier(content.group)
         # 1. check permission
-        if self.facebook.is_owner(member=sender, group=group):
+        if facebook.is_owner(member=sender, group=group):
             raise AssertionError('owner cannot quit: %s' % msg)
-        if self.facebook.exists_assistant(member=sender, group=group):
+        if facebook.exists_assistant(member=sender, group=group):
             raise AssertionError('assistant cannot quit: %s' % msg)
         # 2. remove sender from group members
         self.__remove(sender=sender, group=group)

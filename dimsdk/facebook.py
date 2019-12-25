@@ -40,7 +40,7 @@ import weakref
 from abc import abstractmethod
 from typing import Optional
 
-from dimp import PrivateKey, SignKey
+from dimp import PrivateKey, SignKey, DecryptKey
 from dimp import NetworkID, ID, Address
 from dimp import User, Group
 from dimp import Meta, Profile
@@ -71,10 +71,7 @@ class Facebook(Barrack):
 
     @ans.setter
     def ans(self, value: AddressNameService):
-        if value is None:
-            self.__ans = None
-        else:
-            self.__ans = weakref.ref(value)
+        self.__ans = weakref.ref(value)
 
     def ans_get(self, name: str) -> ID:
         ans = self.ans
@@ -179,10 +176,19 @@ class Facebook(Barrack):
     #
     #   Private keys
     #
+    def verify_private_key(self, key: PrivateKey, identifier: ID) -> bool:
+        assert key is not None, 'private key should not be empty'
+        meta = self.meta(identifier=identifier)
+        assert meta is not None, 'meta not found: %s' % identifier
+        assert meta.key is not None, 'meta error: %s, %s' % (identifier, meta)
+        return meta.key.match(private_key=key)
+
     def cache_private_key(self, key: PrivateKey, identifier: ID) -> bool:
         assert identifier.type.is_user(), 'user ID error: %s' % identifier
         if key is None:
             self.__private_keys.pop(identifier, None)
+            return False
+        if not self.verify_private_key(key=key, identifier=identifier):
             return False
         self.__private_keys[identifier] = key
         return True
@@ -198,7 +204,7 @@ class Facebook(Barrack):
         raise NotImplemented
 
     #
-    #   Contacts
+    #   User Contacts
     #
     def cache_contacts(self, contacts: list, identifier: ID) -> bool:
         assert identifier.type.is_user(), 'user ID error: %s' % identifier
@@ -219,7 +225,7 @@ class Facebook(Barrack):
         raise NotImplemented
 
     #
-    #   Members
+    #   Group Members
     #
     def cache_members(self, members: list, identifier: ID) -> bool:
         assert identifier.type.is_group(), 'group ID error: %s' % identifier
@@ -383,9 +389,8 @@ class Facebook(Barrack):
         # DIMP v1.0:
         #     decrypt key not found, use the same with sign key?
         key = self.private_key_for_signature(identifier)
-        if key is not None:
+        if isinstance(key, DecryptKey):
             # TODO: support profile.key
-            # assert isinstance(key, DecryptKey)
             return [key]
 
     #

@@ -77,8 +77,9 @@ class InviteCommandProcessor(GroupCommandProcessor):
         return cpu.process(content=content, sender=sender, msg=msg)
 
     def __add(self, invite_list: list, group: ID) -> Optional[list]:
+        facebook = self.facebook
         # existed members
-        members: list = self.facebook.members(identifier=group)
+        members: list = facebook.members(identifier=group)
         if members is None:
             members = []
         # added member(s)
@@ -91,7 +92,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
             members.append(item)
         # response added-list after changed
         if len(add_list) > 0:
-            if self.facebook.save_members(members=members, identifier=group):
+            if facebook.save_members(members=members, identifier=group):
                 return add_list
 
     #
@@ -99,7 +100,8 @@ class InviteCommandProcessor(GroupCommandProcessor):
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, InviteCommand), 'group command error: %s' % content
-        group: ID = self.facebook.identifier(content.group)
+        facebook = self.facebook
+        group: ID = facebook.identifier(content.group)
         # 0. check whether group info empty
         if self.is_empty(group=group):
             # NOTICE:
@@ -107,8 +109,8 @@ class InviteCommandProcessor(GroupCommandProcessor):
             #     reset group members
             return self.__reset(content=content, sender=sender, msg=msg)
         # 1. check permission
-        if not self.facebook.exists_member(member=sender, group=group):
-            if not self.facebook.exists_assistant(member=sender, group=group):
+        if not facebook.exists_member(member=sender, group=group):
+            if not facebook.exists_assistant(member=sender, group=group):
                 raise AssertionError('only member/assistant can invite: %s' % msg)
         # 2. get inviting members
         invite_list: list = self.members(content=content)

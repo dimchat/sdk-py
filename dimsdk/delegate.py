@@ -35,20 +35,20 @@
     Delegates for Messenger
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional
 
 from dimp import InstantMessage
 
 
-class Callback(metaclass=ABCMeta):
+class Callback(ABC):
 
     @abstractmethod
     def finished(self, result, error=None):
         pass
 
 
-class CompletionHandler(metaclass=ABCMeta):
+class CompletionHandler(ABC):
 
     @abstractmethod
     def success(self):
@@ -59,7 +59,7 @@ class CompletionHandler(metaclass=ABCMeta):
         pass
 
 
-class MessengerDelegate(metaclass=ABCMeta):
+class MessengerDelegate(ABC):
 
     @abstractmethod
     def upload_data(self, data: bytes, msg: InstantMessage) -> str:
@@ -95,7 +95,7 @@ class MessengerDelegate(metaclass=ABCMeta):
         pass
 
 
-class ConnectionDelegate(metaclass=ABCMeta):
+class ConnectionDelegate(ABC):
 
     @abstractmethod
     def received_package(self, data: bytes) -> Optional[bytes]:
