@@ -87,9 +87,8 @@ class ContentProcessor:
     def cpu_class(cls, content_type: ContentType):
         clazz = cls.__content_processor_classes.get(content_type)
         if clazz is None:
-            # processor not defined, use default
-            clazz = cls.__content_processor_classes[DefaultContentType]
-        assert issubclass(clazz, ContentProcessor), 'error: %s, %s' % (content_type, clazz)
+            clazz = cls.__content_processor_classes[ContentType.Unknown]
+            assert clazz is not None, 'default CPU not register, content type: %s' % content_type
         return clazz
 
     def cpu(self, content_type: ContentType):
@@ -97,8 +96,8 @@ class ContentProcessor:
         if processor is None:
             # try to create new processor with content type
             clazz = self.cpu_class(content_type=content_type)
-            assert clazz is not None, 'failed to get content processor class: %s' % content_type
             processor = self._create_processor(clazz)
+            assert processor is not None, 'failed to create CPU for content type: %s' % content_type
             self.__content_processors[content_type] = processor
         return processor
 
@@ -131,5 +130,4 @@ class _DefaultContentProcessor(ContentProcessor):
 
 
 # register
-DefaultContentType = ContentType.Unknown
-ContentProcessor.register(content_type=DefaultContentType, processor_class=_DefaultContentProcessor)
+ContentProcessor.register(content_type=ContentType.Unknown, processor_class=_DefaultContentProcessor)

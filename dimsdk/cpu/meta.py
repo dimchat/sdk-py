@@ -49,20 +49,25 @@ from .command import CommandProcessor
 class MetaCommandProcessor(CommandProcessor):
 
     def __get(self, identifier: ID) -> Content:
-        # querying meta for ID
+        # query meta for ID
         meta = self.facebook.meta(identifier=identifier)
-        # response
-        if meta is not None:
-            return MetaCommand.response(identifier=identifier, meta=meta)
-        else:
+        if meta is None:
+            # meta not found
             return TextContent.new(text='Sorry, meta for %s not found.' % identifier)
+        # response
+        return MetaCommand.response(identifier=identifier, meta=meta)
 
     def __put(self, identifier: ID, meta: Meta) -> Content:
+        facebook = self.facebook
         # received a meta for ID
-        if self.facebook.save_meta(identifier=identifier, meta=meta):
-            return ReceiptCommand.new(message='Meta for %s received!' % identifier)
-        else:
-            return TextContent.new(text='Meta not match %s!' % identifier)
+        if not facebook.verify_meta(meta=meta, identifier=identifier):
+            # meta not match
+            return TextContent.new(text='Meta not match ID: %s' % identifier)
+        if not facebook.save_meta(meta=meta, identifier=identifier):
+            # save meta failed
+            return TextContent.new(text='Meta not accept: %s!' % identifier)
+        # response
+        return ReceiptCommand.new(message='Meta received: %s' % identifier)
 
     #
     #   main

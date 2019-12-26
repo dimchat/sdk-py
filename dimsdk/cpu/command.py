@@ -46,6 +46,8 @@ from .processor import ContentProcessor
 
 class CommandProcessor(ContentProcessor):
 
+    UNKNOWN = "unknown"
+
     def __init__(self, messenger):
         super().__init__(messenger=messenger)
         self.__command_processors: dict = {}
@@ -69,18 +71,19 @@ class CommandProcessor(ContentProcessor):
     @classmethod
     def cpu_class(cls, command: str):
         clazz = cls.__command_processor_classes.get(command)
-        if clazz is not None:
-            assert issubclass(clazz, CommandProcessor), 'error: %s, %s' % (command, clazz)
-            return clazz
+        if clazz is None:
+            clazz = cls.__command_processor_classes.get(cls.UNKNOWN)
+            assert clazz is not None, 'default CPU not register, command: %s' % command
+        return clazz
 
     def cpu(self, command: str):
         processor = self.__command_processors.get(command)
         if processor is None:
             # try to create new processor with command name
             clazz = self.cpu_class(command=command)
-            if clazz is not None:
-                processor = self._create_processor(clazz)
-                self.__command_processors[command] = processor
+            processor = self._create_processor(clazz)
+            assert processor is not None, 'failed to create CPU for command: %s' % command
+            self.__command_processors[command] = processor
         return processor
 
     #
@@ -91,11 +94,28 @@ class CommandProcessor(ContentProcessor):
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
         cpu = self.cpu(command=content.command)
-        if cpu is None:
-            return TextContent.new(text='Command (name: %s) not support yet!' % content.command)
         assert cpu is not self, 'Dead cycle! command: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
 
 
+#
+#   Default Command Processor
+#
+class _DefaultCommandProcessor(CommandProcessor):
+
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+        assert isinstance(content, Command), 'command error: %s' % content
+        res = TextContent.new(text='Command (name: %s) not support yet!' % content.command)
+        # check group message
+        group = content.group
+        if group is not None:
+            res.group = group
+        return res
+
+
 # register
 ContentProcessor.register(content_type=ContentType.Command, processor_class=CommandProcessor)
+CommandProcessor.register(command=CommandProcessor.UNKNOWN, processor_class=_DefaultCommandProcessor)

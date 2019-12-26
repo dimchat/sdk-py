@@ -37,17 +37,18 @@
 """
 
 from dimp import PublicKey
-from dimp import ID, User, Group
+from dimp import ID, NetworkID, User, Group
 
 from .certificate import CertificateAuthority
 
 
 class Station(User):
 
-    def __init__(self, identifier: ID, host: str='127.0.0.1', port: int=9394):
+    def __init__(self, identifier: ID, host: str=None, port: int=0):
         super().__init__(identifier=identifier)
-        self.host = host
-        self.port = port
+        assert identifier.type == NetworkID.Station, 'Station ID type error: %s' % identifier
+        self.__host = host
+        self.__port = port
 
     def __str__(self):
         clazz = self.__class__.__name__
@@ -58,6 +59,30 @@ class Station(User):
         host = self.host
         port = self.port
         return '<%s: %s(%s|%d) "%s" host="%s" port=%d />' % (clazz, identifier, network, number, name, host, port)
+
+    @property
+    def host(self) -> str:
+        if self.__host is None:
+            profile = self.profile
+            if profile is not None:
+                value = profile.get_property('host')
+                if value is not None:
+                    self.__host = str(value)
+            if self.__host is None:
+                self.__host = '0.0.0.0'
+        return self.__host
+
+    @property
+    def port(self) -> int:
+        if self.__port is 0:
+            profile = self.profile
+            if profile is not None:
+                value = profile.get_property('port')
+                if value is not None:
+                    self.__port = int(value)
+            if self.__port is 0:
+                self.__port = 9394
+        return self.__port
 
     @classmethod
     def new(cls, station: dict):
@@ -99,6 +124,10 @@ class Station(User):
 
 
 class ServiceProvider(Group):
+
+    def __init__(self, identifier: ID):
+        super().__init__(identifier=identifier)
+        assert identifier.type == NetworkID.Provider, 'Service Provider ID type error: %s' % identifier
 
     @property
     def stations(self):

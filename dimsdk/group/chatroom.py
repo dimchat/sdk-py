@@ -29,26 +29,55 @@
 # ==============================================================================
 
 """
-    Polylogue
-    ~~~~~~~~~
+    Chatroom
+    ~~~~~~~~
 
-    Simple group chat
+    Big group with admins
 """
 
-from dimp import ID, Group, NetworkID
+from abc import abstractmethod
+from typing import Optional
+
+from dimp import ID, NetworkID
+from dimp import Group, GroupDataSource
 
 
-class Polylogue(Group):
+class ChatroomDataSource(GroupDataSource):
+    """This interface is for getting information for chatroom
+
+        Chatroom Data Source
+        ~~~~~~~~~~~~~~~~~~~~
+
+        Chatroom admins should be set complying with the consensus algorithm
+    """
+
+    @abstractmethod
+    def admins(self, identifier: ID) -> Optional[list]:
+        """
+        Get all admins in the chatroom
+
+        :param identifier: chatroom ID
+        :return: admin ID list
+        """
+        pass
+
+
+class Chatroom(Group):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)
-        assert identifier.type == NetworkID.Polylogue, 'Polylogue ID type error: %s' % identifier
+        assert identifier.type == NetworkID.Chatroom, 'Chatroom ID type error: %s' % identifier
+
+    @Group.delegate.getter
+    def delegate(self) -> Optional[ChatroomDataSource]:
+        facebook = super().delegate
+        assert facebook is None or isinstance(facebook, ChatroomDataSource), 'error: %s' % facebook
+        return facebook
+
+    # @delegate.setter
+    # def delegate(self, value: ChatroomDataSource):
+    #     super(Chatroom, Chatroom).delegate.__set__(self, value)
 
     @property
-    def owner(self) -> ID:
-        founder = super().owner
-        if founder is not None:
-            assert founder == self.founder
-            return founder
-        # polylogue's owner is its founder
-        return self.founder
+    def admins(self) -> Optional[list]:
+        return self.delegate.admins(identifier=self.identifier)

@@ -100,6 +100,7 @@ class StorageCommand(Command):
         string = self.get('title')
         if string is None or len(string) == 0:
             string = self.command
+            assert string != self.STORAGE, 'storage command error: %s' % self
         return string
 
     #

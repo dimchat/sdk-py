@@ -69,16 +69,8 @@ class Messenger(Transceiver, ConnectionDelegate):
 
     @delegate.setter
     def delegate(self, value: Optional[MessengerDelegate]):
-        if value is None:
-            self.__delegate = None
-        else:
-            self.__delegate = weakref.ref(value)
-
-    @property
-    def processor(self) -> MessageProcessor:
-        if self.__processor is None:
-            self.__processor = MessageProcessor(messenger=self)
-        return self.__processor
+        assert value is not None, 'message delegate should not be empty'
+        self.__delegate = weakref.ref(value)
 
     #
     #   Environment variables as context
@@ -111,7 +103,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         facebook = self.facebook
         users = facebook.local_users
         if users is None or len(users) == 0:
-            raise LookupError('current user should not be empty')
+            raise LookupError('local users should not be empty')
         elif receiver.is_broadcast:
             # broadcast message can decrypt by anyone, so just return current user
             return users[0]
@@ -120,6 +112,7 @@ class Messenger(Transceiver, ConnectionDelegate):
             members = facebook.members(identifier=receiver)
             if members is None or len(members) == 0:
                 # TODO: query group members
+                #       (do it by application)
                 return None
             for item in users:
                 if item.identifier in members:
@@ -242,16 +235,6 @@ class Messenger(Transceiver, ConnectionDelegate):
     #
     #   SecureMessageDelegate
     #
-    def decrypt_key(self, key: bytes, sender: str, receiver: str, msg: SecureMessage) -> Optional[dict]:
-        if key is not None:
-            facebook = self.facebook
-            to = facebook.identifier(msg.envelope.receiver)
-            keys = facebook.private_keys_for_decryption(identifier=to)
-            if keys is None or len(keys) == 0:
-                # FIXME: private key lost?
-                raise LookupError('failed to get decrypt keys for receiver: %s' % to)
-        return super().decrypt_key(key=key, sender=sender, receiver=receiver, msg=msg)
-
     def decrypt_content(self, data: bytes, key: dict, msg: SecureMessage) -> Optional[Content]:
         password = SymmetricKey(key=key)
         content = super().decrypt_content(data=data, key=password, msg=msg)
@@ -387,7 +370,7 @@ class Messenger(Transceiver, ConnectionDelegate):
     @abstractmethod
     def suspend_message(self, msg: Message) -> bool:
         """
-        Suspend message for the contact's meta
+        Suspend (instant/reliable)message for the contact's meta
 
         :param msg: message received from network / instant message to be sent
         :return: False on error
@@ -426,9 +409,11 @@ class Messenger(Transceiver, ConnectionDelegate):
         # serialize message
         return self.serialize_message(msg=msg_r)
 
+    # NOTICE: if you want to filter the response, override me
     def process_message(self, msg: ReliableMessage) -> Optional[Content]:
-        # NOTICE: if you want to filter the response, override me
-        return self.processor.process_message(msg=msg)
+        if self.__processor is None:
+            self.__processor = MessageProcessor(messenger=self)
+        return self.__processor.process_message(msg=msg)
 
 
 class MessageCallback(CompletionHandler):

@@ -111,7 +111,8 @@ class InviteCommandProcessor(GroupCommandProcessor):
         # 1. check permission
         if not facebook.exists_member(member=sender, group=group):
             if not facebook.exists_assistant(member=sender, group=group):
-                raise AssertionError('only member/assistant can invite: %s' % msg)
+                if not facebook.is_owner(member=sender, group=group):
+                    raise AssertionError('only member/assistant can invite: %s' % msg)
         # 2. get inviting members
         invite_list: list = self.members(content=content)
         if invite_list is None or len(invite_list) == 0:

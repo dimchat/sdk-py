@@ -37,8 +37,6 @@
 
 from typing import Optional
 
-from mkm.crypto.utils import base64_decode
-
 from dimp import Envelope
 from dimp import Command
 
@@ -52,11 +50,12 @@ class ReceiptCommand(Command):
             type : 0x88,
             sn   : 123,
 
-            command : "receipt", // command name
-            message : "...",
+            command  : "receipt", // command name
+            message  : "...",
             //-- extra info
-            // 1. envelope
-            // 2. signature
+            sender   : "...",
+            receiver : "...",
+            time     : 0
         }
     """
 
@@ -83,53 +82,35 @@ class ReceiptCommand(Command):
         super().__init__(content)
         # lazy
         self.__envelope: Envelope = None
-        self.__signature: bytes = None
 
-    #
-    #   envelope
-    #
-    @property
-    def envelope(self) -> Optional[Envelope]:
-        if self.__envelope is None:
-            if 'sender' in self and 'receiver' in self:
-                self.__envelope = Envelope(self)
-        return self.__envelope
+    # -------- setters/getters
 
-    #
-    #   signature
-    #
-    @property
-    def signature(self) -> Optional[bytes]:
-        if self.__signature is None:
-            base64 = self.get('signature')
-            if base64 is not None:
-                self.__signature = base64_decode(base64)
-        return self.__signature
-
-    #
-    #   message
-    #
     @property
     def message(self) -> Optional[str]:
         return self.get('message')
 
-    @message.setter
-    def message(self, value: str):
-        if value is None:
-            self.pop('message', None)
-        else:
-            self['message'] = value
+    @property
+    def envelope(self) -> Optional[Envelope]:
+        if self.__envelope is None:
+            # envelope: { sender: "...", receiver: "...", time: 0 }
+            env = self.get('envelope')
+            if env is None and 'sender' in self and 'receiver' in self:
+                env = self
+            self.__envelope = Envelope(env)
+        return self.__envelope
 
     #
     #   Factories
     #
     @classmethod
-    def new(cls, content: dict=None, message: str=None):
+    def new(cls, content: dict=None, message: str=None, sn: int=0, envelope: Envelope=None):
         """
         Create receipt command
 
-        :param content: command info
-        :param message: receipt message
+        :param content:  command info
+        :param message:  receipt message
+        :param sn:       serial number of the message responding to
+        :param envelope: envelope of the message responding to
         :return: ReceiptCommand object
         """
         if content is None:
@@ -138,6 +119,14 @@ class ReceiptCommand(Command):
         # set receipt message
         if message is not None:
             content['message'] = message
+        # set sn for the message responding to
+        if sn > 0:
+            content['sn'] = sn
+        # set envelope for the message responding to
+        if envelope is not None:
+            content['sender'] = envelope.sender
+            content['receiver'] = envelope.receiver
+            content['time'] = envelope.time
         # new ReceiptCommand(dict)
         return super().new(content=content, command=Command.RECEIPT)
 

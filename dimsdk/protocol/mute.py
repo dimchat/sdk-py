@@ -38,20 +38,19 @@
 
 from typing import Optional
 
-from dimp import ID, HistoryCommand
+from dimp import Command
 
 
-class MuteCommand(HistoryCommand):
+class MuteCommand(Command):
     """
         Mute Command
         ~~~~~~~~~~~~
 
         data format: {
-            type : 0x89,
+            type : 0x88,
             sn   : 123,
 
             command : "mute", // command name
-            time    : 0,      // command timestamp
             list    : []      // mute-list
         }
     """
@@ -79,18 +78,13 @@ class MuteCommand(HistoryCommand):
             # no need to init again
             return
         super().__init__(content)
-        # mute-list
-        self.__list: list = None
 
     #
     #   mute-list
     #
     @property
     def mute_list(self) -> Optional[list]:
-        if self.__list is None:
-            # TODO: convert values to ID objects
-            self.__list = self.get('list')
-        return self.__list
+        return self.get('list')
 
     @mute_list.setter
     def mute_list(self, value: list):
@@ -98,25 +92,6 @@ class MuteCommand(HistoryCommand):
             self.pop('list', None)
         else:
             self['list'] = value
-        self.__list = value
-
-    def add_identifier(self, identifier: ID) -> bool:
-        if self.mute_list is None:
-            self.__list = []
-            self['list'] = self.__list
-        elif identifier in self.__list:
-            # raise AssertionError('ID already exists: %s' % identifier)
-            return False
-        self.__list.append(identifier)
-        return True
-
-    def remove_identifier(self, identifier: ID) -> bool:
-        if self.__list is None:
-            return False
-        elif identifier not in self.__list:
-            return False
-        self.__list.remove(identifier)
-        return True
 
     #
     #   Factories
@@ -141,4 +116,4 @@ class MuteCommand(HistoryCommand):
 
 
 # register command class
-HistoryCommand.register(command=MuteCommand.MUTE, command_class=MuteCommand)
+Command.register(command=MuteCommand.MUTE, command_class=MuteCommand)

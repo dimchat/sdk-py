@@ -50,25 +50,33 @@ class ProfileCommandProcessor(CommandProcessor):
 
     def __get(self, identifier: ID) -> Content:
         facebook = self.facebook
-        # querying profile for ID
+        # query profile for ID
         profile: Profile = facebook.profile(identifier=identifier)
-        # response
-        if profile is not None and profile.valid:
-            return ProfileCommand.response(identifier=identifier, profile=profile)
-        else:
+        if profile is None or 'data' not in profile:
+            # profile not found
             return TextContent.new(text='Sorry, profile for %s not found.' % identifier)
+        # response
+        return ProfileCommand.response(identifier=identifier, profile=profile)
 
     def __put(self, identifier: ID, meta: Meta, profile: Profile) -> Content:
         facebook = self.facebook
         if meta is not None:
             # received a meta for ID
-            if not facebook.save_meta(identifier=identifier, meta=meta):
-                return TextContent.new(text='Meta not match %s!' % identifier)
+            if not facebook.verify_meta(meta=meta, identifier=identifier):
+                # meta not match
+                return TextContent.new(text='Meta not match ID: %s' % identifier)
+            if not facebook.save_meta(meta=meta, identifier=identifier):
+                # save meta failed
+                return TextContent.new(text='Meta not accept: %s!' % identifier)
         # received a new profile for ID
-        if facebook.save_profile(profile=profile):
-            return ReceiptCommand.new(message='Profile of %s received!' % identifier)
-        else:
-            return TextContent.new(text='Profile signature not match %s!' % identifier)
+        if not facebook.verify_profile(profile=profile, identifier=identifier):
+            # profile signature not match
+            return TextContent.new(text='Profile not match ID: %s' % identifier)
+        if not facebook.save_profile(profile=profile):
+            # save profile failed
+            return TextContent.new(text='Profile not accept: %s!' % identifier)
+        # response
+        return ReceiptCommand.new(message='Profile received: %s' % identifier)
 
     #
     #   main
@@ -77,11 +85,12 @@ class ProfileCommandProcessor(CommandProcessor):
         assert isinstance(content, ProfileCommand), 'command error: %s' % content
         facebook = self.facebook
         identifier = facebook.identifier(content.identifier)
-        meta = content.meta
         profile = content.profile
         if profile is None:
             return self.__get(identifier=identifier)
         else:
+            # check meta
+            meta = content.meta
             return self.__put(identifier=identifier, meta=meta, profile=profile)
 
 

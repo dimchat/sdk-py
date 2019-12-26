@@ -121,18 +121,21 @@ class MessageProcessor:
             return self.messenger.send_content(content=query, receiver=sender)
 
     def process_message(self, msg: ReliableMessage) -> Optional[Content]:
-        facebook = self.facebook
         messenger = self.messenger
         # verify
         s_msg = messenger.verify_message(msg=msg)
         if s_msg is None:
-            raise ValueError('failed to verify message: %s' % msg)
+            # TODO: save this message in a queue to wait meta response
+            # raise ValueError('failed to verify message: %s' % msg)
+            return None
+        facebook = self.facebook
         receiver = facebook.identifier(msg.envelope.receiver)
         #
         #  1. check broadcast
         #
         if receiver.type.is_group() and receiver.is_broadcast:
-            # if it's a grouped broadcast id, then split and deliver to everyone
+            # if it's a grouped broadcast id, then
+            #    split and deliver to everyone
             return messenger.broadcast_message(msg=msg)
         #
         #  2. try to decrypt
@@ -154,7 +157,8 @@ class MessageProcessor:
         #
         sender = facebook.identifier(msg.envelope.sender)
         if self.__check_group(content=content, sender=sender):
-            # TODO: save this message in a queue to wait meta response
+            # save this message in a queue to wait group meta response
+            messenger.suspend_message(msg=msg)
             return None
         #
         #  5. process

@@ -33,8 +33,12 @@
     ~~~~~~~~~~
 """
 
+from dimp import ID, NetworkID
 from dimp import User
 
 
 class Robot(User):
-    pass
+
+    def __init__(self, identifier: ID):
+        super().__init__(identifier=identifier)
+        assert identifier.type == NetworkID.Robot, 'Robot ID type error: %s' % identifier

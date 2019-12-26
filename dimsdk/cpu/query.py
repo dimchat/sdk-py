@@ -58,7 +58,8 @@ class QueryCommandProcessor(GroupCommandProcessor):
         # 1. check permission
         if not facebook.exists_member(member=sender, group=group):
             if not facebook.exists_assistant(member=sender, group=group):
-                raise AssertionError('only member/assistant can query: %s' % msg)
+                if not facebook.is_owner(member=sender, group=group):
+                    raise AssertionError('only member/assistant can query: %s' % msg)
         # 2. get group members
         members = facebook.members(identifier=group)
         if members is None or len(members) == 0:

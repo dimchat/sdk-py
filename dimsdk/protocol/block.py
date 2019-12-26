@@ -38,20 +38,19 @@
 
 from typing import Optional
 
-from dimp import ID, HistoryCommand
+from dimp import ID, Command
 
 
-class BlockCommand(HistoryCommand):
+class BlockCommand(Command):
     """
         Block Command
         ~~~~~~~~~~~~~
 
         data format: {
-            type : 0x89,
+            type : 0x88,
             sn   : 123,
 
             command : "block", // command name
-            time    : 0,       // command timestamp
             list    : []       // block-list
         }
     """
@@ -79,18 +78,13 @@ class BlockCommand(HistoryCommand):
             # no need to init again
             return
         super().__init__(content)
-        # block-list
-        self.__list: list = None
 
     #
     #   block-list
     #
     @property
     def block_list(self) -> Optional[list]:
-        if self.__list is None:
-            # TODO: convert values to ID objects
-            self.__list = self.get('list')
-        return self.__list
+        return self.get('list')
 
     @block_list.setter
     def block_list(self, value: list):
@@ -98,25 +92,6 @@ class BlockCommand(HistoryCommand):
             self.pop('list', None)
         else:
             self['list'] = value
-        self.__list = value
-
-    def add_identifier(self, identifier: ID) -> bool:
-        if self.block_list is None:
-            self.__list = []
-            self['list'] = self.__list
-        elif identifier in self.__list:
-            # raise AssertionError('ID already exists: %s' % identifier)
-            return False
-        self.__list.append(identifier)
-        return True
-
-    def remove_identifier(self, identifier: ID) -> bool:
-        if self.__list is None:
-            return False
-        elif identifier not in self.__list:
-            return False
-        self.__list.remove(identifier)
-        return True
 
     #
     #   Factories
@@ -141,4 +116,4 @@ class BlockCommand(HistoryCommand):
 
 
 # register command class
-HistoryCommand.register(command=BlockCommand.BLOCK, command_class=BlockCommand)
+Command.register(command=BlockCommand.BLOCK, command_class=BlockCommand)
