@@ -399,9 +399,10 @@ class Messenger(Transceiver, ConnectionDelegate):
             return None
         # 3. pack response
         facebook = self.facebook
-        user = facebook.current_user
-        assert user is not None, 'failed to get current user'
         sender = facebook.identifier(r_msg.envelope.sender)
+        receiver = facebook.identifier(r_msg.envelope.receiver)
+        user = self.__select(receiver=receiver)
+        assert user is not None, 'failed to get current user'
         i_msg = InstantMessage.new(content=response, sender=user.identifier, receiver=sender)
         s_msg = self.encrypt_message(msg=i_msg)
         msg_r = self.sign_message(msg=s_msg)
