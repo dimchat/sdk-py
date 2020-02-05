@@ -56,7 +56,8 @@ class ProfileCommandProcessor(CommandProcessor):
             # profile not found
             return TextContent.new(text='Sorry, profile for %s not found.' % identifier)
         # response
-        return ProfileCommand.response(identifier=identifier, profile=profile)
+        meta: Meta = facebook.meta(identifier=identifier)
+        return ProfileCommand.response(identifier=identifier, profile=profile, meta=meta)
 
     def __put(self, identifier: ID, meta: Meta, profile: Profile) -> Content:
         facebook = self.facebook
