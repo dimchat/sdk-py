@@ -388,17 +388,17 @@ class Messenger(Transceiver, ConnectionDelegate):
         raise NotImplemented
 
     @abstractmethod
-    def suspend_message(self, msg: Message) -> bool:
+    def suspend_message(self, msg: Union[ReliableMessage, InstantMessage]):
         """
-        Suspend (instant/reliable)message for the contact's meta
+        Suspend reliable message for the sender's meta
+        Suspend instant message for the receiver's meta or group info
 
         :param msg: message received from network / instant message to be sent
-        :return: False on error
         """
         # NOTICE: this function is for Client
         #         if the client cannot get verify/encrypt message for contact,
         #         it means you should suspend it and query meta from DIM station first
-        pass
+        raise NotImplemented
 
     #
     #   ConnectionDelegate
@@ -415,17 +415,12 @@ class Messenger(Transceiver, ConnectionDelegate):
         if r_msg is None:
             # no message received
             return None
-        # 2. verify
-        s_msg = self.verify_message(msg=r_msg)
-        if s_msg is None:
-            # waiting for sender's meta if not exists
-            return None
-        # 3. process message
-        response = self.process_message(msg=s_msg)
+        # 2. process message
+        response = self.process_message(msg=r_msg)
         if response is None:
             # nothing to response
             return None
-        # 4. pack response
+        # 3. pack response
         facebook = self.facebook
         sender = facebook.identifier(r_msg.envelope.sender)
         receiver = facebook.identifier(r_msg.envelope.receiver)
@@ -438,20 +433,25 @@ class Messenger(Transceiver, ConnectionDelegate):
         s_msg = self.encrypt_message(msg=i_msg)
         r_msg = self.sign_message(msg=s_msg)
         assert r_msg is not None, 'failed to response: %s' % i_msg
-        # 5. serialize message
+        # serialize message
         return self.serialize_message(msg=r_msg)
 
-    def process_message(self, msg: Union[SecureMessage, InstantMessage]) -> Optional[Content]:
-        if isinstance(msg, SecureMessage):
+    def process_message(self, msg: Message) -> Optional[Content]:
+        if isinstance(msg, ReliableMessage):
+            s_msg = self.verify_message(msg=msg)
+            if s_msg is None:
+                # waiting for sender's meta if not exists
+                return None
             # TODO: override to check broadcast message before calling it
             # TODO: override to deliver to the receiver when catch exception "receiver error ..."
+            return self.process_message(msg=s_msg)
+        elif isinstance(msg, SecureMessage):
             # try to decrypt
             i_msg = self.decrypt_message(msg=msg)
             assert i_msg is not None, 'failed to decrypt message: %s' % msg
             # process it
             return self.process_message(msg=i_msg)
         elif isinstance(msg, InstantMessage):
-            # TODO: override to filter the response
             sender = self.facebook.identifier(string=msg.envelope.sender)
             if self.__check_group(content=msg.content, sender=sender):
                 # save this message in a queue to wait group meta response
@@ -461,6 +461,7 @@ class Messenger(Transceiver, ConnectionDelegate):
             if not self.save_message(msg=msg):
                 # error
                 return None
+            # TODO: override to filter the response
             return res
 
 
