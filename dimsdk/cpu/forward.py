@@ -29,37 +29,44 @@
 # ==============================================================================
 
 """
-    Content/Command Processing Units
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Forward Content Processor
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
 
+from typing import Optional
+
+from dimp import ID
+from dimp import InstantMessage
+from dimp import ContentType, Content, ForwardContent
 
 from .processor import ContentProcessor
-from .forward import ForwardContentProcessor
-from .command import CommandProcessor
-from .history import HistoryCommandProcessor, GroupCommandProcessor
-from .invite import InviteCommandProcessor
-from .expel import ExpelCommandProcessor
-from .quit import QuitCommandProcessor
-from .reset import ResetCommandProcessor
-from .query import QueryCommandProcessor
-
-from .meta import MetaCommandProcessor
-from .profile import ProfileCommandProcessor
 
 
-__all__ = [
-    'ContentProcessor',
-    'ForwardContentProcessor',
+#
+#   Forward Content Processor
+#
+class ForwardContentProcessor(ContentProcessor):
 
-    'CommandProcessor',
+    #
+    #   main
+    #
+    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+        assert isinstance(content, ForwardContent), 'forward content error: %s' % content
+        r_msg = content.forward
 
-    'HistoryCommandProcessor',
-    'GroupCommandProcessor',
-    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
-    'ResetCommandProcessor', 'QueryCommandProcessor',
+        # [Forward Protocol]
+        # do it again to drop the wrapper,
+        # the secret inside the content is the real message
+        s_msg = self.messenger.verify_message(msg=r_msg)
+        if s_msg is None:
+            # TODO: save this message in a queue to wait meta response
+            # raise ValueError('failed to verify message: %s' % r_msg)
+            return None
 
-    'MetaCommandProcessor',
-    'ProfileCommandProcessor',
-]
+        # call messenger to process it
+        return self.messenger.process(s_msg)
+
+
+# register
+ContentProcessor.register(content_type=ContentType.Forward, processor_class=ForwardContentProcessor)

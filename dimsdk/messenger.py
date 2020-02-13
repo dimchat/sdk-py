@@ -37,18 +37,19 @@
 
 import weakref
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Union
 
 from dimp import SymmetricKey, ID, Meta, User
 from dimp import Message, InstantMessage, SecureMessage, ReliableMessage
-from dimp import Content, ForwardContent, FileContent, TextContent
+from dimp import Content, FileContent
+from dimp import GroupCommand, InviteCommand, ResetCommand
 from dimp import Transceiver
 
-from .protocol import ReceiptCommand
 from .delegate import Callback, CompletionHandler
 from .delegate import MessengerDelegate, ConnectionDelegate
 from .facebook import Facebook
-from .processor import MessageProcessor
+
+from .cpu import ContentProcessor
 
 
 class Messenger(Transceiver, ConnectionDelegate):
@@ -56,8 +57,8 @@ class Messenger(Transceiver, ConnectionDelegate):
     def __init__(self):
         super().__init__()
         self.__context: dict = {}
-        self.__processor: MessageProcessor = None
         self.__delegate: weakref.ReferenceType = None
+        self.__cpu = ContentProcessor(messenger=self)
 
     #
     #   Delegate for sending data
@@ -138,6 +139,79 @@ class Messenger(Transceiver, ConnectionDelegate):
             msg = msg.trim(member=user.identifier)
         return msg
 
+    def __is_empty(self, group: ID) -> bool:
+        """
+        Check whether group info empty (lost)
+
+        :param group: group ID
+        :return: True on members, owner not found
+        """
+        facebook = self.facebook
+        members = facebook.members(identifier=group)
+        if members is None or len(members) == 0:
+            return True
+        owner = facebook.owner(identifier=group)
+        if owner is None:
+            return True
+
+    def __check_group(self, content: Content, sender: ID) -> bool:
+        """
+        Check if it is a group message, and whether the group members info needs update
+
+        :param content: message content
+        :param sender:  message sender
+        :return: True on updating
+        """
+        facebook = self.facebook
+        group = facebook.identifier(content.group)
+        if group is None or group.is_broadcast:
+            # 1. personal message
+            # 2. broadcast message
+            return False
+        # check meta for new group ID
+        meta = facebook.meta(identifier=group)
+        if meta is None:
+            # NOTICE: if meta for group not found,
+            #         facebook should query it from DIM network automatically
+            # TODO: insert the message to a temporary queue to wait meta
+            # raise LookupError('group meta not found: %s' % group)
+            return True
+        # query group info
+        if self.__is_empty(group=group):
+            # NOTICE: if the group info not found, and this is not an 'invite' command
+            #         query group info from the sender
+            if isinstance(content, InviteCommand) or isinstance(content, ResetCommand):
+                # FIXME: can we trust this stranger?
+                #        may be we should keep this members list temporary,
+                #        and send 'query' to the owner immediately.
+                # TODO: check whether the members list is a full list,
+                #       it should contain the group owner(owner)
+                return False
+            else:
+                return self.send_content(content=GroupCommand.query(group=group), receiver=sender)
+        elif facebook.exists_member(member=sender, group=group):
+            # normal membership
+            return False
+        elif facebook.exists_assistant(member=sender, group=group):
+            # normal membership
+            return False
+        elif facebook.is_owner(member=sender, group=group):
+            # normal membership
+            return False
+        else:
+            cmd = GroupCommand.query(group=group)
+            checking = False
+            # if assistants exists, query them
+            assistants = facebook.assistants(identifier=group)
+            for item in assistants:
+                if self.send_content(content=cmd, receiver=item):
+                    checking = True
+            # if owner found, query it too
+            owner = facebook.owner(identifier=group)
+            if owner is not None and self.send_content(content=cmd, receiver=owner):
+                checking = True
+            return checking
+
     #
     #  Transform
     #
@@ -177,31 +251,13 @@ class Messenger(Transceiver, ConnectionDelegate):
         return s_msg
 
     def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
-        # 0. trim message
-        msg = self.__trim(msg=msg)
-        if msg is None:
+        # trim message
+        s_msg = self.__trim(msg=msg)
+        if s_msg is None:
             # not for you?
-            return None
-        # 1. decrypt message
-        i_msg = super().decrypt_message(msg=msg)
-        # 2. check: top-secret message
-        content = i_msg.content
-        if isinstance(content, ForwardContent):
-            # [Forward Protocol]
-            # do it again to drop the wrapper,
-            # the secret inside the content is the real message
-            r_msg = content.forward
-            s_msg = self.verify_message(msg=r_msg)
-            if s_msg is not None:
-                # verify OK, try to decrypt
-                secret = self.decrypt_message(msg=s_msg)
-                if secret is not None:
-                    # decrypt success
-                    return secret
-                # NOTICE: decrypt failed, not for you?
-                #         check content type in subclass, if it's a 'forward' message,
-                #         it means you are asked to re-pack and forward this message
-        return i_msg
+            raise LookupError('receiver error: %s' % msg)
+        # decrypt message
+        return super().decrypt_message(msg=s_msg)
 
     #
     #   InstantMessageDelegate
@@ -307,6 +363,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         else:
             ok = self.__send_message(msg=r_msg, callback=callback)
         # TODO: if OK, set iMsg.state = sending; else set iMsg.state = waiting
+
+        if not self.save_message(msg=msg):
+            return False
         return ok
 
     def __send_message(self, msg: ReliableMessage, callback: Callback) -> bool:
@@ -315,47 +374,8 @@ class Messenger(Transceiver, ConnectionDelegate):
         return self.delegate.send_package(data=data, handler=handler)
 
     #
-    #   Message
+    #   Saving Message
     #
-    def forward_message(self, msg: ReliableMessage) -> Optional[Content]:
-        """
-        Re-pack and deliver (Top-Secret) message to the real receiver
-
-        :param msg: top-secret message
-        :return: receipt on success
-        """
-        receiver = self.facebook.identifier(msg.envelope.receiver)
-        secret = ForwardContent.new(message=msg)
-        if self.send_content(content=secret, receiver=receiver):
-            return ReceiptCommand.new(message='message forwarded')
-        else:
-            return TextContent.new(text='Sorry, failed to forward your message')
-
-    @abstractmethod
-    def broadcast_message(self, msg: ReliableMessage) -> Optional[Content]:
-        """
-        Deliver message to everyone@everywhere, including all neighbours
-
-        :param msg: broadcast message
-        :return: receipt on success
-        """
-        # NOTICE: this function is for Station
-        #         if the receiver is a grouped broadcast ID,
-        #         split and deliver to everyone
-        pass
-
-    @abstractmethod
-    def deliver_message(self, msg: ReliableMessage) -> Optional[Content]:
-        """
-        Deliver message to the receiver, or broadcast to neighbours
-
-        :param msg: reliable message
-        :return: receipt on success
-        """
-        # NOTICE: this function is for Station
-        #         if the station cannot decrypt this message,
-        #         it means you should deliver it to the receiver
-        pass
 
     @abstractmethod
     def save_message(self, msg: InstantMessage) -> bool:
@@ -392,12 +412,20 @@ class Messenger(Transceiver, ConnectionDelegate):
         """
         # 1. deserialize message
         r_msg = self.deserialize_message(data=data)
-        # 2. process message
-        response = self.process_message(msg=r_msg)
+        if r_msg is None:
+            # no message received
+            return None
+        # 2. verify
+        s_msg = self.verify_message(msg=r_msg)
+        if s_msg is None:
+            # waiting for sender's meta if not exists
+            return None
+        # 3. process message
+        response = self.process_message(msg=s_msg)
         if response is None:
             # nothing to response
             return None
-        # 3. pack response
+        # 4. pack response
         facebook = self.facebook
         sender = facebook.identifier(r_msg.envelope.sender)
         receiver = facebook.identifier(r_msg.envelope.receiver)
@@ -408,16 +436,32 @@ class Messenger(Transceiver, ConnectionDelegate):
             user = facebook.current_user
         i_msg = InstantMessage.new(content=response, sender=user.identifier, receiver=sender)
         s_msg = self.encrypt_message(msg=i_msg)
-        msg_r = self.sign_message(msg=s_msg)
-        assert msg_r is not None, 'failed to response: %s' % i_msg
-        # serialize message
-        return self.serialize_message(msg=msg_r)
+        r_msg = self.sign_message(msg=s_msg)
+        assert r_msg is not None, 'failed to response: %s' % i_msg
+        # 5. serialize message
+        return self.serialize_message(msg=r_msg)
 
-    # NOTICE: if you want to filter the response, override me
-    def process_message(self, msg: ReliableMessage) -> Optional[Content]:
-        if self.__processor is None:
-            self.__processor = MessageProcessor(messenger=self)
-        return self.__processor.process_message(msg=msg)
+    def process_message(self, msg: Union[SecureMessage, InstantMessage]) -> Optional[Content]:
+        if isinstance(msg, SecureMessage):
+            # TODO: override to check broadcast message before calling it
+            # TODO: override to deliver to the receiver when catch exception "receiver error ..."
+            # try to decrypt
+            i_msg = self.decrypt_message(msg=msg)
+            assert i_msg is not None, 'failed to decrypt message: %s' % msg
+            # process it
+            return self.process_message(msg=i_msg)
+        elif isinstance(msg, InstantMessage):
+            # TODO: override to filter the response
+            sender = self.facebook.identifier(string=msg.envelope.sender)
+            if self.__check_group(content=msg.content, sender=sender):
+                # save this message in a queue to wait group meta response
+                self.suspend_message(msg=msg)
+                return None
+            res = self.__cpu.process(content=msg.content, sender=sender, msg=msg)
+            if not self.save_message(msg=msg):
+                # error
+                return None
+            return res
 
 
 class MessageCallback(CompletionHandler):

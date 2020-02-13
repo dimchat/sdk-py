@@ -46,7 +46,7 @@ from .protocol import ReceiptCommand
 from .protocol import BlockCommand, MuteCommand
 from .protocol import StorageCommand
 
-from .cpu import ContentProcessor
+from .cpu import ContentProcessor, ForwardContentProcessor
 from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
 from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProcessor
 from .cpu import ResetCommandProcessor, QueryCommandProcessor
@@ -58,7 +58,6 @@ from .ans import AddressNameService
 from .facebook import Facebook
 from .keystore import KeyStore
 from .messenger import Messenger
-from .processor import MessageProcessor
 
 name = 'DIM-SDK'
 
@@ -142,8 +141,8 @@ __all__ = [
     'StorageCommand',
 
     # cpu
-    'ContentProcessor', 'CommandProcessor',
-    'HistoryCommandProcessor', 'GroupCommandProcessor',
+    'ContentProcessor', 'ForwardContentProcessor',
+    'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
     'MetaCommandProcessor', 'ProfileCommandProcessor',
@@ -152,5 +151,4 @@ __all__ = [
     'Callback', 'CompletionHandler', 'MessengerDelegate', 'ConnectionDelegate',
 
     'AddressNameService', 'Facebook', 'KeyStore', 'Messenger',
-    'MessageProcessor',
 ]
