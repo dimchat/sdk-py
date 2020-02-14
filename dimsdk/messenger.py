@@ -363,9 +363,8 @@ class Messenger(Transceiver, ConnectionDelegate):
         else:
             ok = self.__send_message(msg=r_msg, callback=callback)
         # TODO: if OK, set iMsg.state = sending; else set iMsg.state = waiting
-
-        if not self.save_message(msg=msg):
-            return False
+        # if not self.save_message(msg=msg):
+        #     return False
         return ok
 
     def __send_message(self, msg: ReliableMessage, callback: Callback) -> bool:
