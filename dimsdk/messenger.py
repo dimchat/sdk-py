@@ -42,7 +42,6 @@ from typing import Optional, Union
 from dimp import SymmetricKey, ID, Meta, User
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Content, FileContent
-from dimp import GroupCommand, InviteCommand, ResetCommand
 from dimp import Transceiver
 
 from .delegate import Callback, CompletionHandler
@@ -138,80 +137,6 @@ class Messenger(Transceiver, ConnectionDelegate):
             # trim group message
             msg = msg.trim(member=user.identifier)
         return msg
-
-    def __is_empty(self, group: ID) -> bool:
-        """
-        Check whether group info empty (lost)
-
-        :param group: group ID
-        :return: True on members, owner not found
-        """
-        facebook = self.facebook
-        members = facebook.members(identifier=group)
-        if members is None or len(members) == 0:
-            return True
-        owner = facebook.owner(identifier=group)
-        if owner is None:
-            return True
-
-    def __check_group(self, content: Content, sender: ID) -> bool:
-        """
-        Check if it is a group message, and whether the group members info needs update
-
-        :param content: message content
-        :param sender:  message sender
-        :return: True on updating
-        """
-        facebook = self.facebook
-        group = facebook.identifier(content.group)
-        if group is None or group.is_broadcast:
-            # 1. personal message
-            # 2. broadcast message
-            return False
-        # check meta for new group ID
-        meta = facebook.meta(identifier=group)
-        if meta is None:
-            # NOTICE: if meta for group not found,
-            #         facebook should query it from DIM network automatically
-            # TODO: insert the message to a temporary queue to wait meta
-            # raise LookupError('group meta not found: %s' % group)
-            return True
-        # query group info
-        if self.__is_empty(group=group):
-            # NOTICE: if the group info not found, and this is not an 'invite' command
-            #         query group info from the sender
-            if isinstance(content, InviteCommand) or isinstance(content, ResetCommand):
-                # FIXME: can we trust this stranger?
-                #        may be we should keep this members list temporary,
-                #        and send 'query' to the owner immediately.
-                # TODO: check whether the members list is a full list,
-                #       it should contain the group owner(owner)
-                return False
-            else:
-                return self.send_content(content=GroupCommand.query(group=group), receiver=sender)
-        elif facebook.exists_member(member=sender, group=group):
-            # normal membership
-            return False
-        elif facebook.exists_assistant(member=sender, group=group):
-            # normal membership
-            return False
-        elif facebook.is_owner(member=sender, group=group):
-            # normal membership
-            return False
-        else:
-            cmd = GroupCommand.query(group=group)
-            checking = False
-            # if assistants exists, query them
-            assistants = facebook.assistants(identifier=group)
-            if assistants is not None:
-                for item in assistants:
-                    if self.send_content(content=cmd, receiver=item):
-                        checking = True
-            # if owner found, query it too
-            owner = facebook.owner(identifier=group)
-            if owner is not None and self.send_content(content=cmd, receiver=owner):
-                checking = True
-            return checking
 
     #
     #  Transform
@@ -454,11 +379,8 @@ class Messenger(Transceiver, ConnectionDelegate):
         return self.process_instant(msg=i_msg)
 
     def process_instant(self, msg: InstantMessage) -> Optional[Content]:
+        # TODO: override to check group
         sender = self.facebook.identifier(string=msg.envelope.sender)
-        if self.__check_group(content=msg.content, sender=sender):
-            # save this message in a queue to wait group meta response
-            self.suspend_message(msg=msg)
-            return None
         res = self.__cpu.process(content=msg.content, sender=sender, msg=msg)
         if not self.save_message(msg=msg):
             # error
