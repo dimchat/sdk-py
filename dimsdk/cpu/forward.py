@@ -54,18 +54,8 @@ class ForwardContentProcessor(ContentProcessor):
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         r_msg = content.forward
-
-        # [Forward Protocol]
-        # do it again to drop the wrapper,
-        # the secret inside the content is the real message
-        s_msg = self.messenger.verify_message(msg=r_msg)
-        if s_msg is None:
-            # TODO: save this message in a queue to wait meta response
-            # raise ValueError('failed to verify message: %s' % r_msg)
-            return None
-
         # call messenger to process it
-        return self.messenger.process(s_msg)
+        return self.messenger.process_reliable(msg=r_msg)
 
 
 # register

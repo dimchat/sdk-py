@@ -41,6 +41,10 @@ MIN_HEAD_LEN = 4 + 4 + 4 + 4 + 4
 
 
 class NetMsgHead(bytes):
+
+    SEND_MSG = 3
+    NOOP = 6
+
     """
         Message Packer for Tencent/mars
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,12 +85,11 @@ class NetMsgHead(bytes):
             seq = read_int(data, 12)
             body_len = read_int(data, 16)
             # check head length
-            if MIN_HEAD_LEN <= head_len < data_len:
+            if data_len < head_len or head_len < MIN_HEAD_LEN:
+                raise ValueError('net message pack head length error: %d' % head_len)
+            elif data_len > head_len:
                 # cut head
                 data = data[:head_len]
-                # data_len = head_len
-            elif head_len > data_len:
-                raise ValueError('net message pack head length error: %d' % head_len)
             # get options
             if head_len == MIN_HEAD_LEN:
                 options = None
@@ -149,12 +152,11 @@ class NetMsg(bytes):
             # check pack length
             pack_len = head.head_length + head.body_length
             data_len = len(data)
-            if pack_len < data_len:
+            if data_len < pack_len:
+                raise ValueError('data length error: %d < %d' % (data_len, pack_len))
+            elif data_len > pack_len:
                 # cut package
                 data = data[:pack_len]
-                # data_len = pack_len
-            elif pack_len > data_len:
-                raise ValueError('data length error:', data_len)
             # get body
             if head.body_length == 0:
                 body = None

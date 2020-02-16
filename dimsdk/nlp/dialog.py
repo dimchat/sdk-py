@@ -49,7 +49,7 @@ class Dialog:
     def __init__(self):
         super().__init__()
         # chat bot candidates
-        self.__bots: list = None
+        self.__bots: list = []
 
     @property
     def bots(self) -> list:
