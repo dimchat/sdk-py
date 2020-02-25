@@ -83,21 +83,13 @@ class ContentProcessor:
             cls.__content_processor_classes[content_type] = processor_class
         return True
 
-    @classmethod
-    def cpu_class(cls, content_type: ContentType):
-        clazz = cls.__content_processor_classes.get(content_type)
-        if clazz is None:
-            clazz = cls.__content_processor_classes[ContentType.Unknown]
-            assert clazz is not None, 'default CPU not register, content type: %s' % content_type
-        return clazz
-
     def cpu(self, content_type: ContentType):
         # 1. get from pool
         processor = self.__content_processors.get(content_type)
         if processor is not None:
             return processor
         # 2. get CPU class by content type
-        clazz = self.cpu_class(content_type=content_type)
+        clazz = self.__content_processor_classes.get(content_type)
         if clazz is None:
             if ContentType.Unknown == content_type:
                 raise LookupError('default CPU not register yet')

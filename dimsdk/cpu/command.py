@@ -68,21 +68,13 @@ class CommandProcessor(ContentProcessor):
             cls.__command_processor_classes[command] = processor_class
         return True
 
-    @classmethod
-    def cpu_class(cls, command: str):
-        clazz = cls.__command_processor_classes.get(command)
-        if clazz is None:
-            clazz = cls.__command_processor_classes.get(cls.UNKNOWN)
-            assert clazz is not None, 'default CPU not register, command: %s' % command
-        return clazz
-
     def cpu(self, command: str):
         # 1. get from pool
         processor = self.__command_processors.get(command)
         if processor is not None:
             return processor
         # 2. get CPU class by command name
-        clazz = self.cpu_class(command=command)
+        clazz = self.__command_processor_classes.get(command)
         if clazz is None:
             if command == self.UNKNOWN:
                 raise LookupError('default CPU not set yet')
