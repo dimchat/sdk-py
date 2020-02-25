@@ -67,8 +67,8 @@ class HistoryCommandProcessor(CommandProcessor):
         if content.group is None:
             # get command processor
             cpu = self.cpu(command=content.command)
-            if cpu is None:
-                return TextContent.new(text='History command (name: %s) not support yet!' % content.command)
+            # if cpu is None:
+            #     return TextContent.new(text='History command (name: %s) not support yet!' % content.command)
         else:
             # get group command processor
             cpu = self.gpu
@@ -127,8 +127,8 @@ class GroupCommandProcessor(HistoryCommandProcessor):
         assert isinstance(content, Command), 'group cmd error: %s' % content
         # process command by name
         cpu = self.cpu(command=content.command)
-        if cpu is None:
-            return TextContent.new(text='Group command (name: %s) not support yet!' % content.command)
+        # if cpu is None:
+        #     return TextContent.new(text='Group command (name: %s) not support yet!' % content.command)
         assert cpu is not self, 'Dead cycle! group cmd: %s' % content
         return cpu.process(content=content, sender=sender, msg=msg)
 
