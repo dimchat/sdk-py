@@ -92,13 +92,21 @@ class ContentProcessor:
         return clazz
 
     def cpu(self, content_type: ContentType):
+        # 1. get from pool
         processor = self.__content_processors.get(content_type)
-        if processor is None:
-            # try to create new processor with content type
-            clazz = self.cpu_class(content_type=content_type)
-            processor = self._create_processor(clazz)
-            assert processor is not None, 'failed to create CPU for content type: %s' % content_type
-            self.__content_processors[content_type] = processor
+        if processor is not None:
+            return processor
+        # 2. get CPU class by content type
+        clazz = self.cpu_class(content_type=content_type)
+        if clazz is None:
+            if ContentType.Unknown == content_type:
+                raise LookupError('default CPU not register yet')
+            # call default CPU
+            return self.cpu(content_type=ContentType.Unknown)
+        # 3. create CPU with messenger
+        processor = self._create_processor(clazz)
+        assert processor is not None, 'failed to create CPU for content type: %s' % content_type
+        self.__content_processors[content_type] = processor
         return processor
 
     #

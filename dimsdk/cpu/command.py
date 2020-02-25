@@ -77,13 +77,21 @@ class CommandProcessor(ContentProcessor):
         return clazz
 
     def cpu(self, command: str):
+        # 1. get from pool
         processor = self.__command_processors.get(command)
-        if processor is None:
-            # try to create new processor with command name
-            clazz = self.cpu_class(command=command)
-            processor = self._create_processor(clazz)
-            assert processor is not None, 'failed to create CPU for command: %s' % command
-            self.__command_processors[command] = processor
+        if processor is not None:
+            return processor
+        # 2. get CPU class by command name
+        clazz = self.cpu_class(command=command)
+        if clazz is None:
+            if command == self.UNKNOWN:
+                raise LookupError('default CPU not set yet')
+            # call default CPU
+            return self.cpu(command=self.UNKNOWN)
+        # 3. create CPU with messenger
+        processor = self._create_processor(clazz)
+        assert processor is not None, 'failed to create CPU for command: %s' % command
+        self.__command_processors[command] = processor
         return processor
 
     #
