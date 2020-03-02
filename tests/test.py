@@ -129,6 +129,8 @@ class EntityTestCase(unittest.TestCase):
         id1 = g_facebook.identifier('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
         moki = g_facebook.user(identifier=id1)
         print('moki: ', moki)
+        number = moki_id.number
+        print('number: %s' % number)
 
 
 class CommandTestCase(unittest.TestCase):

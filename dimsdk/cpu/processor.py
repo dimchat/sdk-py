@@ -35,7 +35,7 @@
 """
 
 import weakref
-from typing import Optional
+from typing import Optional, Union
 
 from dimp import ID
 from dimp import InstantMessage
@@ -73,7 +73,9 @@ class ContentProcessor:
     __content_processor_classes = {}  # class map
 
     @classmethod
-    def register(cls, content_type: ContentType, processor_class=None) -> bool:
+    def register(cls, content_type: Union[ContentType, int], processor_class=None) -> bool:
+        if isinstance(content_type, ContentType):
+            content_type = content_type.value
         if processor_class is None:
             cls.__content_processor_classes.pop(content_type, None)
         elif processor_class == ContentProcessor:
@@ -83,7 +85,9 @@ class ContentProcessor:
             cls.__content_processor_classes[content_type] = processor_class
         return True
 
-    def cpu(self, content_type: ContentType):
+    def cpu(self, content_type: Union[ContentType, int]):
+        if isinstance(content_type, ContentType):
+            content_type = content_type.value
         # 1. get from pool
         processor = self.__content_processors.get(content_type)
         if processor is not None:

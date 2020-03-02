@@ -38,7 +38,7 @@
 
 from typing import Optional
 
-from dimp import ID, Command
+from dimp import Command
 
 
 class BlockCommand(Command):

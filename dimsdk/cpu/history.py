@@ -38,7 +38,7 @@ from typing import Optional
 
 from dimp import ID
 from dimp import InstantMessage
-from dimp import ContentType, Content, TextContent
+from dimp import ContentType, Content
 from dimp import Command, GroupCommand
 
 from .processor import ContentProcessor
