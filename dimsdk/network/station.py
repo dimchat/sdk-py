@@ -114,7 +114,7 @@ class Station(User):
             provider = None
 
         # create Station object
-        if identifier.address.network.is_provider():
+        if identifier.type == NetworkID.Station:
             self = Station(identifier=identifier, host=host, port=port)
             self.provider = provider
             self.certificate = certificate
@@ -154,7 +154,7 @@ class ServiceProvider(Group):
             certificate = None
 
         # create ServiceProvider object
-        if identifier.address.network.is_provider():
+        if identifier.type == NetworkID.Provider:
             self = ServiceProvider(identifier=identifier)
             self.publicKey = public_key
             self.certificate = certificate

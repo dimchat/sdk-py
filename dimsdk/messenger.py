@@ -107,7 +107,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         elif receiver.is_broadcast:
             # broadcast message can decrypt by anyone, so just return current user
             return users[0]
-        if receiver.type.is_group():
+        if receiver.is_group:
             # group message (recipient not designated)
             members = facebook.members(identifier=receiver)
             if members is None or len(members) == 0:
@@ -121,7 +121,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         else:
             # 1. personal message
             # 2. split group message
-            assert receiver.type.is_user(), 'receiver ID error: %s' % receiver
+            assert receiver.is_user, 'receiver ID error: %s' % receiver
             for item in users:
                 if item.identifier == receiver:
                     # set this item to be current user?
@@ -133,7 +133,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         if user is None:
             # current users not match
             msg = None
-        elif receiver.type.is_group():
+        elif receiver.is_group:
             # trim group message
             msg = msg.trim(member=user.identifier)
         return msg
@@ -270,7 +270,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         r_msg = self.sign_message(msg=s_msg)
         receiver = facebook.identifier(msg.envelope.receiver)
         ok = True
-        if split and receiver.type.is_group():
+        if split and receiver.is_group:
             # split for each members
             members = facebook.members(identifier=receiver)
             if members is None or len(members) == 0:

@@ -116,7 +116,7 @@ class Facebook(Barrack):
         #             verify it with each member's meta.key
         #         else (this is a user profile)
         #             verify it with the user's meta.key
-        if identifier.type.is_group():
+        if identifier.is_group:
             # check by each member
             members = self.members(identifier=identifier)
             if members is not None:
@@ -146,7 +146,7 @@ class Facebook(Barrack):
             else:
                 meta = self.meta(identifier=owner)
         else:
-            assert identifier.type.is_user(), 'profile ID error: %s' % identifier
+            assert identifier.is_user, 'profile ID error: %s' % identifier
             meta = self.meta(identifier=identifier)
         if meta is not None:
             return profile.verify(public_key=meta.key)
@@ -184,7 +184,7 @@ class Facebook(Barrack):
         return meta.key.match(private_key=key)
 
     def cache_private_key(self, key: PrivateKey, identifier: ID) -> bool:
-        assert identifier.type.is_user(), 'user ID error: %s' % identifier
+        assert identifier.is_user, 'user ID error: %s' % identifier
         if key is None:
             self.__private_keys.pop(identifier, None)
             return False
@@ -207,7 +207,7 @@ class Facebook(Barrack):
     #   User Contacts
     #
     def cache_contacts(self, contacts: list, identifier: ID) -> bool:
-        assert identifier.type.is_user(), 'user ID error: %s' % identifier
+        assert identifier.is_user, 'user ID error: %s' % identifier
         if contacts is None:
             self.__contacts.pop(identifier, None)
             return False
@@ -228,7 +228,7 @@ class Facebook(Barrack):
     #   Group Members
     #
     def cache_members(self, members: list, identifier: ID) -> bool:
-        assert identifier.type.is_group(), 'group ID error: %s' % identifier
+        assert identifier.is_group, 'group ID error: %s' % identifier
         if members is None:
             self.__members.pop(identifier, None)
             return False
@@ -287,7 +287,7 @@ class Facebook(Barrack):
         return super().create_identifier(string=string)
 
     def create_user(self, identifier: ID) -> User:
-        assert identifier.type.is_user(), 'user ID error: %s' % identifier
+        assert identifier.is_user, 'user ID error: %s' % identifier
         if identifier.is_broadcast:
             # create user 'anyone@anywhere'
             return User(identifier=identifier)
@@ -295,16 +295,16 @@ class Facebook(Barrack):
         assert self.meta(identifier) is not None, 'failed to get meta for user: %s' % identifier
         # TODO: check user type
         u_type = identifier.type
-        if u_type.is_person():
+        if u_type == NetworkID.Main or u_type == NetworkID.BTCMain:
             return User(identifier=identifier)
-        if u_type.is_robot():
+        if u_type == NetworkID.Robot:
             return Robot(identifier=identifier)
-        if u_type.is_station():
+        if u_type == NetworkID.Station:
             return Station(identifier=identifier)
         raise TypeError('unsupported user type: %s' % u_type)
 
     def create_group(self, identifier: ID) -> Group:
-        assert identifier.type.is_group(), 'group ID error: %s' % identifier
+        assert identifier.is_group, 'group ID error: %s' % identifier
         if identifier.is_broadcast:
             # create group 'everyone@everywhere'
             return Group(identifier=identifier)
@@ -316,7 +316,7 @@ class Facebook(Barrack):
             return Polylogue(identifier=identifier)
         if g_type == NetworkID.Chatroom:
             raise NotImplementedError('Chatroom not implemented')
-        if g_type.is_provider():
+        if g_type == NetworkID.Provider:
             return ServiceProvider(identifier=identifier)
         raise TypeError('unsupported group type: %s' % g_type)
 
@@ -466,7 +466,7 @@ class Facebook(Barrack):
     #   Group Assistants
     #
     def assistants(self, identifier: ID) -> Optional[list]:
-        assert identifier.type.is_group(), 'Group ID error: %s' % identifier
+        assert identifier.is_group, 'Group ID error: %s' % identifier
         identifier = self.ans_get(name='assistant')
         if identifier is not None:
             return [identifier]
