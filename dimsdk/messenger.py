@@ -109,13 +109,8 @@ class Messenger(Transceiver, ConnectionDelegate):
             return users[0]
         if receiver.is_group:
             # group message (recipient not designated)
-            members = facebook.members(identifier=receiver)
-            if members is None or len(members) == 0:
-                # TODO: query group members
-                #       (do it by application)
-                return None
             for item in users:
-                if item.identifier in members:
+                if facebook.exists_member(member=item.identifier, group=receiver):
                     # set this item to be current user?
                     return item
         else:
@@ -255,7 +250,8 @@ class Messenger(Transceiver, ConnectionDelegate):
         i_msg = InstantMessage.new(content=content, sender=user.identifier, receiver=receiver)
         return self.send_message(msg=i_msg, callback=callback, split=split)
 
-    def send_message(self, msg: InstantMessage, callback: Callback=None, split: bool=True) -> bool:
+    def send_message(self, msg: Union[InstantMessage, ReliableMessage],
+                     callback: Callback=None, split: bool=True) -> bool:
         """
         Send instant message (encrypt and sign) onto DIM network
 
@@ -264,6 +260,10 @@ class Messenger(Transceiver, ConnectionDelegate):
         :param split:    if it's a group message, split it before sending out
         :return:         False on data/delegate error
         """
+        if isinstance(msg, ReliableMessage):
+            return self.__send_message(msg=msg, callback=callback)
+        elif not isinstance(msg, InstantMessage):
+            raise TypeError('message error: %s' % msg)
         facebook = self.facebook
         # Send message (secured + certified) to target station
         s_msg = self.encrypt_message(msg=msg)
@@ -342,51 +342,63 @@ class Messenger(Transceiver, ConnectionDelegate):
             # no message received
             return None
         # 2. process message
-        response = self.process_reliable(msg=r_msg)
-        if response is None:
+        r_msg = self.process_reliable(msg=r_msg)
+        if r_msg is None:
             # nothing to response
             return None
-        # 3. pack response
-        facebook = self.facebook
-        sender = facebook.identifier(r_msg.envelope.sender)
-        receiver = facebook.identifier(r_msg.envelope.receiver)
-        user = self.__select(receiver=receiver)
-        if user is None:
-            # not for you?
-            # delivering message to other receiver?
-            user = facebook.current_user
-        i_msg = InstantMessage.new(content=response, sender=user.identifier, receiver=sender)
-        s_msg = self.encrypt_message(msg=i_msg)
-        r_msg = self.sign_message(msg=s_msg)
-        assert r_msg is not None, 'failed to response: %s' % i_msg
-        # serialize message
+        # 3. serialize message
         return self.serialize_message(msg=r_msg)
 
-    def process_reliable(self, msg: ReliableMessage) -> Optional[Content]:
+    # TODO: override to check broadcast message before calling it
+    # TODO: override to deliver to the receiver when catch exception "receiver error ..."
+    def process_reliable(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
+        # 1. verify message
         s_msg = self.verify_message(msg=msg)
         if s_msg is None:
             # waiting for sender's meta if not exists
             return None
-        # TODO: override to check broadcast message before calling it
-        # TODO: override to deliver to the receiver when catch exception "receiver error ..."
-        return self.process_secure(msg=s_msg)
+        # 2. process message
+        s_msg = self.process_secure(msg=s_msg)
+        if s_msg is None:
+            # nothing to respond
+            return None
+        # 3. sign message
+        return self.sign_message(msg=s_msg)
 
-    def process_secure(self, msg: SecureMessage) -> Optional[Content]:
-        # try to decrypt
+    def process_secure(self, msg: SecureMessage) -> Optional[SecureMessage]:
+        # 1. decrypt message
         i_msg = self.decrypt_message(msg=msg)
-        assert i_msg is not None, 'failed to decrypt message: %s' % msg
-        # process it
-        return self.process_instant(msg=i_msg)
+        if i_msg is None:
+            # cannot decrypt this message, not for you?
+            # delivering message to other receiver?
+            return None
+        # 2. process message
+        i_msg = self.process_instant(msg=i_msg)
+        if i_msg is None:
+            # nothing to respond
+            return None
+        # 3. encrypt message
+        return self.encrypt_message(msg=i_msg)
 
-    def process_instant(self, msg: InstantMessage) -> Optional[Content]:
-        # TODO: override to check group
-        sender = self.facebook.identifier(string=msg.envelope.sender)
+    # TODO: override to check group
+    # TODO: override to filter the response
+    def process_instant(self, msg: InstantMessage) -> Optional[InstantMessage]:
+        facebook = self.facebook
+        sender = facebook.identifier(string=msg.envelope.sender)
+        # process content from sender
         res = self.__cpu.process(content=msg.content, sender=sender, msg=msg)
         if not self.save_message(msg=msg):
             # error
             return None
-        # TODO: override to filter the response
-        return res
+        if res is None:
+            # nothing to respond
+            return None
+        # check receiver
+        receiver = facebook.identifier(msg.envelope.receiver)
+        user = self.__select(receiver=receiver)
+        assert user is not None, 'receiver error: %s' % receiver
+        # pack message
+        return InstantMessage.new(content=res, sender=user.identifier, receiver=sender)
 
 
 class MessageCallback(CompletionHandler):
