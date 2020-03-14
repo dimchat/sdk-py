@@ -53,12 +53,12 @@ class ForwardContentProcessor(ContentProcessor):
     #
     def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
-        r_msg = content.forward
-        messenger = self.messenger
         # call messenger to process it
-        r_msg = messenger.process_reliable(msg=r_msg)
+        r_msg = self.messenger.process_reliable(msg=content.forward)
+        # check response
         if r_msg is not None:
-            messenger.send_message(msg=r_msg)
+            # Over The Top
+            return ForwardContent.new(message=r_msg)
         # else:
         #     receiver = content.forward.envelope.receiver
         #     text = 'Message forwarded: %s' % receiver
@@ -66,7 +66,6 @@ class ForwardContentProcessor(ContentProcessor):
 
         # NOTICE: decrypt failed, not for you?
         #         it means you are asked to re-pack and forward this message
-        # TODO: override to catch the exception 'receiver error ...'
         return None
 
 
