@@ -96,14 +96,9 @@ class AddressNameService(ABC):
             'owner': ANYONE,
             'founder': founder,
         }
-        # reserved names
-        reserved = {}
-        for name in keywords:
-            reserved[name] = True
-        self.__reserved = reserved
 
     def is_reserved(self, name: str) -> bool:
-        return self.__reserved.get(name)
+        return name in keywords
 
     def cache(self, name: str, identifier: ID=None) -> bool:
         if self.is_reserved(name):
