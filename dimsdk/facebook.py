@@ -456,7 +456,7 @@ class Facebook(Barrack):
 
     def exists_member(self, member: ID, group: ID) -> bool:
         members = self.members(identifier=group)
-        if member in members:
+        if members is not None and member in members:
             return True
         owner = self.owner(identifier=group)
         if member == owner:
