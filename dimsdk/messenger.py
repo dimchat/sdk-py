@@ -157,20 +157,6 @@ class Messenger(Transceiver, ConnectionDelegate):
                 raise ValueError('save meta error: %s, %s' % (sender, meta))
         return super().verify_message(msg=msg)
 
-    def encrypt_message(self, msg: InstantMessage) -> SecureMessage:
-        s_msg = super().encrypt_message(msg=msg)
-        group = msg.content.group
-        if group is not None:
-            # NOTICE: this help the receiver knows the group ID
-            #         when the group message separated to multi-messages,
-            #         if don't want the others know you are the group members,
-            #         remove it.
-            s_msg.envelope.group = group
-        # NOTICE: copy content type to envelope
-        #         this help the intermediate nodes to recognize message type
-        s_msg.envelope.type = msg.content.type
-        return s_msg
-
     def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
         # trim message
         s_msg = self.__trim(msg=msg)
