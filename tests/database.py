@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
 
-from mkm import ID, PrivateKey, Profile, Meta
+from mkm import SignKey
+from mkm import ID, Profile, Meta
 from mkm.immortals import Immortals
 
 from dimsdk import Facebook
@@ -23,12 +24,6 @@ class Database(Facebook):
         pass
 
     def load_profile(self, identifier: ID) -> Optional[Profile]:
-        pass
-
-    def save_private_key(self, key: PrivateKey, identifier: ID) -> bool:
-        pass
-
-    def load_private_key(self, identifier: ID) -> Optional[PrivateKey]:
         pass
 
     def save_contacts(self, contacts: list, identifier: ID) -> bool:
@@ -57,3 +52,12 @@ class Database(Facebook):
         if info is not None:
             return info
         return self.__immortals.meta(identifier=identifier)
+
+    #
+    #   UserDataSource
+    #
+    def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
+        return self.__immortals.private_key_for_signature(identifier=identifier)
+
+    def private_keys_for_decryption(self, identifier: ID) -> Optional[list]:
+        return self.__immortals.private_keys_for_decryption(identifier=identifier)

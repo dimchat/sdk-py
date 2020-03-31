@@ -40,7 +40,6 @@ import weakref
 from abc import abstractmethod
 from typing import Optional
 
-from dimp import PrivateKey, SignKey, DecryptKey
 from dimp import NetworkID, ID, Address
 from dimp import User, Group
 from dimp import Meta, Profile
@@ -60,7 +59,6 @@ class Facebook(Barrack):
         self.__ans: weakref.ReferenceType = None
         # caches
         self.__profiles: dict = {}
-        self.__private_keys: dict = {}
         self.__contacts: dict = {}
         self.__members: dict = {}
 
@@ -174,36 +172,6 @@ class Facebook(Barrack):
         raise NotImplemented
 
     #
-    #   Private keys
-    #
-    def verify_private_key(self, key: PrivateKey, identifier: ID) -> bool:
-        assert key is not None, 'private key should not be empty'
-        meta = self.meta(identifier=identifier)
-        assert meta is not None, 'meta not found: %s' % identifier
-        assert meta.key is not None, 'meta error: %s, %s' % (identifier, meta)
-        return meta.key.match(private_key=key)
-
-    def cache_private_key(self, key: PrivateKey, identifier: ID) -> bool:
-        assert identifier.is_user, 'user ID error: %s' % identifier
-        if key is None:
-            self.__private_keys.pop(identifier, None)
-            return False
-        if not self.verify_private_key(key=key, identifier=identifier):
-            return False
-        self.__private_keys[identifier] = key
-        return True
-
-    @abstractmethod
-    def save_private_key(self, key: PrivateKey, identifier: ID) -> bool:
-        """ Save private key into safety storage """
-        raise NotImplemented
-
-    @abstractmethod
-    def load_private_key(self, identifier: ID) -> Optional[PrivateKey]:
-        """ Load private key from safety storage """
-        raise NotImplemented
-
-    #
     #   User Contacts
     #
     def cache_contacts(self, contacts: list, identifier: ID) -> bool:
@@ -283,8 +251,8 @@ class Facebook(Barrack):
         identifier = self.ans_get(name=string)
         if identifier is not None:
             return identifier
-        # create by barrack
-        return super().create_identifier(string=string)
+        assert isinstance(string, str), 'ID error: %s' % string
+        return ID(string)
 
     def create_user(self, identifier: ID) -> User:
         assert identifier.is_user, 'user ID error: %s' % identifier
@@ -293,7 +261,7 @@ class Facebook(Barrack):
             return User(identifier=identifier)
         # make sure meta exists
         assert self.meta(identifier) is not None, 'failed to get meta for user: %s' % identifier
-        # TODO: check user type
+        # check user type
         u_type = identifier.type
         if u_type == NetworkID.Main or u_type == NetworkID.BTCMain:
             return User(identifier=identifier)
@@ -310,7 +278,7 @@ class Facebook(Barrack):
             return Group(identifier=identifier)
         # make sure meta exists
         assert self.meta(identifier) is not None, 'failed to get meta for group: %s' % identifier
-        # TODO: check group type
+        # check group type
         g_type = identifier.type
         if g_type == NetworkID.Polylogue:
             return Polylogue(identifier=identifier)
@@ -373,25 +341,6 @@ class Facebook(Barrack):
             return None
         self.cache_contacts(contacts=array, identifier=identifier)
         return array
-
-    def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
-        key = self.__private_keys.get(identifier)
-        if key is not None:
-            return key
-        # load from local storage
-        key = self.load_private_key(identifier=identifier)
-        if key is None:
-            return None
-        self.cache_private_key(key=key, identifier=identifier)
-        return key
-
-    def private_keys_for_decryption(self, identifier: ID) -> Optional[list]:
-        # DIMP v1.0:
-        #     decrypt key not found, use the same with sign key?
-        key = self.private_key_for_signature(identifier)
-        if isinstance(key, DecryptKey):
-            # TODO: support profile.key
-            return [key]
 
     #
     #   GroupDataSource
