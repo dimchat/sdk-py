@@ -39,7 +39,7 @@ import weakref
 from abc import abstractmethod
 from typing import Optional, Union
 
-from dimp import SymmetricKey, ID, Meta, User
+from dimp import SymmetricKey, EncryptKey, ID, Meta, User
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Content, FileContent
 from dimp import Transceiver
@@ -183,16 +183,17 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().encrypt_content(content=content, key=password, msg=msg)
 
     def encrypt_key(self, key: dict, receiver: str, msg: InstantMessage) -> Optional[bytes]:
-        facebook = self.facebook
-        to = facebook.identifier(receiver)
-        pk = facebook.public_key_for_encryption(identifier=to)
-        if pk is None:
-            meta = facebook.meta(identifier=to)
-            if meta is None:
-                # save this message in a queue waiting receiver's meta response
-                self.suspend_message(msg=msg)
-                # raise LookupError('failed to get encrypt key for receiver: %s' % receiver)
-                return None
+        if not self._is_broadcast_message(msg=msg):
+            facebook = self.facebook
+            to = facebook.identifier(receiver)
+            pk = facebook.public_key_for_encryption(identifier=to)
+            if pk is None:
+                meta = facebook.meta(identifier=to)
+                if meta is None or not isinstance(meta.key, EncryptKey):
+                    # save this message in a queue waiting receiver's meta response
+                    self.suspend_message(msg=msg)
+                    # raise LookupError('failed to get encrypt key for receiver: %s' % receiver)
+                    return None
         return super().encrypt_key(key=key, receiver=receiver, msg=msg)
 
     #
