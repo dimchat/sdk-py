@@ -60,7 +60,6 @@ class Facebook(Barrack):
         # caches
         self.__profiles: dict = {}
         self.__contacts: dict = {}
-        self.__members: dict = {}
 
     @property
     def ans(self) -> AddressNameService:
@@ -185,22 +184,9 @@ class Facebook(Barrack):
     #
     #   Group Members
     #
-    def cache_members(self, members: list, identifier: ID) -> bool:
-        assert identifier.is_group, 'group ID error: %s' % identifier
-        if members is None:
-            self.__members.pop(identifier, None)
-            return False
-        self.__members[identifier] = members
-        return True
-
     @abstractmethod
     def save_members(self, members: list, identifier: ID) -> bool:
         """ Save members into database """
-        raise NotImplemented
-
-    @abstractmethod
-    def load_members(self, identifier: ID) -> Optional[list]:
-        """ Load members from database """
         raise NotImplemented
 
     #
@@ -347,20 +333,6 @@ class Facebook(Barrack):
             # Polylogue's owner is its founder
             return self.founder(identifier=identifier)
         # TODO: load owner from database
-
-    def members(self, identifier: ID) -> Optional[list]:
-        array = super().members(identifier=identifier)
-        if array is None:
-            # get from cache
-            array = self.__members.get(identifier)
-        if array is not None:
-            return array
-        # load from local storage
-        array = self.load_members(identifier=identifier)
-        if array is None:
-            return None
-        self.cache_members(members=array, identifier=identifier)
-        return array
 
     def is_founder(self, member: ID, group: ID) -> bool:
         # check member's public key with group's meta.key

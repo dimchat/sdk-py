@@ -32,9 +32,6 @@ class Database(Facebook):
     def save_members(self, members: list, identifier: ID) -> bool:
         pass
 
-    def load_members(self, identifier: ID) -> Optional[list]:
-        pass
-
     def save_assistants(self, assistants: list, identifier: ID) -> bool:
         pass
 
