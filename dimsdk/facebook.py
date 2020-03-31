@@ -35,7 +35,6 @@
     Barrack for cache entities
 """
 
-import time
 import weakref
 from abc import abstractmethod
 from typing import Optional
@@ -52,13 +51,9 @@ from .group import Polylogue
 
 class Facebook(Barrack):
 
-    EXPIRES = 3600  # profile expires (1 hour)
-
     def __init__(self):
         super().__init__()
         self.__ans: weakref.ReferenceType = None
-        # caches
-        self.__profiles: dict = {}
 
     @property
     def ans(self) -> AddressNameService:
@@ -137,26 +132,9 @@ class Facebook(Barrack):
         if meta is not None:
             return profile.verify(public_key=meta.key)
 
-    def cache_profile(self, profile: Profile, identifier: ID=None) -> bool:
-        if profile is None:
-            # remove from cache if exists
-            self.__profiles.pop(identifier, None)
-            return False
-        if not self.verify_profile(profile=profile, identifier=identifier):
-            return False
-        if identifier is None:
-            identifier = self.identifier(string=profile.identifier)
-        self.__profiles[identifier] = profile
-        return True
-
     @abstractmethod
     def save_profile(self, profile: Profile, identifier: ID=None) -> bool:
         """ Save profile into database """
-        raise NotImplemented
-
-    @abstractmethod
-    def load_profile(self, identifier: ID) -> Optional[Profile]:
-        """ Load profile from database """
         raise NotImplemented
 
     #
@@ -241,31 +219,6 @@ class Facebook(Barrack):
         if g_type == NetworkID.Provider:
             return ServiceProvider(identifier=identifier)
         raise TypeError('unsupported group type: %s' % g_type)
-
-    EXPIRES_KEY = 'expires'
-
-    def profile(self, identifier: ID) -> Optional[Profile]:
-        info = self.__profiles.get(identifier)
-        if info is not None:
-            # check expired time
-            timestamp = time.time() + self.EXPIRES
-            expires = info.get(self.EXPIRES_KEY)
-            if expires is None:
-                # set expired time
-                info[self.EXPIRES_KEY] = timestamp
-                return info
-            elif expires < timestamp:
-                # not expired yet
-                return info
-        # load from local storage
-        info = self.load_profile(identifier=identifier)
-        if info is None:
-            info = Profile.new(identifier=identifier)
-        else:
-            info.pop(self.EXPIRES_KEY, None)
-        # no need to verify profile from local storage
-        self.__profiles[identifier] = info
-        return info
 
     #
     #   GroupDataSource

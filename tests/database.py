@@ -20,9 +20,6 @@ class Database(Facebook):
     def save_profile(self, profile: Profile, identifier: ID = None) -> bool:
         pass
 
-    def load_profile(self, identifier: ID) -> Optional[Profile]:
-        pass
-
     def save_members(self, members: list, identifier: ID) -> bool:
         pass
 
@@ -37,6 +34,9 @@ class Database(Facebook):
     #
     def meta(self, identifier: ID) -> Optional[Meta]:
         return self.__immortals.meta(identifier=identifier)
+
+    def profile(self, identifier: ID) -> Optional[Profile]:
+        return self.__immortals.profile(identifier=identifier)
 
     #
     #   UserDataSource
