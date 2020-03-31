@@ -39,7 +39,7 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.8.10',
+        'dimp>=0.8.11',
         # 'dkd>=0.6.9',
         # 'mkm>=0.8.10',
         'apns2',  # 0.4.1

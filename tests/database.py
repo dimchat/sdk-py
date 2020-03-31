@@ -23,12 +23,6 @@ class Database(Facebook):
     def save_members(self, members: list, identifier: ID) -> bool:
         pass
 
-    def save_assistants(self, assistants: list, identifier: ID) -> bool:
-        pass
-
-    def load_assistants(self, identifier: ID) -> Optional[list]:
-        pass
-
     #
     #   EntityDataSource
     #
