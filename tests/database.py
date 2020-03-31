@@ -17,9 +17,6 @@ class Database(Facebook):
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
         pass
 
-    def load_meta(self, identifier: ID) -> Optional[Meta]:
-        pass
-
     def save_profile(self, profile: Profile, identifier: ID = None) -> bool:
         pass
 
@@ -48,9 +45,6 @@ class Database(Facebook):
     #   EntityDataSource
     #
     def meta(self, identifier: ID) -> Optional[Meta]:
-        info = super().meta(identifier=identifier)
-        if info is not None:
-            return info
         return self.__immortals.meta(identifier=identifier)
 
     #

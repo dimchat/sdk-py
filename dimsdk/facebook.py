@@ -84,19 +84,9 @@ class Facebook(Barrack):
         assert meta is not None, 'meta should not be empty'
         return meta.match_identifier(identifier)
 
-    def cache_meta(self, meta: Meta, identifier: ID) -> bool:
-        if not self.verify_meta(meta=meta, identifier=identifier):
-            return False
-        return super().cache_meta(meta=meta, identifier=identifier)
-
     @abstractmethod
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
         """ Save meta into local storage """
-        raise NotImplemented
-
-    @abstractmethod
-    def load_meta(self, identifier: ID) -> Optional[Meta]:
-        """ Load meta from local storage """
         raise NotImplemented
 
     #
@@ -287,21 +277,6 @@ class Facebook(Barrack):
         if g_type == NetworkID.Provider:
             return ServiceProvider(identifier=identifier)
         raise TypeError('unsupported group type: %s' % g_type)
-
-    #
-    #   EntityDataSource
-    #
-    def meta(self, identifier: ID) -> Optional[Meta]:
-        info = super().meta(identifier=identifier)
-        if info is not None:
-            return info
-        # load from local storage
-        info = self.load_meta(identifier=identifier)
-        if info is None:
-            return None
-        # no need to verify meta from local storage
-        super().cache_meta(meta=info, identifier=identifier)
-        return info
 
     EXPIRES_KEY = 'expires'
 
