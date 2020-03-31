@@ -59,7 +59,6 @@ class Facebook(Barrack):
         self.__ans: weakref.ReferenceType = None
         # caches
         self.__profiles: dict = {}
-        self.__contacts: dict = {}
 
     @property
     def ans(self) -> AddressNameService:
@@ -158,27 +157,6 @@ class Facebook(Barrack):
     @abstractmethod
     def load_profile(self, identifier: ID) -> Optional[Profile]:
         """ Load profile from database """
-        raise NotImplemented
-
-    #
-    #   User Contacts
-    #
-    def cache_contacts(self, contacts: list, identifier: ID) -> bool:
-        assert identifier.is_user, 'user ID error: %s' % identifier
-        if contacts is None:
-            self.__contacts.pop(identifier, None)
-            return False
-        self.__contacts[identifier] = contacts
-        return True
-
-    @abstractmethod
-    def save_contacts(self, contacts: list, identifier: ID) -> bool:
-        """ Save contacts into database """
-        raise NotImplemented
-
-    @abstractmethod
-    def load_contacts(self, identifier: ID) -> Optional[list]:
-        """ Load contacts from database """
         raise NotImplemented
 
     #
@@ -288,20 +266,6 @@ class Facebook(Barrack):
         # no need to verify profile from local storage
         self.__profiles[identifier] = info
         return info
-
-    #
-    #   UserDataSource
-    #
-    def contacts(self, identifier: ID) -> Optional[list]:
-        array = self.__contacts.get(identifier)
-        if array is not None:
-            return array
-        # load from local storage
-        array = self.load_contacts(identifier=identifier)
-        if array is None:
-            return None
-        self.cache_contacts(contacts=array, identifier=identifier)
-        return array
 
     #
     #   GroupDataSource

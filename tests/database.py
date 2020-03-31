@@ -23,12 +23,6 @@ class Database(Facebook):
     def load_profile(self, identifier: ID) -> Optional[Profile]:
         pass
 
-    def save_contacts(self, contacts: list, identifier: ID) -> bool:
-        pass
-
-    def load_contacts(self, identifier: ID) -> Optional[list]:
-        pass
-
     def save_members(self, members: list, identifier: ID) -> bool:
         pass
 
@@ -47,6 +41,9 @@ class Database(Facebook):
     #
     #   UserDataSource
     #
+    def contacts(self, identifier: ID) -> Optional[list]:
+        pass
+
     def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
         return self.__immortals.private_key_for_signature(identifier=identifier)
 
