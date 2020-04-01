@@ -167,6 +167,17 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().decrypt_message(msg=s_msg)
 
     #
+    #   Serialization
+    #
+    # def serialize_message(self, msg: ReliableMessage) -> bytes:
+    #     return super().serialize_message(msg=msg)
+
+    def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
+        if data is None or len(data) == 0:
+            return None
+        return super().deserialize_message(data=data)
+
+    #
     #   InstantMessageDelegate
     #
     def serialize_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
