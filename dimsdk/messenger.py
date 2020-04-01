@@ -35,6 +35,7 @@
     Transform and send message
 """
 
+import json
 import weakref
 from abc import abstractmethod
 from typing import Optional, Union
@@ -167,15 +168,30 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().decrypt_message(msg=s_msg)
 
     #
-    #   Serialization
+    #  Serialization
     #
-    # def serialize_message(self, msg: ReliableMessage) -> bytes:
-    #     return super().serialize_message(msg=msg)
+    def serialize_message(self, msg: ReliableMessage) -> bytes:
+        assert self.barrack.identifier(msg.envelope.receiver).valid, 'receiver ID error: %s' % msg
+        string = json.dumps(msg)
+        return string.encode('utf-8')
 
     def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        if data is None or len(data) == 0:
-            return None
-        return super().deserialize_message(data=data)
+        assert self
+        string = data.decode('utf-8')
+        dictionary = json.loads(string)
+        # TODO: translate short keys
+        #       'S' -> 'sender'
+        #       'R' -> 'receiver'
+        #       'W' -> 'time'
+        #       'T' -> 'type'
+        #       'G' -> 'group'
+        #       ------------------
+        #       'D' -> 'data'
+        #       'V' -> 'signature'
+        #       'K' -> 'key'
+        #       ------------------
+        #       'M' -> 'meta'
+        return ReliableMessage(dictionary)
 
     #
     #   InstantMessageDelegate
