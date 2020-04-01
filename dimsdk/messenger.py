@@ -169,7 +169,7 @@ class Messenger(Transceiver, ConnectionDelegate):
     #
     #   InstantMessageDelegate
     #
-    def encrypt_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
+    def serialize_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
         password = SymmetricKey(key=key)
         assert password == key, 'irregular symmetric key: %s' % key
         # check attachment for File/Image/Audio/Video message content before
@@ -180,9 +180,9 @@ class Messenger(Transceiver, ConnectionDelegate):
             if url is not None:
                 content.url = url
                 content.data = None
-        return super().encrypt_content(content=content, key=password, msg=msg)
+        return super().serialize_content(content=content, key=password, msg=msg)
 
-    def encrypt_key(self, key: dict, receiver: str, msg: InstantMessage) -> Optional[bytes]:
+    def encrypt_key(self, data: bytes, receiver: str, msg: InstantMessage) -> Optional[bytes]:
         if not self._is_broadcast_message(msg=msg):
             facebook = self.facebook
             to = facebook.identifier(receiver)
@@ -194,14 +194,14 @@ class Messenger(Transceiver, ConnectionDelegate):
                     self.suspend_message(msg=msg)
                     # raise LookupError('failed to get encrypt key for receiver: %s' % receiver)
                     return None
-        return super().encrypt_key(key=key, receiver=receiver, msg=msg)
+        return super().encrypt_key(data=data, receiver=receiver, msg=msg)
 
     #
     #   SecureMessageDelegate
     #
-    def decrypt_content(self, data: bytes, key: dict, msg: SecureMessage) -> Optional[Content]:
+    def deserialize_content(self, data: bytes, key: dict, msg: SecureMessage) -> Optional[Content]:
         password = SymmetricKey(key=key)
-        content = super().decrypt_content(data=data, key=password, msg=msg)
+        content = super().deserialize_content(data=data, key=password, msg=msg)
         if content is None:
             return None
         # check attachment for File/Image/Audio/Video message content after
