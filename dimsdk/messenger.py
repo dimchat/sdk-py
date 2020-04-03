@@ -210,17 +210,17 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().serialize_content(content=content, key=password, msg=msg)
 
     def encrypt_key(self, data: bytes, receiver: str, msg: InstantMessage) -> Optional[bytes]:
-        if not self._is_broadcast_message(msg=msg):
-            facebook = self.facebook
-            to = facebook.identifier(receiver)
-            pk = facebook.public_key_for_encryption(identifier=to)
-            if pk is None:
-                meta = facebook.meta(identifier=to)
-                if meta is None or not isinstance(meta.key, EncryptKey):
-                    # save this message in a queue waiting receiver's meta response
-                    self.suspend_message(msg=msg)
-                    # raise LookupError('failed to get encrypt key for receiver: %s' % receiver)
-                    return None
+        # assert not self._is_broadcast_message(msg=msg), 'broadcast message has no key: %s' % msg
+        facebook = self.facebook
+        to = facebook.identifier(receiver)
+        pk = facebook.public_key_for_encryption(identifier=to)
+        if pk is None:
+            meta = facebook.meta(identifier=to)
+            if meta is None or not isinstance(meta.key, EncryptKey):
+                # save this message in a queue waiting receiver's meta response
+                self.suspend_message(msg=msg)
+                # raise LookupError('failed to get encrypt key for receiver: %s' % receiver)
+                return None
         return super().encrypt_key(data=data, receiver=receiver, msg=msg)
 
     #
@@ -249,7 +249,7 @@ class Messenger(Transceiver, ConnectionDelegate):
     #
     #   Send message
     #
-    def send_content(self, content: Content, receiver: ID, callback: Callback=None, split: bool=True) -> bool:
+    def send_content(self, content: Content, receiver: ID, callback: Callback=None, split: bool=False) -> bool:
         """
         Send content to receiver
 
@@ -265,7 +265,7 @@ class Messenger(Transceiver, ConnectionDelegate):
         return self.send_message(msg=i_msg, callback=callback, split=split)
 
     def send_message(self, msg: Union[InstantMessage, ReliableMessage],
-                     callback: Callback=None, split: bool=True) -> bool:
+                     callback: Callback=None, split: bool=False) -> bool:
         """
         Send instant message (encrypt and sign) onto DIM network
 
