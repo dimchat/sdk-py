@@ -35,7 +35,6 @@ from .notification import ApplePushNotificationService
 
 from .nlp import Dialog, ChatBot, Tuling, XiaoI
 
-from .network import NetMsgHead, NetMsg
 from .network import Session, SessionServer
 from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station, Robot
@@ -127,7 +126,6 @@ __all__ = [
     'Dialog', 'ChatBot', 'Tuling', 'XiaoI',
 
     # network
-    'NetMsgHead', 'NetMsg',
     'Session', 'SessionServer',
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
     'ServiceProvider', 'Station', 'Robot',

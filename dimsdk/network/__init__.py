@@ -28,8 +28,6 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .mars import NetMsgHead, NetMsg
-
 from .session import Session, SessionServer
 
 from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
@@ -38,9 +36,6 @@ from .station import ServiceProvider, Station
 from .robot import Robot
 
 __all__ = [
-
-    # Data packing
-    'NetMsgHead', 'NetMsg',
 
     # Session
     'Session', 'SessionServer',
