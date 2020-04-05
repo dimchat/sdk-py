@@ -28,17 +28,12 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .session import Session, SessionServer
-
 from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
 from .station import ServiceProvider, Station
 
 from .robot import Robot
 
 __all__ = [
-
-    # Session
-    'Session', 'SessionServer',
 
     # CA
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',

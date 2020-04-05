@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
 
-from mkm import SignKey
-from mkm import ID, Profile, Meta
 from mkm.immortals import Immortals
+
+from dimp import SignKey
+from dimp import ID, Profile, Meta
 
 from dimsdk import Facebook
 
