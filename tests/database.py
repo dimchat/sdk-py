@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
 
-from mkm.immortals import Immortals
-
 from dimp import SignKey
 from dimp import ID, Profile, Meta
 
 from dimsdk import Facebook
+from dimsdk.immortals import Immortals
 
 
 class Database(Facebook):

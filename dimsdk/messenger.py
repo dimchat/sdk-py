@@ -35,7 +35,6 @@
     Transform and send message
 """
 
-import json
 import weakref
 from abc import abstractmethod
 from typing import Optional, Union
@@ -168,32 +167,6 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().decrypt_message(msg=s_msg)
 
     #
-    #  Serialization
-    #
-    def serialize_message(self, msg: ReliableMessage) -> bytes:
-        assert self.barrack.identifier(msg.envelope.receiver).valid, 'receiver ID error: %s' % msg
-        string = json.dumps(msg)
-        return string.encode('utf-8')
-
-    def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        assert self
-        string = data.decode('utf-8')
-        dictionary = json.loads(string)
-        # TODO: translate short keys
-        #       'S' -> 'sender'
-        #       'R' -> 'receiver'
-        #       'W' -> 'time'
-        #       'T' -> 'type'
-        #       'G' -> 'group'
-        #       ------------------
-        #       'D' -> 'data'
-        #       'V' -> 'signature'
-        #       'K' -> 'key'
-        #       ------------------
-        #       'M' -> 'meta'
-        return ReliableMessage(dictionary)
-
-    #
     #   InstantMessageDelegate
     #
     def serialize_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
@@ -210,7 +183,6 @@ class Messenger(Transceiver, ConnectionDelegate):
         return super().serialize_content(content=content, key=password, msg=msg)
 
     def encrypt_key(self, data: bytes, receiver: str, msg: InstantMessage) -> Optional[bytes]:
-        # assert not self._is_broadcast_message(msg=msg), 'broadcast message has no key: %s' % msg
         facebook = self.facebook
         to = facebook.identifier(receiver)
         pk = facebook.public_key_for_encryption(identifier=to)

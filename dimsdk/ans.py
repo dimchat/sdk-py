@@ -38,8 +38,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from mkm.address import ANYWHERE
-from dimp import ID, ANYONE, EVERYONE
+from dimp import ID, ANYONE, EVERYONE, ANYWHERE
 
 #
 #   Founder

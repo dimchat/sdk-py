@@ -40,13 +40,13 @@ from typing import Optional
 
 import numpy
 
-from .chatbot import ChatBot
+from dimp import Hex, sha1
 
-from ..crypto import hex_encode, sha1
+from .chatbot import ChatBot
 
 
 def sha_hex(string: str) -> str:
-    return hex_encode(sha1(string.encode('utf-8')))
+    return Hex.encode(sha1(string.encode('utf-8')))
 
 
 class XiaoI(ChatBot):
@@ -70,7 +70,7 @@ class XiaoI(ChatBot):
 
     def __auth(self) -> str:
         random: bytes = numpy.random.bytes(40)
-        nonce = hex_encode(random)
+        nonce = Hex.encode(random)
         # sign
         ha1 = sha_hex(self.app_key + ':' + self.realm + ':' + self.app_secret)
         ha2 = sha_hex(self.method + ':' + self.uri)

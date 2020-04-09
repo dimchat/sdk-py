@@ -38,10 +38,10 @@
 import os
 from typing import Optional
 
-from mkm.dos import JSONFile
-
 from dimp import User
 from dimp import KeyCache
+
+from .dos import JSONFile
 
 
 class KeyStore(KeyCache):

@@ -37,7 +37,7 @@
 
 import json
 
-from mkm.crypto.utils import base64_decode
+from dimp import Base64
 
 from dimp import PublicKey
 
@@ -103,7 +103,7 @@ class CertificateAuthority(dict):
         # info (JsON string)
         self.info = CAData(json.loads(ca['info']))
         # signature of info with Issuer's Public Key
-        self.signature = base64_decode(ca['signature'])
+        self.signature = Base64.decode(ca['signature'])
         # extensions (dict)
         if 'extensions' in ca:
             self.extensions = ca['extensions']

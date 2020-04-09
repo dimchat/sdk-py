@@ -11,9 +11,7 @@ import json
 import unittest
 
 from dimsdk import *
-
-from mkm.crypto.utils import base64_encode
-from mkm.immortals import Immortals
+from dimsdk.immortals import Immortals
 
 from tests.database import Database
 
@@ -40,7 +38,7 @@ def print_ca(ca: CertificateAuthority):
     print('    <version>%d</version>' % ca.version)
     print('    <sn>%s</sn>' % ca.sn)
     print('    <info>%s</info>' % ca.info)
-    print('    <signature>%s</signature>' % base64_encode(ca.signature))
+    print('    <signature>%s</signature>' % Base64.encode(ca.signature))
     print('</%s>' % clazz)
 
 
@@ -91,8 +89,7 @@ class CATestCase(unittest.TestCase):
 
         moki_meta = g_immortals.meta(identifier=moki_id)
         moki_pk = moki_meta.key
-        key = moki_pk
-        common['key'] = PublicKey(key)
+        common['key'] = moki_pk
         print('pubic key: ', common['key'])
 
     def test4_ca(self):
@@ -115,7 +112,7 @@ class CATestCase(unittest.TestCase):
             'version': 1,
             'sn': 1234567,
             'info': string,
-            'signature': base64_encode(signature)
+            'signature': Base64.encode(signature)
         }
         common['ca'] = CertificateAuthority(ca)
         print_ca(common['ca'])

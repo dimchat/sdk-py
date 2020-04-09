@@ -29,6 +29,7 @@
 # ==============================================================================
 
 from dimp import *
+from .plugins import *
 
 from .notification import Notification, Observer, NotificationCenter
 from .notification import ApplePushNotificationService
@@ -71,6 +72,13 @@ __all__ = [
     'SignKey', 'VerifyKey', 'EncryptKey', 'DecryptKey',
     'SymmetricKey', 'PrivateKey', 'PublicKey',
 
+    # data
+    'BaseCoder',
+    'Base64', 'Base58', 'Hex',
+    'Digest',
+    'MD5', 'SHA256', 'RipeMD160',
+    'md5', 'sha256', 'ripemd160',
+
     # entity
     'NetworkID', 'Address', 'ID', 'Meta', 'Profile',
     'Entity', 'User', 'Group',
@@ -78,7 +86,7 @@ __all__ = [
     # delegate
     'EntityDataSource', 'UserDataSource', 'GroupDataSource',
 
-    'ANYONE', 'EVERYONE',
+    'ANYONE', 'EVERYONE', 'ANYWHERE', 'EVERYWHERE',
 
     #
     #   DaoKeDao

@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-#
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
-#
-#                                Written in 2019 by Moky <albert.moky@gmail.com>
-#
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2019 Albert Moky
+# Copyright (c) 2020 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,21 +23,34 @@
 # SOFTWARE.
 # ==============================================================================
 
-import hashlib
+"""
+    Base Coder
+    ~~~~~~~~~~
 
-from binascii import b2a_hex, a2b_hex
+    Base58
+"""
+
+from typing import Optional
+
+import base58
+
+from dimp import BaseCoder, Base58
 
 
-def sha1(data: bytes) -> bytes:
-    """ SHA1 Digest """
-    return hashlib.sha1(data).digest()
+"""
+    Base58
+"""
 
 
-def hex_encode(data: bytes) -> str:
-    """ HEX Encode """
-    return b2a_hex(data).decode('utf-8')
+class B58(BaseCoder):
+
+    def encode(self, data: bytes) -> str:
+        """ BASE-58 Encode """
+        return base58.b58encode(data).decode('utf-8')
+
+    def decode(self, string: str) -> Optional[bytes]:
+        """ BASE-58 Decode """
+        return base58.b58decode(string)
 
 
-def hex_decode(string: str) -> bytes:
-    """ HEX Decode """
-    return a2b_hex(string)
+Base58.coder = B58()

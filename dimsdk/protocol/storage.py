@@ -38,7 +38,7 @@
 import json
 from typing import Optional
 
-from mkm.crypto.utils import base64_encode, base64_decode
+from dimp import Base64
 from dimp import DecryptKey, SymmetricKey, ID
 from dimp import Command
 
@@ -125,7 +125,7 @@ class StorageCommand(Command):
         if self.__key is None:
             base64 = self.get('key')
             if base64 is not None:
-                self.__key = base64_decode(base64)
+                self.__key = Base64.decode(base64)
         return self.__key
 
     @key.setter
@@ -133,7 +133,7 @@ class StorageCommand(Command):
         if value is None:
             self.pop('key', None)
         else:
-            self['key'] = base64_encode(value)
+            self['key'] = Base64.encode(value)
         self.__key = value
 
     #
@@ -144,7 +144,7 @@ class StorageCommand(Command):
         if self.__data is None:
             base64 = self.get('data')
             if base64 is not None:
-                self.__data = base64_decode(base64)
+                self.__data = Base64.decode(base64)
         return self.__data
 
     @data.setter
@@ -152,7 +152,7 @@ class StorageCommand(Command):
         if value is None:
             self.pop('data', None)
         else:
-            self['data'] = base64_encode(value)
+            self['data'] = Base64.encode(value)
         self.__data = value
 
     def decrypt(self, password: DecryptKey=None, private_key: DecryptKey=None) -> bytes:
