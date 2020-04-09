@@ -12,7 +12,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.3.16'
+__version__ = '0.3.17'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -39,9 +39,9 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.9.2',
+        'dimp>=0.9.3',
         # 'dkd>=0.7.3',
-        # 'mkm>=0.9.2',
+        # 'mkm>=0.9.3',
 
         'apns2',   # 0.4.1
         'Crypto',  # pycryptodome==3.7.3
