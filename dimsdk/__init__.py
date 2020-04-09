@@ -34,8 +34,6 @@ from .plugins import *
 from .notification import Notification, Observer, NotificationCenter
 from .notification import ApplePushNotificationService
 
-from .nlp import Dialog, ChatBot, Tuling, XiaoI
-
 from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station, Robot
 
@@ -76,11 +74,12 @@ __all__ = [
     'BaseCoder',
     'Base64', 'Base58', 'Hex',
     'Digest',
-    'MD5', 'SHA256', 'RipeMD160',
-    'md5', 'sha256', 'ripemd160',
+    'MD5', 'SHA1', 'SHA256', 'RipeMD160',
+    'md5', 'sha1', 'sha256', 'ripemd160',
 
     # entity
-    'NetworkID', 'Address', 'ID', 'Meta', 'Profile',
+    'NetworkID', 'MetaVersion',
+    'Address', 'ID', 'Meta', 'Profile',
     'Entity', 'User', 'Group',
 
     # delegate
@@ -128,9 +127,6 @@ __all__ = [
     # notification
     'Notification', 'Observer', 'NotificationCenter',
     'ApplePushNotificationService',
-
-    # NLP
-    'Dialog', 'ChatBot', 'Tuling', 'XiaoI',
 
     # network
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',

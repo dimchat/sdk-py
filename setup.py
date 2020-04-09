@@ -12,7 +12,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.3.15'
+__version__ = '0.3.16'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -31,7 +31,7 @@ setup(
     long_description_content_type='text/markdown',
     packages=find_packages(),
     package_data={
-        '': ['*.js']
+        '': ['res/*.js']
     },
     classifiers=[
         'Programming Language :: Python :: 3',
@@ -41,7 +41,7 @@ setup(
     install_requires=[
         'dimp>=0.9.2',
         # 'dkd>=0.7.3',
-        # 'mkm>=0.9.1',
+        # 'mkm>=0.9.2',
 
         'apns2',   # 0.4.1
         'Crypto',  # pycryptodome==3.7.3
