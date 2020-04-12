@@ -39,7 +39,7 @@
 from typing import Optional
 
 from dimp import ID
-from dimp import InstantMessage
+from dimp import ReliableMessage
 from dimp import Content
 from dimp import GroupCommand, InviteCommand
 
@@ -63,7 +63,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
             if self.facebook.is_owner(member=sender, group=group):
                 return True
 
-    def __reset(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+    def __reset(self, content: Content, sender: ID, msg: ReliableMessage) -> Content:
         """
         Call reset command processor
 
@@ -98,7 +98,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, InviteCommand), 'group command error: %s' % content
         facebook = self.facebook
         group: ID = facebook.identifier(content.group)

@@ -37,7 +37,7 @@
 from typing import Optional
 
 from dimp import ID
-from dimp import InstantMessage
+from dimp import ReliableMessage
 from dimp import ContentType, Content
 from dimp import Command, GroupCommand
 
@@ -61,7 +61,7 @@ class HistoryCommandProcessor(CommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert type(self) == HistoryCommandProcessor, 'override me!'
         assert isinstance(content, Command), 'history cmd error: %s' % content
         if content.group is None:
@@ -122,7 +122,7 @@ class GroupCommandProcessor(HistoryCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert type(self) == GroupCommandProcessor, 'override me!'
         assert isinstance(content, Command), 'group cmd error: %s' % content
         # process command by name

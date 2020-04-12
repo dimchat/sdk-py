@@ -37,7 +37,7 @@
 from typing import Optional
 
 from dimp import ID, Meta, Profile
-from dimp import InstantMessage
+from dimp import ReliableMessage
 from dimp import Content
 from dimp import TextContent, Command, ProfileCommand
 
@@ -82,7 +82,7 @@ class ProfileCommandProcessor(CommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, ProfileCommand), 'command error: %s' % content
         facebook = self.facebook
         identifier = facebook.identifier(content.identifier)

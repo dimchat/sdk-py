@@ -37,7 +37,7 @@
 from typing import Optional
 
 from dimp import ID
-from dimp import InstantMessage
+from dimp import ReliableMessage
 from dimp import ContentType, Content, ForwardContent
 
 from .processor import ContentProcessor
@@ -51,10 +51,10 @@ class ForwardContentProcessor(ContentProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
-        r_msg = self.messenger.process_reliable(msg=content.forward)
+        r_msg = self.messenger.process_message(msg=content.forward)
         # check response
         if r_msg is not None:
             # Over The Top

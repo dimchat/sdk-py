@@ -44,7 +44,7 @@
 from typing import Optional
 
 from dimp import ID
-from dimp import InstantMessage
+from dimp import ReliableMessage
 from dimp import Content
 from dimp import GroupCommand
 
@@ -98,7 +98,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         # assert isinstance(content, ResetCommand), 'group command error: %s' % content
         assert isinstance(content, GroupCommand), 'group command error: %s' % content
         facebook = self.facebook
@@ -115,7 +115,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
         # 1. check permission
         if not facebook.is_owner(member=sender, group=group):
             if not facebook.exists_assistant(member=sender, group=group):
-                raise AssertionError('only owner/assistant can reset: %s' % msg)
+                raise AssertionError('only owner/assistant can reset: %s, %s' % (group, sender))
         # 2. reset
         added, removed = self.__reset(new_members=new_members, group=group)
         if added is not None:

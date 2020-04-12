@@ -37,7 +37,7 @@
 from typing import Optional
 
 from dimp import ID
-from dimp import InstantMessage
+from dimp import ReliableMessage
 from dimp import ContentType, Content, TextContent
 from dimp import Command
 
@@ -89,7 +89,7 @@ class CommandProcessor(ContentProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert type(self) == CommandProcessor, 'override me!'
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
@@ -106,7 +106,7 @@ class _DefaultCommandProcessor(CommandProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Content:
         assert isinstance(content, Command), 'command error: %s' % content
         res = TextContent.new(text='Command (name: %s) not support yet!' % content.command)
         # check group message

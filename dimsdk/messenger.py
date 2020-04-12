@@ -328,7 +328,7 @@ class Messenger(Transceiver, ConnectionDelegate):
             # no message received
             return None
         # 2. process message
-        r_msg = self.process_reliable(msg=r_msg)
+        r_msg = self.process_message(msg=r_msg)
         if r_msg is None:
             # nothing to response
             return None
@@ -337,29 +337,29 @@ class Messenger(Transceiver, ConnectionDelegate):
 
     # TODO: override to check broadcast message before calling it
     # TODO: override to deliver to the receiver when catch exception "receiver error ..."
-    def process_reliable(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
+    def process_message(self, msg: ReliableMessage) -> Optional[ReliableMessage]:
         # 1. verify message
         s_msg = self.verify_message(msg=msg)
         if s_msg is None:
             # waiting for sender's meta if not exists
             return None
         # 2. process message
-        s_msg = self.process_secure(msg=s_msg)
+        s_msg = self.process_secure(secure=s_msg, msg=msg)
         if s_msg is None:
             # nothing to respond
             return None
         # 3. sign message
         return self.sign_message(msg=s_msg)
 
-    def process_secure(self, msg: SecureMessage) -> Optional[SecureMessage]:
+    def process_secure(self, secure: SecureMessage, msg: ReliableMessage) -> Optional[SecureMessage]:
         # 1. decrypt message
-        i_msg = self.decrypt_message(msg=msg)
+        i_msg = self.decrypt_message(msg=secure)
         if i_msg is None:
             # cannot decrypt this message, not for you?
             # delivering message to other receiver?
             return None
         # 2. process message
-        i_msg = self.process_instant(msg=i_msg)
+        i_msg = self.process_instant(instant=i_msg, msg=msg)
         if i_msg is None:
             # nothing to respond
             return None
@@ -368,12 +368,12 @@ class Messenger(Transceiver, ConnectionDelegate):
 
     # TODO: override to check group
     # TODO: override to filter the response
-    def process_instant(self, msg: InstantMessage) -> Optional[InstantMessage]:
+    def process_instant(self, instant: InstantMessage, msg: ReliableMessage) -> Optional[InstantMessage]:
         facebook = self.facebook
         sender = facebook.identifier(string=msg.envelope.sender)
         # process content from sender
-        res = self.__cpu.process(content=msg.content, sender=sender, msg=msg)
-        if not self.save_message(msg=msg):
+        res = self.__cpu.process(content=instant.content, sender=sender, msg=msg)
+        if not self.save_message(msg=instant):
             # error
             return None
         if res is None:

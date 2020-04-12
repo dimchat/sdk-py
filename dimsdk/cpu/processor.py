@@ -38,7 +38,7 @@ import weakref
 from typing import Optional, Union
 
 from dimp import ID
-from dimp import InstantMessage
+from dimp import ReliableMessage
 from dimp import ContentType, Content, TextContent
 
 
@@ -108,7 +108,7 @@ class ContentProcessor:
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Optional[Content]:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert type(self) == ContentProcessor, 'override me!'
         # process content by type
         cpu = self.cpu(content_type=content.type)
@@ -124,7 +124,7 @@ class _DefaultContentProcessor(ContentProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: InstantMessage) -> Content:
+    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Content:
         res = TextContent.new(text='Content (type: %s) not support yet!' % content.type)
         # check group message
         group = content.group
