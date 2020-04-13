@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#   DIMP : Decentralized Instant Messaging Protocol
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #

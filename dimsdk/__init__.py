@@ -29,6 +29,7 @@
 # ==============================================================================
 
 from dimp import *
+
 from .plugins import *
 
 from .notification import Notification, Observer, NotificationCenter
@@ -39,9 +40,8 @@ from .network import ServiceProvider, Station, Robot
 
 from .group import Polylogue
 
-from .protocol import ReceiptCommand
-from .protocol import BlockCommand, MuteCommand
-from .protocol import StorageCommand
+from .protocol import ReceiptCommand, HandshakeCommand, LoginCommand
+from .protocol import BlockCommand, MuteCommand, StorageCommand
 
 from .cpu import ContentProcessor, ForwardContentProcessor
 from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
@@ -112,7 +112,7 @@ __all__ = [
     'Command', 'HistoryCommand', 'GroupCommand',
     'InviteCommand', 'ExpelCommand', 'JoinCommand', 'QuitCommand',
     'QueryCommand', 'ResetCommand',
-    'HandshakeCommand', 'MetaCommand', 'ProfileCommand',
+    'MetaCommand', 'ProfileCommand',
 
     # core
     'Barrack', 'KeyCache', 'Transceiver',
@@ -136,9 +136,8 @@ __all__ = [
     'Polylogue',
 
     # protocol
-    'ReceiptCommand',
-    'BlockCommand', 'MuteCommand',
-    'StorageCommand',
+    'ReceiptCommand', 'HandshakeCommand', 'LoginCommand',
+    'BlockCommand', 'MuteCommand', 'StorageCommand',
 
     # cpu
     'ContentProcessor', 'ForwardContentProcessor',

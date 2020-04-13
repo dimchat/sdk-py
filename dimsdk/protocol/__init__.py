@@ -29,12 +29,17 @@
 # ==============================================================================
 
 from .receipt import ReceiptCommand
+from .handshake import HandshakeCommand
+from .login import LoginCommand
+
 from .block import BlockCommand
 from .mute import MuteCommand
 from .storage import StorageCommand
 
 __all__ = [
     'ReceiptCommand',
+    'HandshakeCommand', 'LoginCommand',
+
     'BlockCommand', 'MuteCommand',
     'StorageCommand',
 ]
