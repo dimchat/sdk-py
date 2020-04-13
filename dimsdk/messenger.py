@@ -99,7 +99,7 @@ class Messenger(Transceiver, ConnectionDelegate):
             assert isinstance(barrack, Facebook), 'messenger delegate error: %s' % barrack
         return barrack
 
-    def __select(self, receiver: ID) -> Optional[User]:
+    def _select(self, receiver: ID) -> Optional[User]:
         facebook = self.facebook
         users = facebook.local_users
         if users is None or len(users) == 0:
@@ -124,7 +124,7 @@ class Messenger(Transceiver, ConnectionDelegate):
 
     def __trim(self, msg: SecureMessage) -> Optional[SecureMessage]:
         receiver = self.facebook.identifier(msg.envelope.receiver)
-        user = self.__select(receiver=receiver)
+        user = self._select(receiver=receiver)
         if user is None:
             # current users not match
             msg = None
@@ -344,14 +344,14 @@ class Messenger(Transceiver, ConnectionDelegate):
             # waiting for sender's meta if not exists
             return None
         # 2. process message
-        s_msg = self.process_secure(secure=s_msg, msg=msg)
+        s_msg = self.__process_secure(secure=s_msg, msg=msg)
         if s_msg is None:
             # nothing to respond
             return None
         # 3. sign message
         return self.sign_message(msg=s_msg)
 
-    def process_secure(self, secure: SecureMessage, msg: ReliableMessage) -> Optional[SecureMessage]:
+    def __process_secure(self, secure: SecureMessage, msg: ReliableMessage) -> Optional[SecureMessage]:
         # 1. decrypt message
         i_msg = self.decrypt_message(msg=secure)
         if i_msg is None:
@@ -359,20 +359,18 @@ class Messenger(Transceiver, ConnectionDelegate):
             # delivering message to other receiver?
             return None
         # 2. process message
-        i_msg = self.process_instant(instant=i_msg, msg=msg)
+        i_msg = self.__process_instant(instant=i_msg, msg=msg)
         if i_msg is None:
             # nothing to respond
             return None
         # 3. encrypt message
         return self.encrypt_message(msg=i_msg)
 
-    # TODO: override to check group
-    # TODO: override to filter the response
-    def process_instant(self, instant: InstantMessage, msg: ReliableMessage) -> Optional[InstantMessage]:
+    def __process_instant(self, instant: InstantMessage, msg: ReliableMessage) -> Optional[InstantMessage]:
         facebook = self.facebook
         sender = facebook.identifier(string=msg.envelope.sender)
         # process content from sender
-        res = self.__cpu.process(content=instant.content, sender=sender, msg=msg)
+        res = self.process_content(content=instant.content, sender=sender, msg=msg)
         if not self.save_message(msg=instant):
             # error
             return None
@@ -381,10 +379,16 @@ class Messenger(Transceiver, ConnectionDelegate):
             return None
         # check receiver
         receiver = facebook.identifier(msg.envelope.receiver)
-        user = self.__select(receiver=receiver)
+        user = self._select(receiver=receiver)
         assert user is not None, 'receiver error: %s' % receiver
         # pack message
         return InstantMessage.new(content=res, sender=user.identifier, receiver=sender)
+
+    # TODO: override to check group
+    # TODO: override to filter the response
+    def process_content(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
+        # call CPU to process it
+        return self.__cpu.process(content=content, sender=sender, msg=msg)
 
 
 class MessageCallback(CompletionHandler):
