@@ -93,15 +93,3 @@ class MessengerDelegate(ABC):
         :return: True on success
         """
         pass
-
-
-class ConnectionDelegate(ABC):
-
-    @abstractmethod
-    def received_package(self, data: bytes) -> Optional[bytes]:
-        """ Receive data package
-
-        :param data: data package
-        :return: response to sender
-        """
-        pass

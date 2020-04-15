@@ -45,13 +45,13 @@ from dimp import Content, FileContent
 from dimp import Transceiver
 
 from .delegate import Callback, CompletionHandler
-from .delegate import MessengerDelegate, ConnectionDelegate
+from .delegate import MessengerDelegate
 from .facebook import Facebook
 
 from .cpu import ContentProcessor
 
 
-class Messenger(Transceiver, ConnectionDelegate):
+class Messenger(Transceiver):
 
     def __init__(self):
         super().__init__()
@@ -313,9 +313,9 @@ class Messenger(Transceiver, ConnectionDelegate):
         raise NotImplemented
 
     #
-    #   ConnectionDelegate
+    #   Process Message Package
     #
-    def received_package(self, data: bytes) -> Optional[bytes]:
+    def process_package(self, data: bytes) -> Optional[bytes]:
         """
         Processing received message package
 
