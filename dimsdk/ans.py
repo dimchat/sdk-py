@@ -96,7 +96,8 @@ class AddressNameService(ABC):
             'founder': founder,
         }
 
-    def is_reserved(self, name: str) -> bool:
+    @staticmethod
+    def is_reserved(name: str) -> bool:
         return name in keywords
 
     def cache(self, name: str, identifier: ID=None) -> bool:

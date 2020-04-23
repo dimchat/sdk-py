@@ -35,7 +35,6 @@
     Barrack for cache entities
 """
 
-import weakref
 from abc import abstractmethod
 from typing import Optional
 
@@ -44,30 +43,11 @@ from dimp import User, Group
 from dimp import Meta, Profile
 from dimp import Barrack
 
-from .ans import AddressNameService
 from .network import ServiceProvider, Station, Robot
 from .group import Polylogue
 
 
 class Facebook(Barrack):
-
-    def __init__(self):
-        super().__init__()
-        self.__ans: weakref.ReferenceType = None
-
-    @property
-    def ans(self) -> AddressNameService:
-        if self.__ans is not None:
-            return self.__ans()
-
-    @ans.setter
-    def ans(self, value: AddressNameService):
-        self.__ans = weakref.ref(value)
-
-    def ans_get(self, name: str) -> ID:
-        ans = self.ans
-        if ans is not None:
-            return ans.identifier(name=name)
 
     #
     #   Meta
@@ -179,10 +159,6 @@ class Facebook(Barrack):
         if isinstance(string, Address):
             # convert Address to ID
             return self.__identifier(address=string)
-        # try from ANS record
-        identifier = self.ans_get(name=string)
-        if identifier is not None:
-            return identifier
         assert isinstance(string, str), 'ID error: %s' % string
         return ID(string)
 
@@ -278,11 +254,10 @@ class Facebook(Barrack):
     #
     #   Group Assistants
     #
+    @abstractmethod
     def assistants(self, identifier: ID) -> Optional[list]:
-        assert identifier.is_group, 'Group ID error: %s' % identifier
-        identifier = self.ans_get(name='assistant')
-        if identifier is not None:
-            return [identifier]
+        """ Get assistants for this group """
+        raise NotImplemented
 
     def exists_assistant(self, member: ID, group: ID) -> bool:
         assistants = self.assistants(identifier=group)

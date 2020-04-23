@@ -231,8 +231,15 @@ class Messenger(Transceiver):
         :param split:    if it's a group message, split it before sending out
         :return: True on success
         """
+        # Application Layer should make sure user is already login before it send message to server.
+        # Application layer should put message into queue so that it will send automatically after user login
         user = self.facebook.current_user
         assert user is not None, 'failed to get current user'
+        # if receiver.is_group:
+        #     if content.group is None:
+        #         content.group = receiver
+        #     else:
+        #         assert receiver == content.group, 'group ID not match: %s, %s' % (receiver, content)
         i_msg = InstantMessage.new(content=content, sender=user.identifier, receiver=receiver)
         return self.send_message(msg=i_msg, callback=callback, split=split)
 
