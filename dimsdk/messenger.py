@@ -221,14 +221,13 @@ class Messenger(Transceiver):
     #
     #   Send message
     #
-    def send_content(self, content: Content, receiver: ID, callback: Callback=None, split: bool=False) -> bool:
+    def send_content(self, content: Content, receiver: ID, callback: Callback=None) -> bool:
         """
         Send content to receiver
 
         :param content: message content
         :param receiver: receiver ID
         :param callback: callback function
-        :param split:    if it's a group message, split it before sending out
         :return: True on success
         """
         # Application Layer should make sure user is already login before it send message to server.
@@ -241,46 +240,34 @@ class Messenger(Transceiver):
         #     else:
         #         assert receiver == content.group, 'group ID not match: %s, %s' % (receiver, content)
         i_msg = InstantMessage.new(content=content, sender=user.identifier, receiver=receiver)
-        return self.send_message(msg=i_msg, callback=callback, split=split)
+        return self.send_message(msg=i_msg, callback=callback)
 
     def send_message(self, msg: Union[InstantMessage, ReliableMessage],
-                     callback: Callback=None, split: bool=False) -> bool:
+                     callback: Callback=None) -> bool:
         """
         Send instant message (encrypt and sign) onto DIM network
 
         :param msg:      instant message
         :param callback: callback function
-        :param split:    if it's a group message, split it before sending out
         :return:         False on data/delegate error
         """
         if isinstance(msg, ReliableMessage):
             return self.__send_message(msg=msg, callback=callback)
         elif not isinstance(msg, InstantMessage):
             raise TypeError('message error: %s' % msg)
-        facebook = self.facebook
+
         # Send message (secured + certified) to target station
         s_msg = self.encrypt_message(msg=msg)
+        if s_msg is None:
+            # public key not found?
+            # raise AssertionError('failed to encrypt message: %s' % msg)
+            return False
         r_msg = self.sign_message(msg=s_msg)
-        receiver = facebook.identifier(msg.envelope.receiver)
-        ok = True
-        if split and receiver.is_group:
-            # split for each members
-            members = facebook.members(identifier=receiver)
-            if members is None or len(members) == 0:
-                # FIXME: query group members from sender
-                messages = None
-            else:
-                messages = r_msg.split(members=members)
-            if messages is None:
-                # failed to split msg, send it to group
-                ok = self.__send_message(msg=r_msg, callback=callback)
-            else:
-                # sending group message one by one
-                for r_msg in messages:
-                    if not self.__send_message(msg=r_msg, callback=callback):
-                        ok = False
-        else:
-            ok = self.__send_message(msg=r_msg, callback=callback)
+        if r_msg is None:
+            # TODO: set iMsg.state = error
+            raise AssertionError('failed to sign message: %s' % s_msg)
+
+        ok = self.__send_message(msg=r_msg, callback=callback)
         # TODO: if OK, set iMsg.state = sending; else set iMsg.state = waiting
 
         if not self.save_message(msg=msg):

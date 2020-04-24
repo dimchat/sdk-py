@@ -43,3 +43,9 @@ class Database(Facebook):
 
     def private_keys_for_decryption(self, identifier: ID) -> Optional[list]:
         return self.__immortals.private_keys_for_decryption(identifier=identifier)
+
+    #
+    #   GroupDataSource
+    #
+    def assistants(self, identifier: ID) -> Optional[list]:
+        pass
