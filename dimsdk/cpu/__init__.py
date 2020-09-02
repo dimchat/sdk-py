@@ -37,6 +37,8 @@
 
 from .processor import ContentProcessor
 from .forward import ForwardContentProcessor
+from .file import FileContentProcessor
+
 from .command import CommandProcessor
 from .history import HistoryCommandProcessor, GroupCommandProcessor
 from .invite import InviteCommandProcessor
@@ -52,11 +54,11 @@ from .profile import ProfileCommandProcessor
 __all__ = [
     'ContentProcessor',
     'ForwardContentProcessor',
+    'FileContentProcessor',
 
     'CommandProcessor',
 
-    'HistoryCommandProcessor',
-    'GroupCommandProcessor',
+    'HistoryCommandProcessor', 'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
 

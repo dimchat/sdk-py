@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#   LNC: Local Notification Center
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -28,21 +28,53 @@
 # SOFTWARE.
 # ==============================================================================
 
-
-"""
-    Notification Center
-    ~~~~~~~~~~~~~~~~~~~
-
-    Notification dispatcher
-"""
-
-from typing import Any
 from weakref import WeakSet
+from abc import ABC, abstractmethod
+from typing import Optional, Any
 
-from .observer import Notification, Observer
+
+class Notification:
+    """ Notification object with name, sender and extra info """
+
+    def __init__(self, name: str, sender: Any, info: dict=None):
+        super().__init__()
+        self.__name = name
+        self.__sender = sender
+        self.__info = info
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @property
+    def sender(self) -> Any:
+        return self.__sender
+
+    @property
+    def info(self) -> Optional[dict]:
+        return self.__info
+
+    @info.setter
+    def info(self, value: dict):
+        self.__info = value
+
+
+class Observer(ABC):
+    """ Notification Observer """
+
+    @abstractmethod
+    def received_notification(self, notification: Notification):
+        """
+        Callback for notification
+
+        :param notification: notification with name, sender and extra info
+        :return:
+        """
+        pass
 
 
 class NotificationCenter:
+    """ Notification dispatcher """
 
     def __init__(self):
         super().__init__()

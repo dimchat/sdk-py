@@ -41,14 +41,14 @@ from typing import Optional, Union
 
 from dimp import SymmetricKey, EncryptKey, ID, Meta, User
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import Content, FileContent
+from dimp import ContentType, Content, FileContent
 from dimp import Transceiver
 
 from .delegate import Callback, CompletionHandler
 from .delegate import MessengerDelegate
 from .facebook import Facebook
 
-from .cpu import ContentProcessor
+from .cpu import ContentProcessor, FileContentProcessor
 
 
 class Messenger(Transceiver):
@@ -178,12 +178,9 @@ class Messenger(Transceiver):
     def serialize_content(self, content: Content, key: SymmetricKey, msg: InstantMessage) -> bytes:
         # check attachment for File/Image/Audio/Video message content before
         if isinstance(content, FileContent):
-            data = key.encrypt(data=content.data)
-            # upload (encrypted) file data onto CDN and save the URL in message content
-            url = self.delegate.upload_data(data=data, msg=msg)
-            if url is not None:
-                content.url = url
-                content.data = None
+            fpu = self.__cpu.cpu(content_type=ContentType.File)
+            assert isinstance(fpu, FileContentProcessor), 'FPU error: %s' % fpu
+            fpu.upload(content=content, password=key, msg=msg)
         return super().serialize_content(content=content, key=key, msg=msg)
 
     def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[bytes]:
@@ -208,17 +205,9 @@ class Messenger(Transceiver):
             return None
         # check attachment for File/Image/Audio/Video message content after
         if isinstance(content, FileContent):
-            i_msg = InstantMessage.new(content=content, envelope=msg.envelope)
-            # download from CDN
-            file_data = self.delegate.download_data(content.url, i_msg)
-            if file_data is None:
-                # save symmetric key for decrypted file data after download from CDN
-                content.password = key
-            else:
-                # decrypt file data
-                content.data = key.decrypt(data=file_data)
-                assert content.data is not None, 'failed to decrypt file data with key: %s' % key
-                content.url = None
+            fpu = self.__cpu.cpu(content_type=ContentType.File)
+            assert isinstance(fpu, FileContentProcessor), 'FPU error: %s' % fpu
+            fpu.download(content=content, password=key, msg=msg)
         return content
 
     #

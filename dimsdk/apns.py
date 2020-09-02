@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#   APNs : Apple Push Notification service
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #

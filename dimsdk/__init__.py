@@ -32,9 +32,6 @@ from dimp import *
 
 from .plugins import *
 
-from .notification import Notification, Observer, NotificationCenter
-from .notification import ApplePushNotificationService
-
 from .network import CASubject, CAValidity, CAData, CertificateAuthority
 from .network import ServiceProvider, Station, Robot
 
@@ -43,7 +40,7 @@ from .group import Polylogue
 from .protocol import ReceiptCommand, HandshakeCommand, LoginCommand
 from .protocol import BlockCommand, MuteCommand, StorageCommand
 
-from .cpu import ContentProcessor, ForwardContentProcessor
+from .cpu import ContentProcessor, ForwardContentProcessor, FileContentProcessor
 from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
 from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProcessor
 from .cpu import ResetCommandProcessor, QueryCommandProcessor
@@ -51,9 +48,10 @@ from .cpu import MetaCommandProcessor, ProfileCommandProcessor
 
 from .delegate import Callback, CompletionHandler, MessengerDelegate
 
-from .ans import AddressNameService
 from .facebook import Facebook
 from .messenger import Messenger
+
+from .ans import AddressNameService
 
 name = 'DIM-SDK'
 
@@ -122,10 +120,6 @@ __all__ = [
     #   DIM SDK
     #
 
-    # notification
-    'Notification', 'Observer', 'NotificationCenter',
-    'ApplePushNotificationService',
-
     # network
     'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
     'ServiceProvider', 'Station', 'Robot',
@@ -138,7 +132,7 @@ __all__ = [
     'BlockCommand', 'MuteCommand', 'StorageCommand',
 
     # cpu
-    'ContentProcessor', 'ForwardContentProcessor',
+    'ContentProcessor', 'ForwardContentProcessor', 'FileContentProcessor',
     'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
@@ -147,5 +141,16 @@ __all__ = [
     # delegate
     'Callback', 'CompletionHandler', 'MessengerDelegate',
 
-    'AddressNameService', 'Facebook', 'Messenger',
+    'Facebook', 'Messenger',
+    'AddressNameService',
+
+    #
+    #  Sub Modules
+    #
+
+    #  1. dos
+    #  2. apns
+    #  3. notifications
+    #  4. plugins
+    #  5. immortals
 ]
