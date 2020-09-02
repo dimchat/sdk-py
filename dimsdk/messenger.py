@@ -353,7 +353,11 @@ class Messenger(Transceiver):
         return self.encrypt_message(msg=i_msg)
 
     def __process_instant(self, instant: InstantMessage, msg: ReliableMessage) -> Optional[InstantMessage]:
-        sender = msg.sender
+        # check message delegate
+        if instant.delegate is None:
+            instant.delegate = self
+        sender = instant.sender
+        receiver = instant.receiver
         # process content from sender
         res = self.process_content(content=instant.content, sender=sender, msg=msg)
         if not self.save_message(msg=instant):
@@ -363,8 +367,8 @@ class Messenger(Transceiver):
             # nothing to respond
             return None
         # check receiver
-        user = self._select(receiver=msg.receiver)
-        assert user is not None, 'receiver error: %s' % msg.receiver
+        user = self._select(receiver=receiver)
+        assert user is not None, 'receiver error: %s' % receiver
         # pack message
         return InstantMessage.new(content=res, sender=user.identifier, receiver=sender)
 
