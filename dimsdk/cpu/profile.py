@@ -84,8 +84,7 @@ class ProfileCommandProcessor(CommandProcessor):
     #
     def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, ProfileCommand), 'command error: %s' % content
-        facebook = self.facebook
-        identifier = facebook.identifier(content.identifier)
+        identifier = content.identifier
         profile = content.profile
         if profile is None:
             return self.__get(identifier=identifier)

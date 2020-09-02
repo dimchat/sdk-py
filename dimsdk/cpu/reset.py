@@ -106,7 +106,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
         new_members: list = self.members(content=content)
         if new_members is None or len(new_members) == 0:
             raise ValueError('reset group command error: %s' % content)
-        group: ID = facebook.identifier(content.group)
+        group: ID = content.group
         # 0. check whether group info empty
         if self.is_empty(group=group):
             # FIXME: group profile lost?

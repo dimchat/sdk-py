@@ -39,9 +39,9 @@ import os
 from typing import Optional
 
 from dimp import User
-from dimp import KeyCache
+from dimsdk.dos import JSONFile
 
-from .dos import JSONFile
+from .keycache import KeyCache
 
 
 class KeyStore(KeyCache):

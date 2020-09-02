@@ -123,7 +123,10 @@ class Messenger(Transceiver):
                     return item
 
     def __trim(self, msg: SecureMessage) -> Optional[SecureMessage]:
-        receiver = self.facebook.identifier(msg.envelope.receiver)
+        # check message delegate
+        if msg.delegate is None:
+            msg.delegate = self
+        receiver = msg.receiver
         user = self._select(receiver=receiver)
         if user is None:
             # current users not match
@@ -137,9 +140,12 @@ class Messenger(Transceiver):
     #  Transform
     #
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
+        # check message delegate
+        if msg.delegate is None:
+            msg.delegate = self
         facebook = self.facebook
         # NOTICE: check meta before calling me
-        sender = facebook.identifier(msg.envelope.sender)
+        sender = msg.sender
         meta = msg.meta
         if meta is None:
             meta = facebook.meta(identifier=sender)
@@ -169,20 +175,18 @@ class Messenger(Transceiver):
     #
     #   InstantMessageDelegate
     #
-    def serialize_content(self, content: Content, key: dict, msg: InstantMessage) -> bytes:
-        password = SymmetricKey(key=key)
-        assert password == key, 'irregular symmetric key: %s' % key
+    def serialize_content(self, content: Content, key: SymmetricKey, msg: InstantMessage) -> bytes:
         # check attachment for File/Image/Audio/Video message content before
         if isinstance(content, FileContent):
-            data = password.encrypt(data=content.data)
+            data = key.encrypt(data=content.data)
             # upload (encrypted) file data onto CDN and save the URL in message content
             url = self.delegate.upload_data(data=data, msg=msg)
             if url is not None:
                 content.url = url
                 content.data = None
-        return super().serialize_content(content=content, key=password, msg=msg)
+        return super().serialize_content(content=content, key=key, msg=msg)
 
-    def encrypt_key(self, data: bytes, receiver: str, msg: InstantMessage) -> Optional[bytes]:
+    def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[bytes]:
         facebook = self.facebook
         to = facebook.identifier(receiver)
         pk = facebook.public_key_for_encryption(identifier=to)
@@ -198,9 +202,8 @@ class Messenger(Transceiver):
     #
     #   SecureMessageDelegate
     #
-    def deserialize_content(self, data: bytes, key: dict, msg: SecureMessage) -> Optional[Content]:
-        password = SymmetricKey(key=key)
-        content = super().deserialize_content(data=data, key=password, msg=msg)
+    def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
+        content = super().deserialize_content(data=data, key=key, msg=msg)
         if content is None:
             return None
         # check attachment for File/Image/Audio/Video message content after
@@ -210,10 +213,10 @@ class Messenger(Transceiver):
             file_data = self.delegate.download_data(content.url, i_msg)
             if file_data is None:
                 # save symmetric key for decrypted file data after download from CDN
-                content.password = password
+                content.password = key
             else:
                 # decrypt file data
-                content.data = password.decrypt(data=file_data)
+                content.data = key.decrypt(data=file_data)
                 assert content.data is not None, 'failed to decrypt file data with key: %s' % key
                 content.url = None
         return content
@@ -361,8 +364,7 @@ class Messenger(Transceiver):
         return self.encrypt_message(msg=i_msg)
 
     def __process_instant(self, instant: InstantMessage, msg: ReliableMessage) -> Optional[InstantMessage]:
-        facebook = self.facebook
-        sender = facebook.identifier(string=msg.envelope.sender)
+        sender = msg.sender
         # process content from sender
         res = self.process_content(content=instant.content, sender=sender, msg=msg)
         if not self.save_message(msg=instant):
@@ -372,9 +374,8 @@ class Messenger(Transceiver):
             # nothing to respond
             return None
         # check receiver
-        receiver = facebook.identifier(msg.envelope.receiver)
-        user = self._select(receiver=receiver)
-        assert user is not None, 'receiver error: %s' % receiver
+        user = self._select(receiver=msg.receiver)
+        assert user is not None, 'receiver error: %s' % msg.receiver
         # pack message
         return InstantMessage.new(content=res, sender=user.identifier, receiver=sender)
 

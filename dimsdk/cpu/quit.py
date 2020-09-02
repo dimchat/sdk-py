@@ -65,7 +65,7 @@ class QuitCommandProcessor(GroupCommandProcessor):
     def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, QuitCommand), 'group command error: %s' % content
         facebook = self.facebook
-        group: ID = facebook.identifier(content.group)
+        group: ID = content.group
         # 1. check permission
         if facebook.is_owner(member=sender, group=group):
             raise AssertionError('owner cannot quit: %s' % msg)

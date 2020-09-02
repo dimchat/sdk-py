@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
-#
-#                                Written in 2019 by Moky <albert.moky@gmail.com>
-#
 # ==============================================================================
 # MIT License
 #
@@ -28,17 +23,32 @@
 # SOFTWARE.
 # ==============================================================================
 
-"""
-    Crypto Utilities
-    ~~~~~~~~~~~~~~~~
+from typing import Optional
 
-"""
+from dimp import SymmetricKey
 
-from .coder import *
-from .rsa import RSAPublicKey, RSAPrivateKey
-from .aes import AESKey
-from .plain import PlainKey
 
-__all__ = [
-    'PlainKey',
-]
+class PlainKey(dict, SymmetricKey):
+    """
+        Symmetric key for broadcast message,
+        which will do nothing when en/decoding message data
+    """
+    PLAIN = 'PLAIN'
+
+    @property
+    def size(self) -> int:
+        return 0
+
+    @property
+    def data(self) -> bytes:
+        return b''
+
+    def encrypt(self, data: bytes) -> bytes:
+        return data
+
+    def decrypt(self, data: bytes) -> Optional[bytes]:
+        return data
+
+
+# register key class with algorithm
+SymmetricKey.register(algorithm=PlainKey.PLAIN, key_class=PlainKey)

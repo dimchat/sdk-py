@@ -53,7 +53,6 @@ from .delegate import Callback, CompletionHandler, MessengerDelegate
 
 from .ans import AddressNameService
 from .facebook import Facebook
-from .keystore import KeyStore
 from .messenger import Messenger
 
 name = 'DIM-SDK'
@@ -91,11 +90,9 @@ __all__ = [
     #   DaoKeDao
     #
 
-    # message
-    'Envelope', 'Content', 'Message',
-
-    # content types
-    'ContentType', 'ForwardContent',
+    'ContentType',
+    'Envelope',
+    'Message',
 
     # transform
     'InstantMessage', 'SecureMessage', 'ReliableMessage',
@@ -108,17 +105,18 @@ __all__ = [
     #
 
     # protocol
-    'TextContent', 'FileContent', 'ImageContent', 'AudioContent', 'VideoContent',
+    'Content', 'ForwardContent', 'TextContent',
+    'FileContent', 'ImageContent', 'AudioContent', 'VideoContent',
     'Command', 'HistoryCommand', 'GroupCommand',
     'InviteCommand', 'ExpelCommand', 'JoinCommand', 'QuitCommand',
     'QueryCommand', 'ResetCommand',
     'MetaCommand', 'ProfileCommand',
 
-    # core
-    'Barrack', 'KeyCache', 'Transceiver',
-
     # delegate
     'EntityDelegate', 'CipherKeyDelegate',
+
+    # core
+    'Barrack', 'Transceiver',
 
     #
     #   DIM SDK
@@ -149,5 +147,5 @@ __all__ = [
     # delegate
     'Callback', 'CompletionHandler', 'MessengerDelegate',
 
-    'AddressNameService', 'Facebook', 'KeyStore', 'Messenger',
+    'AddressNameService', 'Facebook', 'Messenger',
 ]

@@ -73,7 +73,7 @@ class ExpelCommandProcessor(GroupCommandProcessor):
     def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, ExpelCommand), 'group command error: %s' % content
         facebook = self.facebook
-        group: ID = facebook.identifier(content.group)
+        group: ID = content.group
         # 1. check permission
         if not facebook.is_owner(member=sender, group=group):
             if not facebook.exists_assistant(member=sender, group=group):

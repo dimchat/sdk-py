@@ -177,12 +177,13 @@ class LoginCommand(Command):
     #   Factories
     #
     @classmethod
-    def new(cls, content: dict=None, identifier: ID=None):
+    def new(cls, content: dict=None, identifier: ID=None, time: int=0):
         """
         Create login command for user
 
         :param content:    command info
         :param identifier: user ID
+        :param time:       command time
         :return: LoginCommand object
         """
         if content is None:
@@ -198,7 +199,7 @@ class LoginCommand(Command):
         if 'time' not in content:
             content['time'] = int(time_lib.time())
         # new LoginCommand(dict)
-        return super().new(content=content)
+        return super().new(content=content, time=time)
 
 
 # register command class

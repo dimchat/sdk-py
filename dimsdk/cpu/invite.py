@@ -101,7 +101,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
     def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, InviteCommand), 'group command error: %s' % content
         facebook = self.facebook
-        group: ID = facebook.identifier(content.group)
+        group: ID = content.group
         # 0. check whether group info empty
         if self.is_empty(group=group):
             # NOTICE:

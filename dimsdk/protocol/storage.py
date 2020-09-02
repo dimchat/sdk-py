@@ -185,12 +185,13 @@ class StorageCommand(Command):
     #   Factories
     #
     @classmethod
-    def new(cls, content: dict=None, title: str=None):
+    def new(cls, content: dict=None, title: str=None, time: int=0):
         """
         Create storage command
 
         :param content: command info
         :param title: title
+        :param time: command time
         :return: StorageCommand object
         """
         if content is None:
@@ -202,7 +203,7 @@ class StorageCommand(Command):
                 # compatible with v1.0
                 return super().new(content=content, command=cls.CONTACTS)
             content['title'] = title
-        return super().new(content=content, command=cls.STORAGE)
+        return super().new(content=content, command=cls.STORAGE, time=time)
 
 
 # register command class

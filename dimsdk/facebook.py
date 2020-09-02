@@ -67,12 +67,12 @@ class Facebook(Barrack):
     #
     def verify_profile(self, profile: Profile, identifier: ID=None) -> bool:
         assert profile is not None, 'profile should not be empty'
-        if identifier is not None and profile.identifier != identifier:
-            # profile ID not match
-            return False
         if identifier is None:
             identifier = self.identifier(profile.identifier)
             assert identifier is not None, 'profile error: %s ' % profile
+        elif identifier != profile.identifier:
+            # profile ID not match
+            return False
         # NOTICE: if this is a group profile,
         #             verify it with each member's meta.key
         #         else (this is a user profile)

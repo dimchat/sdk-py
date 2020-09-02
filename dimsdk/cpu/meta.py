@@ -74,7 +74,7 @@ class MetaCommandProcessor(CommandProcessor):
     #
     def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, MetaCommand), 'command error: %s' % content
-        identifier = self.facebook.identifier(content.identifier)
+        identifier = content.identifier
         meta = content.meta
         if meta is None:
             return self.__get(identifier=identifier)

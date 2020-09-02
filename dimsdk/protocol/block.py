@@ -97,12 +97,13 @@ class BlockCommand(Command):
     #   Factories
     #
     @classmethod
-    def new(cls, content: dict=None, block: list=None):
+    def new(cls, content: dict=None, block: list=None, time: int=0):
         """
         Create block command
 
         :param content: command info
         :param block: block-list
+        :param time: command time
         :return: BlockCommand object
         """
         if content is None:
@@ -112,7 +113,7 @@ class BlockCommand(Command):
         if block is not None:
             content['list'] = block
         # new BlockCommand(dict)
-        return super().new(content=content, command=cls.BLOCK)
+        return super().new(content=content, command=cls.BLOCK, time=time)
 
 
 # register command class

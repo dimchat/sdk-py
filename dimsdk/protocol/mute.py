@@ -97,12 +97,13 @@ class MuteCommand(Command):
     #   Factories
     #
     @classmethod
-    def new(cls, content: dict=None, mute: list=None):
+    def new(cls, content: dict=None, mute: list=None, time: int=0):
         """
         Create mute command
 
         :param content: command info
         :param mute: mute-list
+        :param time: command time
         :return: MuteCommand object
         """
         if content is None:
@@ -112,7 +113,7 @@ class MuteCommand(Command):
         if mute is not None:
             content['list'] = mute
         # new MuteCommand(dict)
-        return super().new(content=content, command=cls.MUTE)
+        return super().new(content=content, command=cls.MUTE, time=time)
 
 
 # register command class

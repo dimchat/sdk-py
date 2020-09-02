@@ -54,7 +54,7 @@ class ForwardContentProcessor(ContentProcessor):
     def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
-        r_msg = self.messenger.process_message(msg=content.forward)
+        r_msg = self.messenger.process_message(msg=content.message)
         # check response
         if r_msg is not None:
             # Over The Top
