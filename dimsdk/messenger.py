@@ -39,6 +39,8 @@ import weakref
 from abc import abstractmethod
 from typing import Optional, Union
 
+import dkd
+
 from dimp import SymmetricKey, EncryptKey, ID, Meta, User
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import ContentType, Content, FileContent
@@ -243,9 +245,9 @@ class Messenger(Transceiver):
         :param callback: callback function
         :return:         False on data/delegate error
         """
-        if isinstance(msg, ReliableMessage):
+        if isinstance(msg, dkd.ReliableMessage):
             return self.__send_message(msg=msg, callback=callback)
-        elif not isinstance(msg, InstantMessage):
+        elif not isinstance(msg, dkd.InstantMessage):
             raise TypeError('message error: %s' % msg)
 
         # Send message (secured + certified) to target station
