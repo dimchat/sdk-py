@@ -96,7 +96,9 @@ class ReceiptCommand(Command):
             env = self.get('envelope')
             if env is None and 'sender' in self and 'receiver' in self:
                 env = self
-            self.__envelope = Envelope(env)
+            if env is not None:
+                self.__envelope = Envelope(env)
+                self.__envelope.delegate = self.delegate
         return self.__envelope
 
     #
@@ -127,6 +129,7 @@ class ReceiptCommand(Command):
             content['sender'] = envelope.sender
             content['receiver'] = envelope.receiver
             content['time'] = envelope.time
+            # TODO: envelope.group?
         # new ReceiptCommand(dict)
         return super().new(content=content, command=Command.RECEIPT)
 

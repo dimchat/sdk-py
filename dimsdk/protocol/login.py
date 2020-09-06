@@ -35,7 +35,6 @@
     As receipt returned to sender to proofing the message's received
 """
 
-import time as time_lib
 from typing import Union, Optional
 
 from dimp import ID
@@ -92,25 +91,13 @@ class LoginCommand(Command):
             # no need to init again
             return
         super().__init__(content)
-        # login time
-        self.__time: int = None
-
-    @property
-    def time(self) -> int:
-        if self.__time is None:
-            time = self.get('time')
-            if time is None:
-                self.__time = 0
-            else:
-                self.__time = int(time)
-        return self.__time
 
     #
     #   Client Info
     #
     @property
-    def identifier(self) -> Union[ID, str]:
-        return self.get('ID')
+    def identifier(self) -> ID:
+        return self.delegate.identifier(string=self.get('ID'))
 
     # Device ID
     @property
@@ -189,17 +176,11 @@ class LoginCommand(Command):
         if content is None:
             # create empty content
             content = {}
-        # set command name: 'meta'
-        if 'command' not in content:
-            content['command'] = Command.LOGIN
         # set entity ID
         if identifier is not None:
             content['ID'] = identifier
-        # set current time
-        if 'time' not in content:
-            content['time'] = int(time_lib.time())
         # new LoginCommand(dict)
-        return super().new(content=content, time=time)
+        return super().new(content=content, command=Command.LOGIN, time=time)
 
 
 # register command class

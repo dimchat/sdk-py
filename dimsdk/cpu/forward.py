@@ -60,7 +60,7 @@ class ForwardContentProcessor(ContentProcessor):
             # Over The Top
             return ForwardContent.new(message=r_msg)
         # else:
-        #     receiver = content.forward.envelope.receiver
+        #     receiver = content.message.receiver
         #     text = 'Message forwarded: %s' % receiver
         #     return ReceiptCommand.new(message=text)
 

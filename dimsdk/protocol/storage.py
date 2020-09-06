@@ -107,11 +107,11 @@ class StorageCommand(Command):
     #   ID
     #
     @property
-    def identifier(self) -> str:
-        return self.get('ID')
+    def identifier(self) -> ID:
+        return self.delegate.identifier(string=self.get('ID'))
 
     @identifier.setter
-    def identifier(self, value: ID):
+    def identifier(self, value: str):
         if value is None:
             self.pop('ID', None)
         else:
