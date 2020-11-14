@@ -139,5 +139,31 @@ class CommandTestCase(unittest.TestCase):
         print('receipt: %s' % cmd)
 
 
+class CryptoTestCase(unittest.TestCase):
+
+    def test1_ecc(self):
+        print('\n---------------- %s' % self)
+
+        s_key = PrivateKey({
+            'algorithm': 'ECC',
+            'data': '18e14a7b6a307f426a94f8114701e7c8e774e7f9a47e2c2035db29a206321725',
+        })
+        print('private key: %s' % s_key)
+        pri = s_key.data
+        print('private data: %s' % Hex.encode(pri))
+
+        p_key = s_key.public_key
+        print('public key: %s' % p_key)
+
+        pub = p_key.data
+        print('pub data: %s' % Hex.encode(pub))
+
+        d = keccak256(pub)
+        h = Hex.encode(d)
+        print('keccak256: %s' % h)
+        address = h[-40:]
+        print('address: %s' % address)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-#
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
-#
-#                                Written in 2019 by Moky <albert.moky@gmail.com>
-#
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2019 Albert Moky
+# Copyright (c) 2020 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,20 +24,35 @@
 # ==============================================================================
 
 """
-    Crypto Utilities
-    ~~~~~~~~~~~~~~~~
+    Data Digest
+    ~~~~~~~~~~~
 
+    Keccak-256
 """
 
-from .coder import *
-from .digest import SHA3, keccak256
-from .rsa import RSAPublicKey, RSAPrivateKey
-from .ecc import ECCPublicKey, ECCPrivateKey
-from .aes import AESKey
-from .plain import PlainKey
+from Crypto.Hash import keccak
 
-__all__ = [
-    'PlainKey',
+from dimp import Digest
 
-    'SHA3', 'keccak256',
-]
+
+class K(Digest):
+
+    def digest(self, data: bytes) -> bytes:
+        """ Keccak256 digest """
+        hash_obj = keccak.new(digest_bits=256)
+        hash_obj.update(data)
+        return hash_obj.digest()
+
+
+class SHA3:
+
+    coder: Digest = K()
+
+    @staticmethod
+    def digest(data: bytes) -> bytes:
+        assert SHA3.coder is not None, 'Keccak256 coder not set yet'
+        return SHA3.coder.digest(data=data)
+
+
+def keccak256(data: bytes) -> bytes:
+    return SHA3.coder.digest(data=data)

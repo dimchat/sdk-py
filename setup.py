@@ -12,7 +12,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.4.7'
+__version__ = '0.4.8'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -47,5 +47,6 @@ setup(
         'Crypto',  # pycryptodome==3.7.3
         'base58',  # 1.0.3
         'numpy',   # 1.15.4
+        'ecdsa',
     ]
 )

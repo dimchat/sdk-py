@@ -73,6 +73,7 @@ __all__ = [
     'Digest',
     'MD5', 'SHA1', 'SHA256', 'RIPEMD160',
     'md5', 'sha1', 'sha256', 'ripemd160',
+    'SHA3', 'keccak256',
 
     # entity
     'NetworkID', 'MetaVersion',
