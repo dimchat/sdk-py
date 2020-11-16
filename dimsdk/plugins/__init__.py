@@ -40,9 +40,14 @@ from .rsa import RSAPublicKey, RSAPrivateKey
 from .ecc import ECCPublicKey, ECCPrivateKey
 from .aes import AESKey
 from .plain import PlainKey
+from .address import ETHAddress
+from .meta import ETHMeta
+
 
 __all__ = [
     'PlainKey',
 
     'SHA3', 'keccak256',
+
+    'ETHAddress', 'ETHMeta',
 ]

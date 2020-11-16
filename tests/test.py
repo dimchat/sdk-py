@@ -11,6 +11,7 @@ import json
 import unittest
 
 from dimsdk import *
+from dimsdk.plugins import ETHAddress, ETHMeta
 from dimsdk.immortals import Immortals
 
 from tests.database import Database
@@ -141,12 +142,37 @@ class CommandTestCase(unittest.TestCase):
 
 class CryptoTestCase(unittest.TestCase):
 
-    def test1_ecc(self):
-        print('\n---------------- %s' % self)
+    def __test_keccak(self, data: bytes, exp: str):
+        d = keccak256(data)
+        res = Hex.encode(d)
+        print('Keccak256: %s' % res)
+        self.assertEqual(exp, res)
 
+    def test1_keccak(self):
+        print('\n---------------- %s' % self)
+        data = 'moky'.encode('utf-8')
+        exp = '96b07f3103d45cc7df2dd6e597922a17f48c86257dffe790d442bbd1ff46514d'
+        self.__test_keccak(data=data, exp=exp)
+
+        data = 'hello'.encode('utf-8')
+        exp = '1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8'
+        self.__test_keccak(data=data, exp=exp)
+
+        data = 'abc'.encode('utf-8')
+        exp = '4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45'
+        self.__test_keccak(data=data, exp=exp)
+
+        data = '04' \
+               '50863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352' \
+               '2cd470243453a299fa9e77237716103abc11a1df38855ed6f2ee187e9c582ba6'.encode('utf-8')
+        exp = 'fc12ad814631ba689f7abe671016f75c54c607f082ae6b0881fac0abeda21781'
+        self.__test_keccak(data=data, exp=exp)
+
+    @staticmethod
+    def __private_key(pem: str) -> PrivateKey:
         s_key = PrivateKey({
             'algorithm': 'ECC',
-            'data': '18e14a7b6a307f426a94f8114701e7c8e774e7f9a47e2c2035db29a206321725',
+            'data': pem,
         })
         print('private key: %s' % s_key)
         pri = s_key.data
@@ -157,12 +183,37 @@ class CryptoTestCase(unittest.TestCase):
 
         pub = p_key.data
         print('pub data: %s' % Hex.encode(pub))
+        return s_key
 
-        d = keccak256(pub)
-        h = Hex.encode(d)
-        print('keccak256: %s' % h)
-        address = h[-40:]
-        print('address: %s' % address)
+    def __test_eth_address(self, pem: str, exp: str):
+        s_key = self.__private_key(pem=pem)
+        p_key = s_key.public_key
+        pub = p_key.data
+        address = ETHAddress.new(pub)
+        print('ETH address: %s' % address)
+        self.assertEqual(exp, address)
+
+    def __test_eth_meta(self, pem: str, exp: str):
+        s_key = self.__private_key(pem=pem)
+        p_key = s_key.public_key
+        pub = Hex.encode(data=p_key.data)
+        meta = ETHMeta({
+            'version': MetaVersion.ETH.value,
+            'key': {
+                'algorithm': 'ECC',
+                'data': pub
+            },
+        })
+        identifier = meta.generate_address(network=NetworkID.Main.value)
+        print('ETH identifier: %s' % identifier)
+        self.assertEqual(identifier, exp)
+
+    def test2_eth(self):
+        print('\n---------------- %s' % self)
+        pem = '18e14a7b6a307f426a94f8114701e7c8e774e7f9a47e2c2035db29a206321725'
+        exp = '0x3E9003153d9A39D3f57B126b0c38513D5e289c3E'
+        self.__test_eth_address(pem=pem, exp=exp)
+        self.__test_eth_meta(pem=pem, exp=exp)
 
 
 if __name__ == '__main__':
