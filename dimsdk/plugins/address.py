@@ -61,6 +61,11 @@ def eip55(address: str) -> str:
 
 class ETHAddress(str, Address):
 
+    def __new__(cls, address: str):
+        if not address.startswith('0x'):
+            raise ValueError('Not an ETH address: %s' % address)
+        return super().__new__(cls, address)
+
     def __init__(self, address: str):
         if self is address:
             # no need to init again

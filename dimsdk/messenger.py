@@ -39,6 +39,7 @@ import weakref
 from abc import abstractmethod
 from typing import Optional, Union
 
+from mkm.profile import UserProfile
 import dkd
 
 from dimp import SymmetricKey, EncryptKey, ID, Meta, User
@@ -146,8 +147,8 @@ class Messenger(Transceiver):
         if msg.delegate is None:
             msg.delegate = self
         facebook = self.facebook
-        # NOTICE: check meta before calling me
         sender = msg.sender
+        # NOTICE: check meta before calling me
         meta = msg.meta
         if meta is None:
             meta = facebook.meta(identifier=sender)
@@ -163,6 +164,22 @@ class Messenger(Transceiver):
             meta = Meta(meta)
             if not facebook.save_meta(meta=meta, identifier=sender):
                 raise ValueError('save meta error: %s, %s' % (sender, meta))
+        # NOTICE: check profile before calling me
+        profile = msg.profile
+        if profile is None:
+            profile = facebook.profile(identifier=sender)
+            if profile is None:
+                # NOTICE: the application will query profile automatically
+                # save this message in a queue waiting sender's profile response
+                self.suspend_message(msg=msg)
+                # raise LookupError('failed to get profile for sender: %s' % sender)
+                return None
+        else:
+            # [Profile Protocol]
+            # save profile for sender
+            profile = UserProfile(profile)
+            if not facebook.save_profile(profile=profile, identifier=sender):
+                raise ValueError('save profile error: %s, %s' % (sender, profile))
         return super().verify_message(msg=msg)
 
     def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
