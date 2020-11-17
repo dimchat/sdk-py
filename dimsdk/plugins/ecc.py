@@ -81,7 +81,11 @@ class ECCPublicKey(dict, PublicKey):
             return int(bits) / 8
 
     def verify(self, data: bytes, signature: bytes) -> bool:
-        return self.__key.verify(signature=signature, data=data, hashfunc=hashlib.sha256)
+        try:
+            return self.__key.verify(signature=signature, data=data,
+                                     hashfunc=hashlib.sha256, sigdecode=ecdsa.util.sigdecode_der)
+        except ecdsa.BadSignatureError:
+            return False
 
 
 class ECCPrivateKey(dict, PrivateKey):
@@ -110,12 +114,14 @@ class ECCPrivateKey(dict, PrivateKey):
         super().__init__(key)
         # data in 'PEM' format
         data: str = key.get('data')
-        if data is None:
+        if data is None or len(data) == 0:
             # generate private key data
             key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
+            der = key.to_der(format='pkcs8')
+            pem = ecdsa.der.topem(der, 'PRIVATE KEY').decode('utf-8')
             self.__key = key
-            self.__data = key.to_der()
-            self['data'] = key.to_pem().decode('utf-8')
+            self.__data = der
+            self['data'] = pem
             self['curve'] = 'SECP256k1'
             self['digest'] = 'SHA256'
         else:
@@ -149,17 +155,18 @@ class ECCPrivateKey(dict, PrivateKey):
 
     @property
     def public_key(self) -> Union[PublicKey]:
-        pk = self.__key.get_verifying_key()
+        key = self.__key.get_verifying_key()
+        pem = key.to_pem().decode('utf-8')
         info = {
             'algorithm': PublicKey.ECC,
-            'data': pk.to_pem().decode('utf-8'),
+            'data': pem,
             'curve': 'SECP256k1',
             'digest': 'SHA256'
         }
         return ECCPublicKey(info)
 
     def sign(self, data: bytes) -> bytes:
-        return self.__key.sign(data, hashfunc=hashlib.sha256)
+        return self.__key.sign(data=data, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_der)
 
 
 # register public key class with algorithm

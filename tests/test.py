@@ -169,6 +169,15 @@ class CryptoTestCase(unittest.TestCase):
         self.__test_keccak(data=data, exp=exp)
 
     @staticmethod
+    def __public_key(pem: str) -> PublicKey:
+        p_key = PublicKey({
+            'algorithm': 'ECC',
+            'data': pem,
+        })
+        print('public key: %s' % p_key)
+        return p_key
+
+    @staticmethod
     def __private_key(pem: str) -> PrivateKey:
         s_key = PrivateKey({
             'algorithm': 'ECC',
@@ -196,6 +205,13 @@ class CryptoTestCase(unittest.TestCase):
     def __test_eth_meta(self, pem: str, exp: str):
         s_key = self.__private_key(pem=pem)
         p_key = s_key.public_key
+
+        pub = p_key.data
+        sig = s_key.sign(pub)
+        print('signature: %s' % Hex.encode(sig))
+        ok = p_key.verify(pub, sig)
+        self.assertTrue(ok)
+
         pub = Hex.encode(data=p_key.data)
         meta = ETHMeta({
             'version': MetaVersion.ETH.value,
@@ -214,6 +230,41 @@ class CryptoTestCase(unittest.TestCase):
         exp = '0x3E9003153d9A39D3f57B126b0c38513D5e289c3E'
         self.__test_eth_address(pem=pem, exp=exp)
         self.__test_eth_meta(pem=pem, exp=exp)
+
+        s_key = self.__private_key('')
+        print('generate private key: %s' % s_key)
+
+        s_key = self.__private_key(pem='-----BEGIN PRIVATE KEY-----\n\
+MIGNAgEAMBAGByqGSM49AgEGBSuBBAAKBHYwdAIBAQQgRc9oT0qckFAW57khXTzbWXWX1Kcy3St5\n\
+hiSV1fx9YZagBwYFK4EEAAqhRANCAASYjO9EH0g7K/8/IB/VQaDDSMNK38lPLedpBbBo9yi6ttR1\n\
+MY/5Zguh/nrE2EzI6Bk7yW3F6b2LMr9X031ydzlR\n\
+-----END PRIVATE KEY-----')
+        print('private key: %s' % s_key)
+
+        p_key = s_key.public_key
+        print('public key: %s' % p_key)
+        pub = p_key.data
+        print('pub data: %s' % Hex.encode(pub))
+
+        p_key = self.__public_key(pem='-----BEGIN PUBLIC KEY-----\n\
+MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEmIzvRB9IOyv/PyAf1UGgw0jDSt/JTy3naQWwaPcourbU\n\
+dTGP+WYLof56xNhMyOgZO8ltxem9izK/V9N9cnc5UQ==\n\
+-----END PUBLIC KEY-----')
+        print('public key: %s' % p_key)
+        pub = p_key.data
+        print('pub data: %s' % Hex.encode(pub))
+
+        data = 'moky'.encode('utf-8')
+        sig = s_key.sign(data=data)
+        print('signature : %s' % Hex.encode(sig))
+        ok = p_key.verify(data, sig)
+        self.assertTrue(ok)
+        exp = '3046022100da3774377c56165d400567d205f01a416599c800c6a3e08e6297f2' \
+              'c8d234b5f80221008370153e800db98880cd012fec439304c5ece48ee2636303' \
+              'fc001d463d14b311'
+        print('signature2: %s' % exp)
+        ok = p_key.verify(data, Hex.decode(exp))
+        self.assertTrue(ok)
 
 
 if __name__ == '__main__':

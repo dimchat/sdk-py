@@ -118,7 +118,7 @@ class RSAPrivateKey(dict, PrivateKey, DecryptKey):
         super().__init__(key)
         # data in 'PEM' format
         data: str = key.get('data')
-        if data is None:
+        if data is None or len(data) == 0:
             # generate private key data
             private_key = RSA.generate(bits=self.bits)
             data: bytes = private_key.exportKey()
