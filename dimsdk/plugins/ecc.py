@@ -157,9 +157,10 @@ class ECCPrivateKey(dict, PrivateKey):
     @property
     def public_key(self) -> Union[PublicKey]:
         key = self.__key.get_verifying_key()
-        data = key.to_string(encoding='uncompressed')
-        pem = data.hex()
-        # pem = key.to_pem().decode('utf-8')
+        # store public key in X.509 format
+        pem = key.to_pem().decode('utf-8')
+        # data = key.to_string(encoding='uncompressed')
+        # pem = data.hex()
         info = {
             'algorithm': PublicKey.ECC,
             'data': pem,
