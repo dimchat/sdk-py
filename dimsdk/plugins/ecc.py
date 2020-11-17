@@ -59,8 +59,6 @@ class ECCPublicKey(dict, PublicKey):
         data = key['data']
         data_len = len(data)
         if data_len == 130 or data_len == 128:
-            if data_len == 130:
-                data = data[2:]
             data = bytes.fromhex(data)
             key = ecdsa.VerifyingKey.from_string(data, curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
         else:
@@ -118,12 +116,9 @@ class ECCPrivateKey(dict, PrivateKey):
             # generate private key data
             key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
             data = key.to_string()
-            if len(data) == 33:
-                assert data[0] == 0, 'ECC private key data error: %s' % data.hex()
-                data = data[1:]
-            assert len(data) == 32, 'ECC private key length error: %d' % len(data)
-            pem = data.hex()
-            # pem = key.to_pem(format='pkcs8').decode('utf-8')
+            # store private key in PKCS#8 format
+            pem = key.to_pem(format='pkcs8').decode('utf-8')
+            # pem = data.hex()
             self.__key = key
             self.__data = data
             self['data'] = pem
@@ -163,8 +158,7 @@ class ECCPrivateKey(dict, PrivateKey):
         key = self.__key.get_verifying_key()
         # store public key in X.509 format
         pem = key.to_pem().decode('utf-8')
-        # data = key.to_string(encoding='uncompressed')
-        # pem = data.hex()
+        # pem = key.to_string(encoding='uncompressed').hex()
         info = {
             'algorithm': PublicKey.ECC,
             'data': pem,
