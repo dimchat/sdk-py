@@ -113,14 +113,15 @@ class ECCPrivateKey(dict, PrivateKey):
             return
         super().__init__(key)
         # data in 'PEM' format
-        data: str = key.get('data')
+        data = key.get('data')
         if data is None or len(data) == 0:
             # generate private key data
-            key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
-            der = key.to_der(format='pkcs8')
-            pem = ecdsa.der.topem(der, 'PRIVATE KEY').decode('utf-8')
+            key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+            data = key.to_string()
+            pem = data.hex()
+            # pem = key.to_pem(format='pkcs8').decode('utf-8')
             self.__key = key
-            self.__data = der
+            self.__data = data
             self['data'] = pem
             self['curve'] = 'SECP256k1'
             self['digest'] = 'SHA256'
@@ -156,7 +157,9 @@ class ECCPrivateKey(dict, PrivateKey):
     @property
     def public_key(self) -> Union[PublicKey]:
         key = self.__key.get_verifying_key()
-        pem = key.to_pem().decode('utf-8')
+        data = key.to_string(encoding='uncompressed')
+        pem = data.hex()
+        # pem = key.to_pem().decode('utf-8')
         info = {
             'algorithm': PublicKey.ECC,
             'data': pem,
