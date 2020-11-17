@@ -118,6 +118,10 @@ class ECCPrivateKey(dict, PrivateKey):
             # generate private key data
             key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
             data = key.to_string()
+            if len(data) == 33:
+                assert data[0] == 0, 'ECC private key data error: %s' % data.hex()
+                data = data[1:]
+            assert len(data) == 32, 'ECC private key length error: %d' % len(data)
             pem = data.hex()
             # pem = key.to_pem(format='pkcs8').decode('utf-8')
             self.__key = key
