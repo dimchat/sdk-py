@@ -83,7 +83,7 @@ class StorageCommand(Command):
     @property
     def title(self) -> str:
         string = self.get('title')
-        if string is None or len(string) == 0:
+        if not isinstance(string, str):
             string = self.command
             assert string != self.STORAGE, 'storage command error: %s' % self
         return string
@@ -93,14 +93,16 @@ class StorageCommand(Command):
     #
     @property
     def identifier(self) -> ID:
-        return ID.parse(identifier=self.get('ID'))
+        string = self.get('ID')
+        assert isinstance(string, str), 'ID error: %s' % string
+        return ID.parse(identifier=string)
 
     @identifier.setter
     def identifier(self, value: ID):
         if value is None:
             self.pop('ID', None)
         else:
-            self['ID'] = value
+            self['ID'] = str(value)
 
     #
     #   Key (for decrypt data)
@@ -109,7 +111,7 @@ class StorageCommand(Command):
     def key(self) -> Optional[bytes]:
         if self.__key is None:
             base64 = self.get('key')
-            if base64 is not None:
+            if isinstance(base64, str):
                 self.__key = base64_decode(base64)
         return self.__key
 
@@ -128,7 +130,7 @@ class StorageCommand(Command):
     def data(self) -> Optional[bytes]:
         if self.__data is None:
             base64 = self.get('data')
-            if base64 is not None:
+            if isinstance(base64, str):
                 self.__data = base64_decode(base64)
         return self.__data
 

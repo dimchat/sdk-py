@@ -33,9 +33,9 @@ from typing import Optional, Union
 
 from dimp import ID
 from dimp import Content, Envelope, InstantMessage, ReliableMessage
+from dimp import Packer
 
 from .delegate import Callback
-from .packer import MessagePacker
 from .messenger import Messenger, MessageCallback
 
 
@@ -50,7 +50,7 @@ class MessageTransmitter:
         return self.__messenger()
 
     @property
-    def message_packer(self) -> MessagePacker:
+    def message_packer(self) -> Packer:
         return self.messenger.message_packer
 
     def send_content(self, sender: ID, receiver: ID, content: Content,
@@ -101,8 +101,7 @@ class MessageTransmitter:
             return False
         return ok
 
-    def __send_message(self, msg: ReliableMessage,
-                       callback: Optional[Callback] = None, priority: int = 0) -> bool:
+    def __send_message(self, msg: ReliableMessage, callback: Optional[Callback] = None, priority: int=0) -> bool:
         handler = MessageCallback(msg=msg, cb=callback)
         data = self.message_packer.serialize_message(msg=msg)
         return self.messenger.send_package(data=data, handler=handler, priority=priority)

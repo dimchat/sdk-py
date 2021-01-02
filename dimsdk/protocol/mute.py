@@ -38,7 +38,7 @@
 
 from typing import Optional
 
-from dimp import Command
+from dimp import ID, Command
 
 
 class MuteCommand(Command):
@@ -68,11 +68,13 @@ class MuteCommand(Command):
     #
     @property
     def mute_list(self) -> Optional[list]:
-        return self.get('list')
+        array = self.get('list')
+        if isinstance(array, list):
+            return ID.convert(members=array)
 
     @mute_list.setter
-    def mute_list(self, value: list):
+    def mute_list(self, value: Optional[list]):
         if value is None:
             self.pop('list', None)
         else:
-            self['list'] = value
+            self['list'] = ID.revert(members=value)

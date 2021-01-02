@@ -76,14 +76,16 @@ class LoginCommand(Command):
         else:
             super().__init__(cmd=cmd)
         if identifier is not None:
-            self['ID'] = identifier
+            self['ID'] = str(identifier)
 
     #
     #   Client Info
     #
     @property
     def identifier(self) -> ID:
-        return ID.parse(identifier=self.get('ID'))
+        string = self.get('ID')
+        assert isinstance(string, str), 'ID error: %s' % string
+        return ID.parse(identifier=string)
 
     # Device ID
     @property
@@ -125,7 +127,7 @@ class LoginCommand(Command):
         else:
             assert isinstance(value, Station), 'station error: %s' % value
             self['station'] = {
-                'ID': value.identifier,
+                'ID': str(value.identifier),
                 'host': value.host,
                 'port': value.port,
             }
@@ -143,5 +145,5 @@ class LoginCommand(Command):
         else:
             assert isinstance(value, ServiceProvider), 'SP error: %s' % value
             self['provider'] = {
-                'ID': value.identifier,
+                'ID': str(value.identifier),
             }

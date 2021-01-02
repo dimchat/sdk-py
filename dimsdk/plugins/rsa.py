@@ -51,12 +51,18 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
         return self.__data
 
     @property
-    def size(self):
+    def size(self) -> int:
+        return self.bits >> 3
+
+    @property
+    def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if bits is None:
-            return 1024 / 8  # RSA-1024
+        if isinstance(bits, int):
+            return bits
+        elif isinstance(bits, str):
+            return int(bits)
         else:
-            return int(bits) / 8
+            return 1024  # RSA-1024
 
     def encrypt(self, data: bytes) -> bytes:
         # noinspection PyTypeChecker
@@ -108,20 +114,18 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
         return self.__data
 
     @property
-    def size(self):
-        bits = self.get('sizeInBits')
-        if bits is None:
-            return 1024 / 8  # RSA-1024
-        else:
-            return int(bits) / 8
+    def size(self) -> int:
+        return self.bits >> 3
 
     @property
-    def bits(self):
+    def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if bits is None:
-            return 1024  # RSA-1024
-        else:
+        if isinstance(bits, int):
+            return bits
+        elif isinstance(bits, str):
             return int(bits)
+        else:
+            return 1024  # RSA-1024
 
     @property
     def public_key(self) -> Union[PublicKey, EncryptKey]:

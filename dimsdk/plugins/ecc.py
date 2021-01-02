@@ -53,12 +53,18 @@ class ECCPublicKey(Dictionary, PublicKey):
         return self.__data
 
     @property
-    def size(self):
+    def size(self) -> int:
+        return self.bits >> 3
+
+    @property
+    def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if bits is None:
-            return 256 / 8  # ECC-256
+        if isinstance(bits, int):
+            return bits
+        elif isinstance(bits, str):
+            return int(bits)
         else:
-            return int(bits) / 8
+            return 256  # ECC-256
 
     def verify(self, data: bytes, signature: bytes) -> bool:
         try:
@@ -103,20 +109,18 @@ class ECCPrivateKey(Dictionary, PrivateKey):
         return self.__data
 
     @property
-    def size(self):
-        bits = self.get('sizeInBits')
-        if bits is None:
-            return 256 / 8  # ECC-256
-        else:
-            return int(bits) / 8
+    def size(self) -> int:
+        return self.bits >> 3
 
     @property
-    def bits(self):
+    def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if bits is None:
-            return 256  # ECC-256
-        else:
+        if isinstance(bits, int):
+            return bits
+        elif isinstance(bits, str):
             return int(bits)
+        else:
+            return 256  # ECC-256
 
     @property
     def public_key(self) -> Union[PublicKey]:

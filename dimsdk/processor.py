@@ -60,7 +60,7 @@ class MessageProcessor(Processor):
         from .cpu import ContentProcessor
         cpu = ContentProcessor.processor_for_content(content=content)
         if cpu is None:
-            cpu = ContentProcessor.processor_for_type(type=0)  # unknown
+            cpu = ContentProcessor.processor_for_type(content_type=0)  # unknown
             assert isinstance(cpu, ContentProcessor), 'cannot process content: %s' % content
         cpu.messenger = self.messenger
         return cpu.process(content=content, msg=r_msg)

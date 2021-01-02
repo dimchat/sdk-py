@@ -67,7 +67,7 @@ class ReceiptCommand(Command):
             super().__init__(cmd=cmd)
         self.__envelope = envelope
         if envelope is not None:
-            self['envelope'] = envelope
+            self['envelope'] = envelope.dictionary
         if message is not None:
             self['message'] = message
         if sn > 0:

@@ -84,12 +84,13 @@ class MessengerDelegate:
         raise NotImplemented
 
     @abstractmethod
-    def send_package(self, data: bytes, handler: CompletionHandler) -> bool:
+    def send_package(self, data: bytes, handler: CompletionHandler, priority: int=0) -> bool:
         """
         Send out a data package onto network
 
-        :param data:    package data
-        :param handler: completion handler
+        :param data:     package data
+        :param handler:  completion handler
+        :param priority: task priority (smaller is faster)
         :return: True on success
         """
         raise NotImplemented

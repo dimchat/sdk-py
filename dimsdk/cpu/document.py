@@ -86,6 +86,8 @@ class DocumentCommandProcessor(CommandProcessor):
         doc = content.document
         if doc is None:
             doc_type = content.get('doc_type')
+            if not isinstance(doc_type, str):
+                doc_type = '*'
             return self.__get(identifier=identifier, doc_type=doc_type)
         else:
             # check meta

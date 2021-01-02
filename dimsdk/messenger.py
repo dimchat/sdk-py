@@ -231,8 +231,8 @@ class Messenger(Transceiver):
     def download_data(self, url: str, msg: InstantMessage) -> Optional[bytes]:
         return self.delegate.download_data(url=url, msg=msg)
 
-    def send_package(self, data: bytes, handler: CompletionHandler) -> bool:
-        return self.delegate.send_package(data=data, handler=handler)
+    def send_package(self, data: bytes, handler: CompletionHandler, priority: int=0) -> bool:
+        return self.delegate.send_package(data=data, handler=handler, priority=priority)
 
     #
     #   Interfaces for Message Storage
