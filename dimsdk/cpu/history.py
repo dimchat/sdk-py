@@ -46,7 +46,6 @@ from .command import CommandProcessor
 
 class HistoryCommandProcessor(CommandProcessor):
 
-    # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
         text = 'History command (name: %s) not support yet!' % cmd.command
         res = TextContent(text=text)
@@ -69,6 +68,15 @@ class GroupCommandProcessor(HistoryCommandProcessor):
             if item is not None:
                 array = [item]
         return array
+
+    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+        text = 'Group command (name: %s) not support yet!' % cmd.command
+        res = TextContent(text=text)
+        # check group message
+        group = cmd.group
+        if group is not None:
+            res.group = group
+        return res
 
     #
     #   main

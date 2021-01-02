@@ -87,7 +87,7 @@ class Immortals(UserDataSource):
         return PrivateKey.parse(key=load_resource_file(filename=filename))
 
     def __load_profile(self, filename: str) -> Optional[Document]:
-        profile = Document.parse_document(document=load_resource_file(filename=filename))
+        profile = Document.parse(document=load_resource_file(filename=filename))
         assert profile is not None, 'failed to load profile: %s' % filename
         # copy 'name'
         name = profile.get('name')

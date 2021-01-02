@@ -38,8 +38,8 @@ from typing import Optional
 
 from dimp import ID, Meta
 from dimp import ReliableMessage
-from dimp import Content
-from dimp import TextContent, MetaCommand
+from dimp import Content, TextContent
+from dimp import Command, MetaCommand
 
 from ..protocol import ReceiptCommand
 
@@ -67,13 +67,10 @@ class MetaCommandProcessor(CommandProcessor):
         # response
         return ReceiptCommand(message='Meta received: %s' % identifier)
 
-    #
-    #   main
-    #
-    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
-        assert isinstance(content, MetaCommand), 'command error: %s' % content
-        identifier = content.identifier
-        meta = content.meta
+    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+        assert isinstance(cmd, MetaCommand), 'command error: %s' % cmd
+        identifier = cmd.identifier
+        meta = cmd.meta
         if meta is None:
             return self.__get(identifier=identifier)
         else:

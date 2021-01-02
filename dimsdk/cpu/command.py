@@ -46,7 +46,6 @@ from .content import ContentProcessor
 
 class CommandProcessor(ContentProcessor):
 
-    # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
         text = 'Command (name: %s) not support yet!' % cmd.command
         res = TextContent(text=text)

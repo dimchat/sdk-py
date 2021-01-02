@@ -39,7 +39,7 @@ from typing import Optional
 from dimp import ID, Meta, Document
 from dimp import ReliableMessage
 from dimp import Content, TextContent
-from dimp import DocumentCommand
+from dimp import Command, DocumentCommand
 
 from ..protocol import ReceiptCommand
 
@@ -77,19 +77,16 @@ class DocumentCommandProcessor(CommandProcessor):
         text = 'Document received: %s' % identifier
         return ReceiptCommand(message=text)
 
-    #
-    #   main
-    #
-    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
-        assert isinstance(content, DocumentCommand), 'command error: %s' % content
-        identifier = content.identifier
-        doc = content.document
+    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+        assert isinstance(cmd, DocumentCommand), 'command error: %s' % cmd
+        identifier = cmd.identifier
+        doc = cmd.document
         if doc is None:
-            doc_type = content.get('doc_type')
+            doc_type = cmd.get('doc_type')
             if not isinstance(doc_type, str):
                 doc_type = '*'
             return self.__get(identifier=identifier, doc_type=doc_type)
         else:
             # check meta
-            meta = content.meta
+            meta = cmd.meta
             return self.__put(identifier=identifier, meta=meta, document=doc)
