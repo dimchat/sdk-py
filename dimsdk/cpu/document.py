@@ -36,63 +36,58 @@
 
 from typing import Optional
 
-from dimp import ID, Meta, Profile
+from dimp import ID, Meta, Document
 from dimp import ReliableMessage
-from dimp import Content
-from dimp import TextContent, Command, ProfileCommand
+from dimp import Content, TextContent
+from dimp import DocumentCommand
 
 from ..protocol import ReceiptCommand
 
 from .command import CommandProcessor
 
 
-class ProfileCommandProcessor(CommandProcessor):
+class DocumentCommandProcessor(CommandProcessor):
 
-    def __get(self, identifier: ID) -> Content:
+    def __get(self, identifier: ID, doc_type: str='*') -> Content:
         facebook = self.facebook
-        # query profile for ID
-        profile: Profile = facebook.profile(identifier=identifier)
-        if profile is None or 'data' not in profile:
-            # profile not found
-            return TextContent.new(text='Sorry, profile for %s not found.' % identifier)
+        # query entity document for ID
+        doc = facebook.document(identifier=identifier, doc_type=doc_type)
+        if facebook.is_empty_document(document=doc):
+            # document not found
+            text = 'Sorry, document not found for ID: %s' % identifier
+            return TextContent(text=text)
         # response
         meta: Meta = facebook.meta(identifier=identifier)
-        return ProfileCommand.response(identifier=identifier, profile=profile, meta=meta)
+        return DocumentCommand.response(document=doc, meta=meta, identifier=identifier)
 
-    def __put(self, identifier: ID, meta: Meta, profile: Profile) -> Content:
+    def __put(self, identifier: ID, meta: Meta, document: Document) -> Content:
         facebook = self.facebook
         if meta is not None:
             # received a meta for ID
-            if not facebook.verify_meta(meta=meta, identifier=identifier):
-                # meta not match
-                return TextContent.new(text='Meta not match ID: %s' % identifier)
             if not facebook.save_meta(meta=meta, identifier=identifier):
                 # save meta failed
-                return TextContent.new(text='Meta not accept: %s!' % identifier)
+                text = 'Meta not accept: %s!' % identifier
+                return TextContent(text=text)
         # received a new profile for ID
-        if not facebook.verify_profile(profile=profile, identifier=identifier):
-            # profile signature not match
-            return TextContent.new(text='Profile not match ID: %s' % identifier)
-        if not facebook.save_profile(profile=profile):
+        if not facebook.save_document(document=document):
             # save profile failed
-            return TextContent.new(text='Profile not accept: %s!' % identifier)
+            text = 'Document not accept: %s!' % identifier
+            return TextContent(text=text)
         # response
-        return ReceiptCommand.new(message='Profile received: %s' % identifier)
+        text = 'Document received: %s' % identifier
+        return ReceiptCommand(message=text)
 
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
-        assert isinstance(content, ProfileCommand), 'command error: %s' % content
+    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
+        assert isinstance(content, DocumentCommand), 'command error: %s' % content
         identifier = content.identifier
-        profile = content.profile
-        if profile is None:
-            return self.__get(identifier=identifier)
+        doc = content.document
+        if doc is None:
+            doc_type = content.get('doc_type')
+            return self.__get(identifier=identifier, doc_type=doc_type)
         else:
             # check meta
             meta = content.meta
-            return self.__put(identifier=identifier, meta=meta, profile=profile)
-
-
-# register
-CommandProcessor.register(command=Command.PROFILE, processor_class=ProfileCommandProcessor)
+            return self.__put(identifier=identifier, meta=meta, document=doc)

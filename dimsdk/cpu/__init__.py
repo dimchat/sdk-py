@@ -35,7 +35,7 @@
 """
 
 
-from .processor import ContentProcessor
+from .content import ContentProcessor
 from .forward import ForwardContentProcessor
 from .file import FileContentProcessor
 
@@ -48,10 +48,11 @@ from .reset import ResetCommandProcessor
 from .query import QueryCommandProcessor
 
 from .meta import MetaCommandProcessor
-from .profile import ProfileCommandProcessor
+from .document import DocumentCommandProcessor
 
 
 __all__ = [
+
     'ContentProcessor',
     'ForwardContentProcessor',
     'FileContentProcessor',
@@ -63,5 +64,5 @@ __all__ = [
     'ResetCommandProcessor', 'QueryCommandProcessor',
 
     'MetaCommandProcessor',
-    'ProfileCommandProcessor',
+    'DocumentCommandProcessor',
 ]

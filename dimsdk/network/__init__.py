@@ -28,17 +28,11 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .certificate import CASubject, CAValidity, CAData, CertificateAuthority
 from .station import ServiceProvider, Station
-
 from .robot import Robot
 
 __all__ = [
 
-    # CA
-    'CASubject', 'CAValidity', 'CAData', 'CertificateAuthority',
-
-    # Roles
     'ServiceProvider', 'Station',
     'Robot',
 ]

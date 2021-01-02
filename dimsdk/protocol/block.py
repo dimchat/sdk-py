@@ -57,27 +57,11 @@ class BlockCommand(Command):
 
     BLOCK = 'block'
 
-    def __new__(cls, cmd: dict):
-        """
-        Create block command
-
-        :param cmd: command info
-        :return: BlockCommand object
-        """
+    def __init__(self, cmd: Optional[dict]=None):
         if cmd is None:
-            return None
-        elif cls is BlockCommand:
-            if isinstance(cmd, BlockCommand):
-                # return BlockCommand object directly
-                return cmd
-        # new BlockCommand(dict)
-        return super().__new__(cls, cmd)
-
-    def __init__(self, content: dict):
-        if self is content:
-            # no need to init again
-            return
-        super().__init__(content)
+            super().__init__(command=BlockCommand.BLOCK)
+        else:
+            super().__init__(cmd=cmd)
 
     #
     #   block-list
@@ -92,29 +76,3 @@ class BlockCommand(Command):
             self.pop('list', None)
         else:
             self['list'] = value
-
-    #
-    #   Factories
-    #
-    @classmethod
-    def new(cls, content: dict=None, block: list=None, time: int=0):
-        """
-        Create block command
-
-        :param content: command info
-        :param block: block-list
-        :param time: command time
-        :return: BlockCommand object
-        """
-        if content is None:
-            # create empty content
-            content = {}
-        # set block-list
-        if block is not None:
-            content['list'] = block
-        # new BlockCommand(dict)
-        return super().new(content=content, command=cls.BLOCK, time=time)
-
-
-# register command class
-Command.register(command=BlockCommand.BLOCK, command_class=BlockCommand)

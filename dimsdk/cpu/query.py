@@ -38,41 +38,41 @@
 
 from typing import Optional
 
-from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content, TextContent
-from dimp import GroupCommand, QueryCommand
+from dimp import Command, GroupCommand, QueryCommand
 
 from .history import GroupCommandProcessor
 
 
 class QueryCommandProcessor(GroupCommandProcessor):
 
-    #
-    #   main
-    #
-    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
-        assert isinstance(content, QueryCommand), 'group command error: %s' % content
+    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+        assert isinstance(cmd, QueryCommand), 'group command error: %s' % cmd
         facebook = self.facebook
-        group: ID = content.group
-        # 1. check permission
-        if not facebook.exists_member(member=sender, group=group):
-            if not facebook.exists_assistant(member=sender, group=group):
-                if not facebook.is_owner(member=sender, group=group):
-                    raise AssertionError('only member/assistant can query: %s' % msg)
-        # 2. get group members
+        from ..facebook import Facebook
+        assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
+        # 0. check group
+        group = cmd.group
+        owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
-        if members is None or len(members) == 0:
-            text = 'Group members not found: %s' % group
-            return TextContent.new(text=text)
-        # 3. respond group members for sender
+        if owner is None or members is None or len(members) == 0:
+            text = 'Sorry, members not found in group: %s' % group
+            res = TextContent(text=text)
+            res.group = group
+            return res
+        # 1. check permission
+        sender = msg.sender
+        if sender not in members:
+            # not a member? check assistants
+            assistants = facebook.assistants(identifier=group)
+            if assistants is None or sender not in assistants:
+                text = '%s is not a member/assistant of group %s, cannot query.' % (sender, group)
+                raise AssertionError(text)
+        # 2. respond
         user = facebook.current_user
         assert user is not None, 'current user not set'
-        if facebook.is_owner(member=user.identifier, group=group):
+        if user.identifier == owner:
             return GroupCommand.reset(group=group, members=members)
         else:
             return GroupCommand.invite(group=group, members=members)
-
-
-# register
-GroupCommandProcessor.register(command=GroupCommand.QUERY, processor_class=QueryCommandProcessor)

@@ -142,31 +142,29 @@ class CommandTestCase(unittest.TestCase):
 
 class CryptoTestCase(unittest.TestCase):
 
-    def __test_keccak(self, data: bytes, exp: str):
+    def __test_keccak(self, string: str, exp: str):
+        data = string.encode('utf-8')
         d = keccak256(data)
         res = Hex.encode(d)
-        print('Keccak256: %s' % res)
+        print('Keccak256 ( %s ):\n\t%s' % (string, res))
         self.assertEqual(exp, res)
 
     def test1_keccak(self):
         print('\n---------------- %s' % self)
-        data = 'moky'.encode('utf-8')
         exp = '96b07f3103d45cc7df2dd6e597922a17f48c86257dffe790d442bbd1ff46514d'
-        self.__test_keccak(data=data, exp=exp)
+        self.__test_keccak(string='moky', exp=exp)
 
-        data = 'hello'.encode('utf-8')
         exp = '1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8'
-        self.__test_keccak(data=data, exp=exp)
+        self.__test_keccak(string='hello', exp=exp)
 
-        data = 'abc'.encode('utf-8')
         exp = '4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45'
-        self.__test_keccak(data=data, exp=exp)
+        self.__test_keccak(string='abc', exp=exp)
 
         data = '04' \
                '50863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352' \
-               '2cd470243453a299fa9e77237716103abc11a1df38855ed6f2ee187e9c582ba6'.encode('utf-8')
+               '2cd470243453a299fa9e77237716103abc11a1df38855ed6f2ee187e9c582ba6'
         exp = 'fc12ad814631ba689f7abe671016f75c54c607f082ae6b0881fac0abeda21781'
-        self.__test_keccak(data=data, exp=exp)
+        self.__test_keccak(string=data, exp=exp)
 
     @staticmethod
     def __public_key(pem: str) -> PublicKey:

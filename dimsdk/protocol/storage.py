@@ -35,10 +35,9 @@
     Storage data (may be encrypted) by title for VIP users
 """
 
-import json
 from typing import Optional
 
-from dimp import Base64
+from dimp import base64_encode, base64_decode, json_decode
 from dimp import DecryptKey, SymmetricKey, ID
 from dimp import Command
 
@@ -66,27 +65,13 @@ class StorageCommand(Command):
     CONTACTS = 'contacts'
     PRIVATE_KEY = 'private_key'
 
-    def __new__(cls, cmd: dict):
-        """
-        Create storage command
-
-        :param cmd: command info
-        :return: StorageCommand object
-        """
+    def __init__(self, cmd: Optional[dict]=None, title: Optional[str]=None):
         if cmd is None:
-            return None
-        elif cls is StorageCommand:
-            if isinstance(cmd, StorageCommand):
-                # return StorageCommand object directly
-                return cmd
-        # new StorageCommand(dict)
-        return super().__new__(cls, cmd)
-
-    def __init__(self, content: dict):
-        if self is content:
-            # no need to init again
-            return
-        super().__init__(content)
+            super().__init__(command=StorageCommand.STORAGE)
+        else:
+            super().__init__(cmd=cmd)
+        if title is not None:
+            self['title'] = title
         # lazy
         self.__key: bytes = None
         self.__data: bytes = None
@@ -108,10 +93,10 @@ class StorageCommand(Command):
     #
     @property
     def identifier(self) -> ID:
-        return self.delegate.identifier(string=self.get('ID'))
+        return ID.parse(identifier=self.get('ID'))
 
     @identifier.setter
-    def identifier(self, value: str):
+    def identifier(self, value: ID):
         if value is None:
             self.pop('ID', None)
         else:
@@ -125,7 +110,7 @@ class StorageCommand(Command):
         if self.__key is None:
             base64 = self.get('key')
             if base64 is not None:
-                self.__key = Base64.decode(base64)
+                self.__key = base64_decode(base64)
         return self.__key
 
     @key.setter
@@ -133,7 +118,7 @@ class StorageCommand(Command):
         if value is None:
             self.pop('key', None)
         else:
-            self['key'] = Base64.encode(value)
+            self['key'] = base64_encode(value)
         self.__key = value
 
     #
@@ -144,7 +129,7 @@ class StorageCommand(Command):
         if self.__data is None:
             base64 = self.get('data')
             if base64 is not None:
-                self.__data = Base64.decode(base64)
+                self.__data = base64_decode(base64)
         return self.__data
 
     @data.setter
@@ -152,7 +137,7 @@ class StorageCommand(Command):
         if value is None:
             self.pop('data', None)
         else:
-            self['data'] = Base64.encode(value)
+            self['data'] = base64_encode(value)
         self.__data = value
 
     def decrypt(self, password: DecryptKey=None, private_key: DecryptKey=None) -> bytes:
@@ -174,39 +159,9 @@ class StorageCommand(Command):
             elif private_key is not None:
                 # assert isinstance(private_key, PrivateKey), 'private key error: %s' % private_key
                 key_data = private_key.decrypt(self.key)
-                key = SymmetricKey(json.loads(key_data))
+                key = SymmetricKey.parse(key=json_decode(data=key_data))
             # get encrypted data
             data = self.data
             if key is not None and data is not None:
                 self.__plaintext = key.decrypt(data=data)
         return self.__plaintext
-
-#
-    #   Factories
-    #
-    @classmethod
-    def new(cls, content: dict=None, title: str=None, time: int=0):
-        """
-        Create storage command
-
-        :param content: command info
-        :param title: title
-        :param time: command time
-        :return: StorageCommand object
-        """
-        if content is None:
-            # create empty content
-            content = {}
-        # new StorageCommand(dict)
-        if title is not None:
-            if title == cls.CONTACTS:
-                # compatible with v1.0
-                return super().new(content=content, command=cls.CONTACTS)
-            content['title'] = title
-        return super().new(content=content, command=cls.STORAGE, time=time)
-
-
-# register command class
-Command.register(command=StorageCommand.STORAGE, command_class=StorageCommand)
-Command.register(command=StorageCommand.CONTACTS, command_class=StorageCommand)
-Command.register(command=StorageCommand.PRIVATE_KEY, command_class=StorageCommand)

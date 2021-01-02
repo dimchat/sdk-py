@@ -29,7 +29,10 @@
 # ==============================================================================
 
 from .polylogue import Polylogue
+from .chatroom import Chatroom, ChatroomDataSource
 
 __all__ = [
+
     'Polylogue',
+    'Chatroom', 'ChatroomDataSource',
 ]

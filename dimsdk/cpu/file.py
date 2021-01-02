@@ -36,22 +36,17 @@
 
 from typing import Optional
 
-from dimp import ID, SymmetricKey
+from dimp import SymmetricKey
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import Envelope
-from dimp import ContentType, Content, FileContent
+from dimp import Content, FileContent
 
-from .processor import ContentProcessor
+from .content import ContentProcessor
 
 
 #
 #   File Content Processor
 #
 class FileContentProcessor(ContentProcessor):
-
-    @property
-    def delegate(self):  # MessengerDelegate
-        return self.messenger.delegate
 
     def upload(self, content: FileContent, password: SymmetricKey, msg: InstantMessage):
         data = content.data
@@ -61,7 +56,7 @@ class FileContentProcessor(ContentProcessor):
         encrypted = password.encrypt(data=data)
         if encrypted is None or len(encrypted) == 0:
             raise ValueError('failed to encrypt file data with key: %s' % password)
-        url = self.delegate.upload_data(data=encrypted, msg=msg)
+        url = self.messenger.upload_data(data=encrypted, msg=msg)
         if url is not None:
             # replace 'data' with 'URL'
             content.url = url
@@ -73,17 +68,11 @@ class FileContentProcessor(ContentProcessor):
         if url is None or url.find('://') < 0:
             # download URL not found
             return False
-        env = msg.envelope
-        envelope = Envelope.new(sender=env.sender, receiver=env.receiver, time=env.time)
-        envelope.delegate = env.delegate
-        if env.group is not None:
-            envelope.group = env.group
-        if env.type is not None and env.type > 0:
-            envelope.type = env.type
-        i_msg = InstantMessage.new(content=content, envelope=envelope)
+        i_msg = InstantMessage.create(head=msg.envelope, body=content)
         # download from CDN
-        encrypted = self.delegate.download_data(url=url, msg=i_msg)
+        encrypted = self.messenger.download_data(url=url, msg=i_msg)
         if encrypted is None or len(encrypted) == 0:
+            # save symmetric key for decrypting file data after download from CDN
             content.password = password
             return False
         else:
@@ -98,14 +87,7 @@ class FileContentProcessor(ContentProcessor):
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
+    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, FileContent), 'file content error: %s' % content
         # TODO: process file content
         return None
-
-
-# register
-ContentProcessor.register(content_type=ContentType.File, processor_class=FileContentProcessor)
-ContentProcessor.register(content_type=ContentType.Image, processor_class=FileContentProcessor)
-ContentProcessor.register(content_type=ContentType.Audio, processor_class=FileContentProcessor)
-ContentProcessor.register(content_type=ContentType.Video, processor_class=FileContentProcessor)

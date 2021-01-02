@@ -35,31 +35,31 @@
     Delegates for Messenger
 """
 
-from abc import ABC, abstractmethod
-from typing import Optional
+from abc import abstractmethod
+from typing import Optional, Union
 
-from dimp import InstantMessage
+from dimp import InstantMessage, ReliableMessage
 
 
-class Callback(ABC):
+class Callback:
 
     @abstractmethod
     def finished(self, result, error=None):
-        pass
+        raise NotImplemented
 
 
-class CompletionHandler(ABC):
+class CompletionHandler:
 
     @abstractmethod
     def success(self):
-        pass
+        raise NotImplemented
 
     @abstractmethod
     def failed(self, error):
-        pass
+        raise NotImplemented
 
 
-class MessengerDelegate(ABC):
+class MessengerDelegate:
 
     @abstractmethod
     def upload_data(self, data: bytes, msg: InstantMessage) -> str:
@@ -70,7 +70,7 @@ class MessengerDelegate(ABC):
         :param msg:  instant message
         :return: download URL
         """
-        pass
+        raise NotImplemented
 
     @abstractmethod
     def download_data(self, url: str, msg: InstantMessage) -> Optional[bytes]:
@@ -81,7 +81,7 @@ class MessengerDelegate(ABC):
         :param msg: instant message
         :return: encrypted file data
         """
-        pass
+        raise NotImplemented
 
     @abstractmethod
     def send_package(self, data: bytes, handler: CompletionHandler) -> bool:
@@ -92,4 +92,30 @@ class MessengerDelegate(ABC):
         :param handler: completion handler
         :return: True on success
         """
-        pass
+        raise NotImplemented
+
+
+class MessengerDataSource:
+
+    def save_message(self, msg: InstantMessage) -> bool:
+        """
+        Save the message into local storage
+
+        :param msg: instant message
+        :return: True on success
+        """
+        raise NotImplemented
+
+    # NOTICE: this function is for Client
+    #         if the client cannot get verify/encrypt message for contact,
+    #         it means you should suspend it and query meta from DIM station first
+    def suspend_message(self, msg: Union[InstantMessage, ReliableMessage]) -> bool:
+        """
+        1. Suspend the sending message for the receiver's meta & visa,
+           or group meta when received new message
+        2. Suspend the received message for the sender's meta
+
+        :param msg: instant/reliable message
+        :return:
+        """
+        raise NotImplemented

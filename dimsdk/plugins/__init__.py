@@ -35,19 +35,21 @@
 """
 
 from .coder import *
-from .digest import SHA3, keccak256
-from .rsa import RSAPublicKey, RSAPrivateKey
-from .ecc import ECCPublicKey, ECCPrivateKey
-from .aes import AESKey
+from .digest import *
+from .factories import *
+
 from .plain import PlainKey
-from .address import ETHAddress
-from .meta import ETHMeta
+
+from .btc import BTCAddress
+from .eth import ETHAddress
+
+from .meta import DefaultMeta, BTCMeta, ETHMeta
 
 
 __all__ = [
+
     'PlainKey',
 
-    'SHA3', 'keccak256',
-
-    'ETHAddress', 'ETHMeta',
+    'BTCAddress', 'ETHAddress',
+    'DefaultMeta', 'BTCMeta', 'ETHMeta',
 ]

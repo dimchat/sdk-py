@@ -70,34 +70,20 @@ class LoginCommand(Command):
         }
     """
 
-    def __new__(cls, cmd: dict):
-        """
-        Create login command
-
-        :param cmd: command info
-        :return: LoginCommand object
-        """
+    def __init__(self, cmd: Optional[dict]=None, identifier: Optional[ID]=None):
         if cmd is None:
-            return None
-        elif cls is LoginCommand:
-            if isinstance(cmd, LoginCommand):
-                # return LoginCommand object directly
-                return cmd
-        # new LoginCommand(dict)
-        return super().__new__(cls, cmd)
-
-    def __init__(self, content: dict):
-        if self is content:
-            # no need to init again
-            return
-        super().__init__(content)
+            super().__init__(command=Command.LOGIN)
+        else:
+            super().__init__(cmd=cmd)
+        if identifier is not None:
+            self['ID'] = identifier
 
     #
     #   Client Info
     #
     @property
     def identifier(self) -> ID:
-        return self.delegate.identifier(string=self.get('ID'))
+        return ID.parse(identifier=self.get('ID'))
 
     # Device ID
     @property
@@ -159,29 +145,3 @@ class LoginCommand(Command):
             self['provider'] = {
                 'ID': value.identifier,
             }
-
-    #
-    #   Factories
-    #
-    @classmethod
-    def new(cls, content: dict=None, identifier: ID=None, time: int=0):
-        """
-        Create login command for user
-
-        :param content:    command info
-        :param identifier: user ID
-        :param time:       command time
-        :return: LoginCommand object
-        """
-        if content is None:
-            # create empty content
-            content = {}
-        # set entity ID
-        if identifier is not None:
-            content['ID'] = identifier
-        # new LoginCommand(dict)
-        return super().new(content=content, command=Command.LOGIN, time=time)
-
-
-# register command class
-Command.register(command=Command.LOGIN, command_class=LoginCommand)

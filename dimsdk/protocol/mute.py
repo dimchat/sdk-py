@@ -57,27 +57,11 @@ class MuteCommand(Command):
 
     MUTE = 'mute'
 
-    def __new__(cls, cmd: dict):
-        """
-        Create mute command
-
-        :param cmd: command info
-        :return: MuteCommand object
-        """
+    def __init__(self, cmd: Optional[dict]=None):
         if cmd is None:
-            return None
-        elif cls is MuteCommand:
-            if isinstance(cmd, MuteCommand):
-                # return MuteCommand object directly
-                return cmd
-        # new MuteCommand(dict)
-        return super().__new__(cls, cmd)
-
-    def __init__(self, content: dict):
-        if self is content:
-            # no need to init again
-            return
-        super().__init__(content)
+            super().__init__(command=MuteCommand.MUTE)
+        else:
+            super().__init__(cmd=cmd)
 
     #
     #   mute-list
@@ -92,29 +76,3 @@ class MuteCommand(Command):
             self.pop('list', None)
         else:
             self['list'] = value
-
-    #
-    #   Factories
-    #
-    @classmethod
-    def new(cls, content: dict=None, mute: list=None, time: int=0):
-        """
-        Create mute command
-
-        :param content: command info
-        :param mute: mute-list
-        :param time: command time
-        :return: MuteCommand object
-        """
-        if content is None:
-            # create empty content
-            content = {}
-        # set mute-list
-        if mute is not None:
-            content['list'] = mute
-        # new MuteCommand(dict)
-        return super().new(content=content, command=cls.MUTE, time=time)
-
-
-# register command class
-Command.register(command=MuteCommand.MUTE, command_class=MuteCommand)

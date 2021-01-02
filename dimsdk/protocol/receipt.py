@@ -59,29 +59,19 @@ class ReceiptCommand(Command):
         }
     """
 
-    def __new__(cls, cmd: dict):
-        """
-        Create receipt command
-
-        :param cmd: command info
-        :return: ReceiptCommand object
-        """
+    def __init__(self, cmd: Optional[dict]=None,
+                 envelope: Optional[Envelope]=None, message: Optional[str]=None, sn: Optional[int]=0):
         if cmd is None:
-            return None
-        elif cls is ReceiptCommand:
-            if isinstance(cmd, ReceiptCommand):
-                # return ReceiptCommand object directly
-                return cmd
-        # new ReceiptCommand(dict)
-        return super().__new__(cls, cmd)
-
-    def __init__(self, content: dict):
-        if self is content:
-            # no need to init again
-            return
-        super().__init__(content)
-        # lazy
-        self.__envelope: Envelope = None
+            super().__init__(command=Command.RECEIPT)
+        else:
+            super().__init__(cmd=cmd)
+        self.__envelope = envelope
+        if envelope is not None:
+            self['envelope'] = envelope
+        if message is not None:
+            self['message'] = message
+        if sn > 0:
+            self['sn'] = sn
 
     # -------- setters/getters
 
@@ -95,44 +85,7 @@ class ReceiptCommand(Command):
             # envelope: { sender: "...", receiver: "...", time: 0 }
             env = self.get('envelope')
             if env is None and 'sender' in self and 'receiver' in self:
-                env = self
+                env = self.dictionary
             if env is not None:
-                self.__envelope = Envelope(env)
-                self.__envelope.delegate = self.delegate
+                self.__envelope = Envelope.parse(envelope=env)
         return self.__envelope
-
-    #
-    #   Factories
-    #
-    @classmethod
-    def new(cls, content: dict=None, message: str=None, sn: int=0, envelope: Envelope=None):
-        """
-        Create receipt command
-
-        :param content:  command info
-        :param message:  receipt message
-        :param sn:       serial number of the message responding to
-        :param envelope: envelope of the message responding to
-        :return: ReceiptCommand object
-        """
-        if content is None:
-            # create empty content
-            content = {}
-        # set receipt message
-        if message is not None:
-            content['message'] = message
-        # set sn for the message responding to
-        if sn > 0:
-            content['sn'] = sn
-        # set envelope for the message responding to
-        if envelope is not None:
-            content['sender'] = envelope.sender
-            content['receiver'] = envelope.receiver
-            content['time'] = envelope.time
-            # TODO: envelope.group?
-        # new ReceiptCommand(dict)
-        return super().new(content=content, command=Command.RECEIPT)
-
-
-# register command class
-Command.register(command=Command.RECEIPT, command_class=ReceiptCommand)

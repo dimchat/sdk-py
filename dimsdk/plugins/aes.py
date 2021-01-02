@@ -28,76 +28,48 @@ from typing import Optional
 import numpy
 from Crypto.Cipher import AES
 
-from dimp import Base64
+from dimp import base64_encode, base64_decode
+from dimp import Dictionary
 from dimp import SymmetricKey
 
 
-def pkcs7_pad(data: bytes, block_size: int) -> bytes:
-    assert data is not None, 'data cannot be None'
-    amount = block_size - len(data) % block_size
-    if amount == 0:
-        amount = block_size
-    pad = chr(amount).encode('utf-8')
-    return data + pad * amount
-
-
-def pkcs7_unpad(data: bytes) -> bytes:
-    assert data is not None and len(data) > 0, 'data empty'
-    amount = data[-1]
-    assert len(data) >= amount
-    return data[:-amount]
-
-
-class AESKey(dict, SymmetricKey):
+class AESKey(Dictionary, SymmetricKey):
     """ AES Key """
 
-    def __new__(cls, key: dict):
-        """
-        Create AES key
-
-        :param key: key info
-        :return: AESKey object
-        """
+    def __init__(self, key: Optional[dict]=None):
         if key is None:
-            return None
-        elif cls is AESKey:
-            if isinstance(key, AESKey):
-                # return AESKey object directly
-                return key
-        # new AESKey(dict)
-        return super().__new__(cls, key)
-
-    def __init__(self, key: dict):
-        if self is key:
-            # no need to init again
-            return
-        super().__init__(key)
-        # key data
-        data = self.get('data')
-        if data is None:
-            # generate data and iv
-            data = bytes(numpy.random.bytes(self.size))
-            self['data'] = Base64.encode(data)
-            iv = bytes(numpy.random.bytes(AES.block_size))
-            self['iv'] = Base64.encode(iv)
-            # self['mode'] = 'CBC'
-            # self['padding'] = 'PKCS7'
-        else:
-            data = Base64.decode(data)
-        # initialization vector
-        iv = self.get('iv')
-        if iv is None:
-            # iv = b'\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'
-            iv = AES.block_size * chr(0).encode('utf-8')
-            self['iv'] = Base64.encode(iv)
-        else:
-            iv = Base64.decode(iv)
-        self.__data = data
-        self.iv = iv
+            key = {'algorithm': SymmetricKey.AES}
+        super().__init__(dictionary=key)
+        self.__data = None
+        self.__iv = None
 
     @property
     def data(self) -> bytes:
+        if self.__data is None:
+            base64 = self.get('data')
+            if base64 is None:
+                # generate key data & iv
+                data, iv = generate(key_size=self.size, block_size=AES.block_size)
+                self.__data = data
+                self.__iv = iv
+                self['data'] = base64_encode(data=data)
+                self['iv'] = base64_encode(data=iv)
+                # self['mode'] = 'CBC'
+                # self['padding'] = 'PKCS7'
+            else:
+                self.__data = base64_decode(string=base64)
         return self.__data
+
+    @property
+    def iv(self) -> bytes:
+        if self.__iv is None:
+            base64 = self.get('iv')
+            if base64 is None:
+                # iv = b'\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'
+                self.__iv = AES.block_size * chr(0).encode('utf-8')
+            else:
+                self.__iv = base64_decode(string=base64)
+        return self.__iv
 
     @property
     def size(self) -> int:
@@ -118,6 +90,23 @@ class AESKey(dict, SymmetricKey):
         return pkcs7_unpad(data=plaintext)
 
 
-# register symmetric key class with algorithm
-SymmetricKey.register(algorithm=SymmetricKey.AES, key_class=AESKey)        # default
-SymmetricKey.register(algorithm='AES/CBC/PKCS7Padding', key_class=AESKey)
+def generate(key_size: int, block_size: int) -> (bytes, bytes):
+    data = bytes(numpy.random.bytes(key_size))
+    iv = bytes(numpy.random.bytes(block_size))
+    return data, iv
+
+
+def pkcs7_pad(data: bytes, block_size: int) -> bytes:
+    assert data is not None, 'data cannot be None'
+    amount = block_size - len(data) % block_size
+    if amount == 0:
+        amount = block_size
+    pad = chr(amount).encode('utf-8')
+    return data + pad * amount
+
+
+def pkcs7_unpad(data: bytes) -> bytes:
+    assert data is not None and len(data) > 0, 'data empty'
+    amount = data[-1]
+    assert len(data) >= amount
+    return data[:-amount]

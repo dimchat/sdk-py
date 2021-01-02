@@ -33,8 +33,8 @@
 import os
 from typing import Optional
 
-from dimp import PrivateKey, EncryptKey, DecryptKey, SignKey
-from dimp import Meta, Profile
+from dimp import PrivateKey, EncryptKey, DecryptKey, SignKey, VerifyKey
+from dimp import Meta, Document, Visa
 from dimp import ID, User, UserDataSource
 
 from .dos import JSONFile
@@ -63,12 +63,11 @@ class Immortals(UserDataSource):
         self.__profiles = {}
         self.__users = {}
         # load built-in users
-        self.__load_user(identifier=ID(self.HULK))
-        self.__load_user(identifier=ID(self.MOKI))
+        self.__load_user(identifier=ID.parse(self.HULK))
+        self.__load_user(identifier=ID.parse(self.MOKI))
 
     def __load_user(self, identifier: ID):
-        assert identifier.valid, 'ID error: %s' % identifier
-        self.cache_id(identifier=identifier)
+        self.__ids[identifier] = identifier
         # load meta for ID
         meta = self.__load_meta(filename=identifier.name+'_meta.js')
         self.cache_meta(meta=meta, identifier=identifier)
@@ -81,14 +80,14 @@ class Immortals(UserDataSource):
 
     @staticmethod
     def __load_meta(filename: str) -> Optional[Meta]:
-        return Meta(load_resource_file(filename=filename))
+        return Meta.parse(meta=load_resource_file(filename=filename))
 
     @staticmethod
     def __load_private_key(filename: str) -> Optional[PrivateKey]:
-        return PrivateKey(load_resource_file(filename=filename))
+        return PrivateKey.parse(key=load_resource_file(filename=filename))
 
-    def __load_profile(self, filename: str) -> Optional[Profile]:
-        profile = Profile(load_resource_file(filename=filename))
+    def __load_profile(self, filename: str) -> Optional[Document]:
+        profile = Document.parse_document(document=load_resource_file(filename=filename))
         assert profile is not None, 'failed to load profile: %s' % filename
         # copy 'name'
         name = profile.get('name')
@@ -110,28 +109,22 @@ class Immortals(UserDataSource):
         self.__sign_profile(profile=profile)
         return profile
 
-    def __sign_profile(self, profile: Profile) -> bytes:
-        identifier = self.identifier(profile.identifier)
+    def __sign_profile(self, profile: Document) -> bytes:
+        identifier = profile.identifier
         key = self.private_key_for_signature(identifier)
-        assert key is not None, 'failed to get private key for signature: %s' % identifier
-        return profile.sign(private_key=key)
-
-    def cache_id(self, identifier: ID) -> bool:
-        assert identifier.valid, 'ID not valid: %s' % identifier
-        self.__ids[identifier] = identifier
-        return True
+        if key is not None:
+            return profile.sign(private_key=key)
 
     def cache_meta(self, meta: Meta, identifier: ID) -> bool:
-        assert meta.match_identifier(identifier), 'meta not match: %s, %s' % (identifier, meta)
-        self.__metas[identifier] = meta
-        return True
+        if meta.match_identifier(identifier):
+            self.__metas[identifier] = meta
+            return True
 
     def cache_private_key(self, private_key: PrivateKey, identifier: ID) -> bool:
-        assert self.meta(identifier).key.match(private_key), 'private key error: %s, %s' % (identifier, private_key)
         self.__private_keys[identifier] = private_key
         return True
 
-    def cache_profile(self, profile: Profile, identifier: ID) -> bool:
+    def cache_profile(self, profile: Document, identifier: ID) -> bool:
         assert profile.valid, 'profile not valid: %s' % profile
         assert identifier == profile.identifier, 'profile not match: %s, %s' % (identifier, profile)
         self.__profiles[profile.identifier] = profile
@@ -145,16 +138,7 @@ class Immortals(UserDataSource):
 
     # ----
 
-    def identifier(self, string: str) -> Optional[ID]:
-        if string is None:
-            return None
-        elif isinstance(string, ID):
-            return string
-        assert isinstance(string, str), 'ID string error: %s' % string
-        return self.__ids.get(string)
-
     def user(self, identifier: ID) -> Optional[User]:
-        assert identifier.is_user, 'ID type error: %s' % identifier
         user = self.__users.get(identifier)
         if user is None:
             # only create exists account
@@ -169,14 +153,13 @@ class Immortals(UserDataSource):
     def meta(self, identifier: ID) -> Optional[Meta]:
         return self.__metas.get(identifier)
 
-    def profile(self, identifier: ID) -> Optional[Profile]:
+    def document(self, identifier: ID, doc_type: Optional[str]='*') -> Optional[Document]:
         return self.__profiles.get(identifier)
 
     #
     #   UserDataSource
     #
     def contacts(self, identifier: ID) -> Optional[list]:
-        assert identifier.is_user, 'ID error: %s' % identifier
         if identifier not in self.__ids:
             return None
         array = []
@@ -186,22 +169,54 @@ class Immortals(UserDataSource):
             array.append(value)
         return array
 
+    def __visa_key(self, identifier: ID) -> Optional[EncryptKey]:
+        visa = self.document(identifier=identifier, doc_type=Document.VISA)
+        if isinstance(visa, Visa):
+            if visa.valid:
+                return visa.key
+
+    def __meta_key(self, identifier: ID) -> Optional[VerifyKey]:
+        meta = self.meta(identifier=identifier)
+        if meta is not None:
+            return meta.key
+
     def public_key_for_encryption(self, identifier: ID) -> Optional[EncryptKey]:
-        assert identifier.is_user, 'ID error: %s' % identifier
-        # NOTICE: return nothing to use profile.key or meta.key
-        return None
+        # 1. get key from visa
+        key = self.__visa_key(identifier=identifier)
+        if key is not None:
+            # if visa.key exists, use it for encryption
+            return key
+        # 2. get key from meta
+        key = self.__meta_key(identifier=identifier)
+        if isinstance(key, EncryptKey):
+            # if profile.key not exists and meta.key is encrypt key,
+            # use it for encryption
+            return key
+
+    def public_keys_for_verification(self, identifier: ID) -> Optional[list]:
+        keys = []
+        # 1. get key from visa
+        key = self.__visa_key(identifier=identifier)
+        if isinstance(key, VerifyKey):
+            # the sender may use communication key to sign message.data,
+            # so try to verify it with visa.key here
+            keys.append(key)
+        # 2. get key from meta
+        key = self.__meta_key(identifier=identifier)
+        if key is not None:
+            # the sender may use identity key to sign message.data,
+            # try to verify it with meta.key
+            keys.append(key)
+        assert len(keys) > 0, 'failed to get verify key for user: %s' % identifier
+        return keys
 
     def private_keys_for_decryption(self, identifier: ID) -> Optional[list]:
-        assert identifier.is_user, 'ID error: %s' % identifier
         key = self.__private_keys.get(identifier)
         if isinstance(key, DecryptKey):
             return [key]
 
     def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
-        assert identifier.is_user, 'ID error: %s' % identifier
         return self.__private_keys.get(identifier)
 
-    def public_keys_for_verification(self, identifier: ID) -> Optional[list]:
-        assert identifier.is_user, 'ID error: %s' % identifier
-        # NOTICE: return nothing to use meta.key
-        return None
+    def private_key_for_visa_signature(self, identifier: ID) -> Optional[SignKey]:
+        return self.__private_keys.get(identifier)

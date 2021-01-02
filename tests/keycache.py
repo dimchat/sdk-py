@@ -42,8 +42,6 @@ from dimsdk.plugins import PlainKey
 from dimsdk import SymmetricKey, ID
 from dimsdk import CipherKeyDelegate
 
-plain_key = PlainKey({'algorithm': PlainKey.PLAIN})
-
 
 class KeyCache(CipherKeyDelegate):
 
@@ -144,7 +142,7 @@ class KeyCache(CipherKeyDelegate):
     # TODO: override to check whether key expired for sending message
     def cipher_key(self, sender: ID, receiver: ID) -> Optional[SymmetricKey]:
         if receiver.is_broadcast:
-            return plain_key
+            return SymmetricKey.generate(algorithm=PlainKey.PLAIN)
         # get key from cache
         return self.__cipher_key(sender, receiver)
 

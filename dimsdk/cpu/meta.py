@@ -39,7 +39,7 @@ from typing import Optional
 from dimp import ID, Meta
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import TextContent, Command, MetaCommand
+from dimp import TextContent, MetaCommand
 
 from ..protocol import ReceiptCommand
 
@@ -53,26 +53,24 @@ class MetaCommandProcessor(CommandProcessor):
         meta = self.facebook.meta(identifier=identifier)
         if meta is None:
             # meta not found
-            return TextContent.new(text='Sorry, meta for %s not found.' % identifier)
+            text = 'Sorry, meta for %s not found.' % identifier
+            return TextContent(text=text)
         # response
         return MetaCommand.response(identifier=identifier, meta=meta)
 
     def __put(self, identifier: ID, meta: Meta) -> Content:
         facebook = self.facebook
         # received a meta for ID
-        if not facebook.verify_meta(meta=meta, identifier=identifier):
-            # meta not match
-            return TextContent.new(text='Meta not match ID: %s' % identifier)
         if not facebook.save_meta(meta=meta, identifier=identifier):
             # save meta failed
-            return TextContent.new(text='Meta not accept: %s!' % identifier)
+            return TextContent(text='Meta not accept: %s!' % identifier)
         # response
-        return ReceiptCommand.new(message='Meta received: %s' % identifier)
+        return ReceiptCommand(message='Meta received: %s' % identifier)
 
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
+    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, MetaCommand), 'command error: %s' % content
         identifier = content.identifier
         meta = content.meta
@@ -80,7 +78,3 @@ class MetaCommandProcessor(CommandProcessor):
             return self.__get(identifier=identifier)
         else:
             return self.__put(identifier=identifier, meta=meta)
-
-
-# register
-CommandProcessor.register(command=Command.META, processor_class=MetaCommandProcessor)

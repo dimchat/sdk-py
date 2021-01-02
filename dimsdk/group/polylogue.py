@@ -35,14 +35,14 @@
     Simple group chat
 """
 
-from dimp import ID, Group, NetworkID
+from dimp import ID, Group, NetworkType
 
 
 class Polylogue(Group):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)
-        assert identifier.type == NetworkID.Polylogue, 'Polylogue ID type error: %s' % identifier
+        assert identifier.type == NetworkType.POLYLOGUE, 'Polylogue ID type error: %s' % identifier
 
     @property
     def owner(self) -> ID:

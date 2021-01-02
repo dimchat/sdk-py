@@ -34,7 +34,7 @@ from typing import Optional
 
 import base58
 
-from dimp import BaseCoder, Base58
+from dimp import DataCoder, Base58
 
 
 """
@@ -42,7 +42,7 @@ from dimp import BaseCoder, Base58
 """
 
 
-class B58(BaseCoder):
+class B58(DataCoder):
 
     def encode(self, data: bytes) -> str:
         """ BASE-58 Encode """

@@ -25,10 +25,10 @@
 
 from typing import Optional
 
-from dimp import SymmetricKey
+from dimp import Dictionary, SymmetricKey
 
 
-class PlainKey(dict, SymmetricKey):
+class PlainKey(Dictionary, SymmetricKey):
     """
         Symmetric key for broadcast message,
         which will do nothing when en/decoding message data
@@ -48,7 +48,3 @@ class PlainKey(dict, SymmetricKey):
 
     def decrypt(self, data: bytes) -> Optional[bytes]:
         return data
-
-
-# register key class with algorithm
-SymmetricKey.register(algorithm=PlainKey.PLAIN, key_class=PlainKey)

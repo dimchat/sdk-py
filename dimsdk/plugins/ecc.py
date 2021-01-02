@@ -24,36 +24,18 @@
 # ==============================================================================
 
 import hashlib
-from typing import Union
+from typing import Union, Optional
 
 import ecdsa
 
-from dimp import PublicKey, PrivateKey
+from dimp import Dictionary
+from dimp import AsymmetricKey, PublicKey, PrivateKey
 
 
-class ECCPublicKey(dict, PublicKey):
+class ECCPublicKey(Dictionary, PublicKey):
     """ ECC Public Key """
 
-    def __new__(cls, key: dict):
-        """
-        Create ECC public key
-
-        :param key: key info
-        :return: ECCPublicKey object
-        """
-        if key is None:
-            return None
-        elif cls is ECCPublicKey:
-            if isinstance(key, ECCPublicKey):
-                # return ECCPublicKey object directly
-                return key
-        # new ECCPublicKey(dict)
-        return super().__new__(cls, key)
-
     def __init__(self, key: dict):
-        if self is key:
-            # no need to init again
-            return
         super().__init__(key)
         # data in 'PEM' format
         data = key['data']
@@ -86,29 +68,12 @@ class ECCPublicKey(dict, PublicKey):
             return False
 
 
-class ECCPrivateKey(dict, PrivateKey):
+class ECCPrivateKey(Dictionary, PrivateKey):
     """ ECC Private Key """
 
-    def __new__(cls, key: dict):
-        """
-        Create ECC private key
-
-        :param key: key info
-        :return: ECCPrivateKey object
-        """
+    def __init__(self, key: Optional[dict]=None):
         if key is None:
-            return None
-        elif cls is ECCPrivateKey:
-            if isinstance(key, ECCPrivateKey):
-                # return ECCPrivateKey object directly
-                return key
-        # new ECCPrivateKey(dict)
-        return super().__new__(cls, key)
-
-    def __init__(self, key: dict):
-        if self is key:
-            # no need to init again
-            return
+            key = {'algorithm': AsymmetricKey.ECC}
         super().__init__(key)
         # data in 'PEM' format
         data = key.get('data')
@@ -169,12 +134,3 @@ class ECCPrivateKey(dict, PrivateKey):
 
     def sign(self, data: bytes) -> bytes:
         return self.__key.sign(data=data, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_der)
-
-
-# register public key class with algorithm
-PublicKey.register(algorithm=PublicKey.ECC, key_class=ECCPublicKey)             # default
-PublicKey.register(algorithm='SHA256withECC', key_class=ECCPublicKey)
-
-# register private key class with algorithm
-PrivateKey.register(algorithm=PrivateKey.ECC, key_class=ECCPrivateKey)          # default
-PrivateKey.register(algorithm='SHA256withECC', key_class=ECCPrivateKey)

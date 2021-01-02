@@ -36,102 +36,50 @@
 
 from typing import Optional
 
-from dimp import ID
 from dimp import ReliableMessage
-from dimp import ContentType, Content
+from dimp import Content, TextContent
 from dimp import Command, GroupCommand
 
-from .processor import ContentProcessor
+from .content import ContentProcessor
 from .command import CommandProcessor
 
 
 class HistoryCommandProcessor(CommandProcessor):
 
-    def __init__(self, messenger):
-        super().__init__(messenger=messenger)
-        # lazy
-        self.__gpu: GroupCommandProcessor = None
-
-    @property
-    def gpu(self):  # GroupCommandProcessor
-        if self.__gpu is None:
-            self.__gpu = self._create_processor(GroupCommandProcessor)
-        return self.__gpu
-
-    #
-    #   main
-    #
-    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
-        assert type(self) == HistoryCommandProcessor, 'override me!'
-        assert isinstance(content, Command), 'history cmd error: %s' % content
-        if content.group is None:
-            # get command processor
-            cpu = self.cpu(command=content.command)
-            # if cpu is None:
-            #     return TextContent.new(text='History command (name: %s) not support yet!' % content.command)
-        else:
-            # get group command processor
-            cpu = self.gpu
-        assert cpu is not self, 'Dead cycle! history cmd: %s' % content
-        return cpu.process(content=content, sender=sender, msg=msg)
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
+    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+        text = 'History command (name: %s) not support yet!' % cmd.command
+        res = TextContent(text=text)
+        # check group message
+        group = cmd.group
+        if group is not None:
+            res.group = group
+        return res
 
 
 class GroupCommandProcessor(HistoryCommandProcessor):
 
-    def members(self, content: GroupCommand) -> Optional[list]:
-        array = content.members
+    @staticmethod
+    def members(cmd: GroupCommand) -> Optional[list]:
+        # get from 'members'
+        array = cmd.members
         if array is None:
-            item = content.member
-            if item is None:
-                return None
-            array = [item]
-        return self.convert_members(array)
-
-    def convert_members(self, array: list) -> list:
-        facebook = self.facebook
-        results = []
-        for item in array:
-            identifier = facebook.identifier(item)
-            if identifier is None:
-                raise ValueError('Member ID error: %s' % item)
-            results.append(identifier)
-        return results
-
-    def contains_owner(self, members: list, group: ID) -> bool:
-        facebook = self.facebook
-        for item in members:
-            user = facebook.identifier(item)
-            if facebook.is_owner(member=user, group=group):
-                return True
-
-    def is_empty(self, group: ID) -> bool:
-        """
-        Check whether group info empty (lost)
-
-        :param group: group ID
-        :return: True on members, owner not found
-        """
-        facebook = self.facebook
-        members = facebook.members(identifier=group)
-        if members is None or len(members) == 0:
-            return True
-        owner = facebook.owner(identifier=group)
-        if owner is None:
-            return True
+            # get from 'member
+            item = cmd.member
+            if item is not None:
+                array = [item]
+        return array
 
     #
     #   main
     #
-    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
-        assert type(self) == GroupCommandProcessor, 'override me!'
-        assert isinstance(content, Command), 'group cmd error: %s' % content
+    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
+        assert isinstance(content, GroupCommand), 'group cmd error: %s' % content
         # process command by name
-        cpu = self.cpu(command=content.command)
-        # if cpu is None:
-        #     return TextContent.new(text='Group command (name: %s) not support yet!' % content.command)
-        assert cpu is not self, 'Dead cycle! group cmd: %s' % content
-        return cpu.process(content=content, sender=sender, msg=msg)
-
-
-# register
-ContentProcessor.register(content_type=ContentType.History, processor_class=HistoryCommandProcessor)
+        cpu = CommandProcessor.processor_for_command(cmd=content)
+        if cpu is None:
+            cpu = self
+        else:
+            assert isinstance(cpu, ContentProcessor), 'CPU error: %s' % cpu
+            cpu.messenger = self.messenger
+        return cpu.execute(cmd=content, msg=msg)

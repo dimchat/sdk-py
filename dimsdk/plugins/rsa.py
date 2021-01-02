@@ -30,33 +30,15 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
 from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
+from dimp import Dictionary
 from dimp import EncryptKey, DecryptKey
-from dimp import PublicKey, PrivateKey
+from dimp import AsymmetricKey, PublicKey, PrivateKey
 
 
-class RSAPublicKey(dict, PublicKey, EncryptKey):
+class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
     """ RSA Public Key """
 
-    def __new__(cls, key: dict):
-        """
-        Create RSA public key
-
-        :param key: key info
-        :return: RSAPublicKey object
-        """
-        if key is None:
-            return None
-        elif cls is RSAPublicKey:
-            if isinstance(key, RSAPublicKey):
-                # return RSAPublicKey object directly
-                return key
-        # new RSAPublicKey(dict)
-        return super().__new__(cls, key)
-
     def __init__(self, key: dict):
-        if self is key:
-            # no need to init again
-            return
         super().__init__(key)
         # data in 'PEM' format
         data = key['data']
@@ -92,29 +74,12 @@ class RSAPublicKey(dict, PublicKey, EncryptKey):
             return False
 
 
-class RSAPrivateKey(dict, PrivateKey, DecryptKey):
+class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
     """ RSA Private Key """
 
-    def __new__(cls, key: dict):
-        """
-        Create RSA private key
-
-        :param key: key info
-        :return: RSAPrivateKey object
-        """
+    def __init__(self, key: Optional[dict]=None):
         if key is None:
-            return None
-        elif cls is RSAPrivateKey:
-            if isinstance(key, RSAPrivateKey):
-                # return RSAPrivateKey object directly
-                return key
-        # new RSAPrivateKey(dict)
-        return super().__new__(cls, key)
-
-    def __init__(self, key: dict):
-        if self is key:
-            # no need to init again
-            return
+            key = {'algorithm': AsymmetricKey.RSA}
         super().__init__(key)
         # data in 'PEM' format
         data: str = key.get('data')
@@ -185,14 +150,3 @@ class RSAPrivateKey(dict, PrivateKey, DecryptKey):
         hash_obj = SHA256.new(data)
         signer = Signature_PKCS1_v1_5.new(self.__key)
         return signer.sign(hash_obj)
-
-
-# register public key class with algorithm
-PublicKey.register(algorithm=PublicKey.RSA, key_class=RSAPublicKey)             # default
-PublicKey.register(algorithm='SHA256withRSA', key_class=RSAPublicKey)
-PublicKey.register(algorithm='RSA/ECB/PKCS1Padding', key_class=RSAPublicKey)
-
-# register private key class with algorithm
-PrivateKey.register(algorithm=PrivateKey.RSA, key_class=RSAPrivateKey)          # default
-PrivateKey.register(algorithm='SHA256withRSA', key_class=RSAPrivateKey)
-PrivateKey.register(algorithm='RSA/ECB/PKCS1Padding', key_class=RSAPrivateKey)

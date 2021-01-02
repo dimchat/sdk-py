@@ -38,7 +38,7 @@
 from abc import abstractmethod
 from typing import Optional
 
-from dimp import ID, NetworkID
+from dimp import ID, NetworkType
 from dimp import Group, GroupDataSource
 
 
@@ -66,7 +66,7 @@ class Chatroom(Group):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)
-        assert identifier.type == NetworkID.Chatroom, 'Chatroom ID type error: %s' % identifier
+        assert identifier.type == NetworkType.CHATROOM, 'Chatroom ID type error: %s' % identifier
 
     @Group.delegate.getter
     def delegate(self) -> Optional[ChatroomDataSource]:

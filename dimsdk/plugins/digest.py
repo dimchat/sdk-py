@@ -32,10 +32,10 @@
 
 from Crypto.Hash import keccak
 
-from dimp import Digest
+from dimp import DataDigester, KECCAK256
 
 
-class K(Digest):
+class K(DataDigester):
 
     def digest(self, data: bytes) -> bytes:
         """ Keccak256 digest """
@@ -44,15 +44,4 @@ class K(Digest):
         return hash_obj.digest()
 
 
-class SHA3:
-
-    coder: Digest = K()
-
-    @staticmethod
-    def digest(data: bytes) -> bytes:
-        assert SHA3.coder is not None, 'Keccak256 coder not set yet'
-        return SHA3.coder.digest(data=data)
-
-
-def keccak256(data: bytes) -> bytes:
-    return SHA3.coder.digest(data=data)
+KECCAK256.digester = K()

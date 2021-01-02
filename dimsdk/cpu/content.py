@@ -29,67 +29,72 @@
 # ==============================================================================
 
 """
-    Command Processor
+    Content Processor
     ~~~~~~~~~~~~~~~~~
 
 """
 
+import weakref
 from typing import Optional, Union
 
-from dimp.protocol.command import command_name
+from dkd.content import msg_type
+
 from dimp import ReliableMessage
-from dimp import Content, TextContent
-from dimp import Command, GroupCommand
-
-from .content import ContentProcessor
+from dimp import ContentType, Content, TextContent
 
 
-class CommandProcessor(ContentProcessor):
+class ContentProcessor:
 
-    # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
-        text = 'Command (name: %s) not support yet!' % cmd.command
-        res = TextContent(text=text)
-        # check group message
-        group = cmd.group
-        if group is not None:
-            res.group = group
-        return res
+    def __init__(self):
+        super().__init__()
+        self.__messenger: weakref.ReferenceType = None
+
+    @property
+    def messenger(self):  # Messenger
+        if self.__messenger is not None:
+            return self.__messenger()
+
+    @messenger.setter
+    def messenger(self, transceiver):
+        self.__messenger = weakref.ref(transceiver)
+
+    @property
+    def facebook(self):  # Facebook
+        return self.messenger.facebook
 
     #
     #   main
     #
     def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
-        assert isinstance(content, Command), 'command error: %s' % content
-        # process command by name
-        cpu = self.processor_for_command(cmd=content)
-        if cpu is None:
-            if isinstance(content, GroupCommand):
-                cpu = self.processor_for_name(command='group')
-        if cpu is None:
-            cpu = self
-        else:
-            assert isinstance(cpu, CommandProcessor), 'CPU error: %s' % cpu
-            cpu.messenger = self.messenger
-        return cpu.execute(cmd=content, msg=msg)
+        text = 'Content (type: %s) not support yet!' % content.type
+        res = TextContent(text=text)
+        # check group message
+        group = content.group
+        if group is not None:
+            res.group = group
+        return res
 
     #
     #   CPU factory
     #
 
     @classmethod
-    def processor_for_command(cls, cmd: Union[Command, dict]):  # -> Optional[CommandProcessor]:
-        if isinstance(cmd, Command):
-            cmd = cmd.dictionary
-        name = command_name(cmd=cmd)
-        return cls.processor_for_name(command=name)
+    def processor_for_content(cls, content: Union[Content, dict]):  # -> Optional[ContentProcessor]:
+        if isinstance(content, Content):
+            content = content.dictionary
+        content_type = msg_type(content=content)
+        return cls.processor_for_type(content_type=content_type)
 
     @classmethod
-    def processor_for_name(cls, command: str):  # -> Optional[CommandProcessor]:
-        return cls.__command_processors.get(command)
+    def processor_for_type(cls, content_type: Union[ContentType, int]):  # -> Optional[ContentProcessor]:
+        if isinstance(content_type, ContentType):
+            content_type = content_type.value
+        return cls.__content_processors.get(content_type)
 
     @classmethod
-    def register(cls, command: str, cpu):
-        cls.__command_processors[command] = cpu
+    def register(cls, content_type: Union[ContentType, int], cpu):
+        if isinstance(content_type, ContentType):
+            content_type = content_type.value
+        cls.__content_processors[content_type] = cpu
 
-    __command_processors = {}
+    __content_processors = {}

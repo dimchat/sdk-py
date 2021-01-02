@@ -43,7 +43,7 @@ from dimp import ID, ANYONE, EVERYONE, ANYWHERE
 #
 #   Founder
 #
-founder = ID.new(name='moky', address=ANYWHERE)
+founder = ID.create(name='moky', address=ANYWHERE)
 #
 #   Reserved names
 #

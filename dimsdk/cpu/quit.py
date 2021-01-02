@@ -39,43 +39,36 @@
 
 from typing import Optional
 
-from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import GroupCommand, QuitCommand
+from dimp import Command, QuitCommand
 
 from .history import GroupCommandProcessor
 
 
 class QuitCommandProcessor(GroupCommandProcessor):
 
-    def __remove(self, sender: ID, group: ID) -> bool:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+        assert isinstance(cmd, QuitCommand), 'group command error: %s' % cmd
         facebook = self.facebook
+        from ..facebook import Facebook
+        assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
+        # 0. check group
+        group = cmd.group
+        owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
-        if members is None:
-            return False
-        if sender not in members:
-            return False
-        members.remove(sender)
-        return facebook.save_members(members=members, identifier=group)
-
-    #
-    #   main
-    #
-    def process(self, content: Content, sender: ID, msg: ReliableMessage) -> Optional[Content]:
-        assert isinstance(content, QuitCommand), 'group command error: %s' % content
-        facebook = self.facebook
-        group: ID = content.group
+        if owner is None or members is None or len(members) == 0:
+            raise LookupError('Group not ready: %s' % group)
         # 1. check permission
-        if facebook.is_owner(member=sender, group=group):
-            raise AssertionError('owner cannot quit: %s' % msg)
-        if facebook.exists_assistant(member=sender, group=group):
-            raise AssertionError('assistant cannot quit: %s' % msg)
+        sender = msg.sender
+        if sender == owner:
+            raise AssertionError('owner cannot quit: %s -> %s' % (sender, group))
+        assistants = facebook.assistants(identifier=group)
+        if assistants is not None and sender in assistants:
+            raise AssertionError('assistant cannot quit: %s -> %s' % (sender, group))
         # 2. remove sender from group members
-        self.__remove(sender=sender, group=group)
+        if sender in members:
+            members.remove(sender)
+            facebook.save_members(members=members, identifier=group)
         # 3. response (no need to response this group command)
         return None
-
-
-# register
-GroupCommandProcessor.register(command=GroupCommand.QUIT, processor_class=QuitCommandProcessor)
