@@ -156,7 +156,7 @@ class Facebook(Barrack):
         # TODO: make sure visa key exists before calling this
         # check user type
         u_type = identifier.type
-        if u_type in [NetworkType.Main, NetworkType.BTC_MAIN]:
+        if u_type in [NetworkType.MAIN, NetworkType.BTC_MAIN]:
             return User(identifier=identifier)
         if u_type == NetworkType.ROBOT:
             return Robot(identifier=identifier)

@@ -26,10 +26,11 @@
 from typing import Optional, Union
 
 from dimp import base58_encode, base58_decode, sha256, ripemd160
+from dimp import String
 from dimp import Address, NetworkType
 
 
-class BTCAddress(str, Address):
+class BTCAddress(String, Address):
     """
         Address like BitCoin
         ~~~~~~~~~~~~~~~~~~~~
@@ -47,7 +48,7 @@ class BTCAddress(str, Address):
     """
 
     def __init__(self, address: str, network: Union[NetworkType, int]):
-        super().__init__(address)
+        super().__init__(string=address)
         if isinstance(network, NetworkType):
             self.__network = network.value
         else:

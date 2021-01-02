@@ -7,7 +7,7 @@
 
     Unit test for DIM-SDK
 """
-import json
+
 import unittest
 
 from dimsdk import *
@@ -19,28 +19,28 @@ from tests.database import Database
 g_facebook = Database()
 
 g_immortals = Immortals()
-moki_id = g_immortals.identifier(string='moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
-hulk_id = g_immortals.identifier(string='hulk@4YeVEN3aUnvC1DNUufCq1bs9zoBSJTzVEj')
+moki_id = ID.parse(identifier='moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
+hulk_id = ID.parse(identifier='hulk@4YeVEN3aUnvC1DNUufCq1bs9zoBSJTzVEj')
 
 
-def print_data(data: CAData):
-    clazz = data.__class__.__name__
-    print('<%s>' % clazz)
-    print('    <issuer>%s</issuer>' % data.issuer)
-    print('    <validity>%s</validity>' % data.validity)
-    print('    <subject>%s</subject>' % data.subject)
-    print('    <key>%s</key>' % data.key)
-    print('</%s>' % clazz)
-
-
-def print_ca(ca: CertificateAuthority):
-    clazz = ca.__class__.__name__
-    print('<%s>' % clazz)
-    print('    <version>%d</version>' % ca.version)
-    print('    <sn>%s</sn>' % ca.sn)
-    print('    <info>%s</info>' % ca.info)
-    print('    <signature>%s</signature>' % Base64.encode(ca.signature))
-    print('</%s>' % clazz)
+# def print_data(data: CAData):
+#     clazz = data.__class__.__name__
+#     print('<%s>' % clazz)
+#     print('    <issuer>%s</issuer>' % data.issuer)
+#     print('    <validity>%s</validity>' % data.validity)
+#     print('    <subject>%s</subject>' % data.subject)
+#     print('    <key>%s</key>' % data.key)
+#     print('</%s>' % clazz)
+#
+#
+# def print_ca(ca: CertificateAuthority):
+#     clazz = ca.__class__.__name__
+#     print('<%s>' % clazz)
+#     print('    <version>%d</version>' % ca.version)
+#     print('    <sn>%s</sn>' % ca.sn)
+#     print('    <info>%s</info>' % ca.info)
+#     print('    <signature>%s</signature>' % Base64.encode(ca.signature))
+#     print('</%s>' % clazz)
 
 
 common = {}
@@ -51,39 +51,39 @@ class CATestCase(unittest.TestCase):
     def test1_subject(self):
         print('\n---------------- %s' % self)
 
-        issuer = {
-            'O': 'GSP',
-            'OU': 'Service Operation Department',
-            'CN': 'dim.chat',
-        }
-
-        common['issuer'] = CASubject(issuer)
-        print('issuer: ', common['issuer'])
-        self.assertEqual(common['issuer'].organization, issuer['O'])
-
-        subject = {
-            'C': 'CN',
-            'ST': 'Guangdong',
-            'L': 'Guangzhou',
-
-            'O': 'GSP',
-            'OU': 'Service Operation Department',
-            'CN': '127.0.0.1',
-        }
-
-        common['subject'] = CASubject(subject)
-        print('subject: ', common['subject'])
-        self.assertEqual(common['subject'].organization, subject['O'])
+        # issuer = {
+        #     'O': 'GSP',
+        #     'OU': 'Service Operation Department',
+        #     'CN': 'dim.chat',
+        # }
+        #
+        # common['issuer'] = CASubject(issuer)
+        # print('issuer: ', common['issuer'])
+        # self.assertEqual(common['issuer'].organization, issuer['O'])
+        #
+        # subject = {
+        #     'C': 'CN',
+        #     'ST': 'Guangdong',
+        #     'L': 'Guangzhou',
+        #
+        #     'O': 'GSP',
+        #     'OU': 'Service Operation Department',
+        #     'CN': '127.0.0.1',
+        # }
+        #
+        # common['subject'] = CASubject(subject)
+        # print('subject: ', common['subject'])
+        # self.assertEqual(common['subject'].organization, subject['O'])
 
     def test2_validity(self):
         print('\n---------------- %s' % self)
 
-        validity = {
-            'NotBefore': 123,
-            'NotAfter': 456,
-        }
-        common['validity'] = CAValidity(validity)
-        print('validity: ', common['validity'])
+        # validity = {
+        #     'NotBefore': 123,
+        #     'NotAfter': 456,
+        # }
+        # common['validity'] = CAValidity(validity)
+        # print('validity: ', common['validity'])
 
     def test3_key(self):
         print('\n---------------- %s' % self)
@@ -96,27 +96,27 @@ class CATestCase(unittest.TestCase):
     def test4_ca(self):
         print('\n---------------- %s' % self)
 
-        info = {
-            'Issuer': common['issuer'],
-            'Validity': common['validity'],
-            'Subject': common['subject'],
-            'Key': common['key'],
-        }
-        common['info'] = CAData(info)
-        print_data(common['info'])
-
-        moki = g_immortals.user(identifier=moki_id)
-
-        string = json.dumps(common['info']).encode('utf-8')
-        signature = moki.sign(string)
-        ca = {
-            'version': 1,
-            'sn': 1234567,
-            'info': string,
-            'signature': Base64.encode(signature)
-        }
-        common['ca'] = CertificateAuthority(ca)
-        print_ca(common['ca'])
+        # info = {
+        #     'Issuer': common['issuer'],
+        #     'Validity': common['validity'],
+        #     'Subject': common['subject'],
+        #     'Key': common['key'],
+        # }
+        # common['info'] = CAData(info)
+        # print_data(common['info'])
+        #
+        # moki = g_immortals.user(identifier=moki_id)
+        #
+        # string = json.dumps(common['info']).encode('utf-8')
+        # signature = moki.sign(string)
+        # ca = {
+        #     'version': 1,
+        #     'sn': 1234567,
+        #     'info': string,
+        #     'signature': Base64.encode(signature)
+        # }
+        # common['ca'] = CertificateAuthority(ca)
+        # print_ca(common['ca'])
 
 
 class EntityTestCase(unittest.TestCase):
@@ -124,11 +124,9 @@ class EntityTestCase(unittest.TestCase):
     def test1_immortals(self):
         print('\n---------------- %s' % self)
 
-        id1 = g_facebook.identifier('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
+        id1 = ID.parse('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
         moki = g_facebook.user(identifier=id1)
         print('moki: ', moki)
-        number = moki_id.number
-        print('number: %s' % number)
 
 
 class CommandTestCase(unittest.TestCase):
@@ -136,7 +134,7 @@ class CommandTestCase(unittest.TestCase):
     def test1_receipt(self):
         print('\n---------------- %s' % self)
 
-        cmd = ReceiptCommand.new(message='OK!')
+        cmd = ReceiptCommand(message='OK!')
         print('receipt: %s' % cmd)
 
 
@@ -168,7 +166,7 @@ class CryptoTestCase(unittest.TestCase):
 
     @staticmethod
     def __public_key(pem: str) -> PublicKey:
-        p_key = PublicKey({
+        p_key = PublicKey.parse({
             'algorithm': 'ECC',
             'data': pem,
         })
@@ -177,7 +175,7 @@ class CryptoTestCase(unittest.TestCase):
 
     @staticmethod
     def __private_key(pem: str) -> PrivateKey:
-        s_key = PrivateKey({
+        s_key = PrivateKey.parse({
             'algorithm': 'ECC',
             'data': pem,
         })
@@ -196,7 +194,7 @@ class CryptoTestCase(unittest.TestCase):
         s_key = self.__private_key(pem=pem)
         p_key = s_key.public_key
         pub = p_key.data
-        address = ETHAddress.new(pub)
+        address = ETHAddress.generate(pub)
         print('ETH address: %s' % address)
         self.assertEqual(exp, address)
 
@@ -212,13 +210,13 @@ class CryptoTestCase(unittest.TestCase):
 
         pub = Hex.encode(data=p_key.data)
         meta = ETHMeta({
-            'version': MetaVersion.ETH.value,
+            'version': MetaType.ETH.value,
             'key': {
                 'algorithm': 'ECC',
                 'data': pub
             },
         })
-        identifier = meta.generate_address(network=NetworkID.Main.value)
+        identifier = meta.generate_address(network=NetworkType.MAIN.value)
         print('ETH identifier: %s' % identifier)
         self.assertEqual(identifier, exp)
 

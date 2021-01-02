@@ -26,10 +26,11 @@
 from typing import Optional
 
 from dimp import hex_encode, keccak256
+from dimp import String
 from dimp import Address, NetworkType
 
 
-class ETHAddress(str, Address):
+class ETHAddress(String, Address):
     """
         Address like Ethereum
         ~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +44,7 @@ class ETHAddress(str, Address):
     """
 
     def __init__(self, address: str):
-        super().__init__(address)
+        super().__init__(string=address)
 
     @property
     def network(self) -> int:
