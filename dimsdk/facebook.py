@@ -56,7 +56,7 @@ class Facebook(Barrack):
 
         :return: User
         """
-        users = self.local_users()
+        users = self.local_users
         if users is not None and len(users) > 0:
             return users[0]
 

@@ -98,6 +98,7 @@ class MessengerDelegate:
 
 class MessengerDataSource:
 
+    @abstractmethod
     def save_message(self, msg: InstantMessage) -> bool:
         """
         Save the message into local storage
@@ -110,6 +111,7 @@ class MessengerDataSource:
     # NOTICE: this function is for Client
     #         if the client cannot get verify/encrypt message for contact,
     #         it means you should suspend it and query meta from DIM station first
+    @abstractmethod
     def suspend_message(self, msg: Union[InstantMessage, ReliableMessage]) -> bool:
         """
         1. Suspend the sending message for the receiver's meta & visa,

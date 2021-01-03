@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from typing import Optional
+from typing import Optional, List
 
 from dimp import SignKey
-from dimp import ID, Meta, Document
+from dimp import ID, User, Meta, Document
 
 from dimsdk import Facebook
 from dimsdk.immortals import Immortals
@@ -14,8 +14,9 @@ class Database(Facebook):
         super().__init__()
         self.__immortals = Immortals()
 
-    def local_users(self) -> Optional[list]:
-        pass
+    @property
+    def local_users(self) -> Optional[List[User]]:
+        return None
 
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
         pass

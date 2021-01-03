@@ -69,7 +69,8 @@ class MessagePacker(Packer):
         if self.__is_waiting(receiver) or (group is not None and self.__is_waiting(group)):
             # NOTICE: the application will query visa automatically,
             #         save this message in a queue waiting sender's visa response
-            return self.messenger.suspend_message(msg=msg)
+            self.messenger.suspend_message(msg=msg)
+            return None
         # make sure visa.key exists before encrypting message
         return super().encrypt_message(msg=msg)
 

@@ -36,7 +36,6 @@
 """
 
 import weakref
-from abc import abstractmethod
 from typing import Optional, Union
 
 from dimp import SymmetricKey, ID
@@ -238,12 +237,10 @@ class Messenger(Transceiver):
     #   Interfaces for Message Storage
     #
 
-    @abstractmethod
     def save_message(self, msg: InstantMessage) -> bool:
         return self.data_source.save_message(msg=msg)
 
-    @abstractmethod
-    def suspend_message(self, msg: Union[ReliableMessage, InstantMessage]):
+    def suspend_message(self, msg: Union[ReliableMessage, InstantMessage]) -> bool:
         return self.data_source.suspend_message(msg=msg)
 
 
