@@ -87,7 +87,8 @@ class KeyStore(KeyCache):
     def __path(self) -> Optional[str]:
         if self.__user is None:
             return None
-        return os.path.join(self.__base_dir, 'protected', self.__user.identifier, 'keystore.js')
+        address = self.__user.identifier.address
+        return os.path.join(self.__base_dir, 'protected', str(address), 'keystore.js')
 
     def save_keys(self, key_map: dict) -> bool:
         # write key table to persistent storage

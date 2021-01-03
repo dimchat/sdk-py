@@ -43,7 +43,6 @@ setup(
         'mkm',
         'dkd',
 
-        'apns2',   # 0.4.1
         'Crypto',  # pycryptodome==3.7.3
         'base58',  # 1.0.3
         'numpy',   # 1.15.4
