@@ -59,12 +59,10 @@ class ECCPublicKey(Dictionary, PublicKey):
     @property
     def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if isinstance(bits, int):
-            return bits
-        elif isinstance(bits, str):
-            return int(bits)
-        else:
+        if bits is None:
             return 256  # ECC-256
+        else:
+            return int(bits)
 
     def verify(self, data: bytes, signature: bytes) -> bool:
         try:
@@ -115,12 +113,10 @@ class ECCPrivateKey(Dictionary, PrivateKey):
     @property
     def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if isinstance(bits, int):
-            return bits
-        elif isinstance(bits, str):
-            return int(bits)
-        else:
+        if bits is None:
             return 256  # ECC-256
+        else:
+            return int(bits)
 
     @property
     def public_key(self) -> Union[PublicKey]:

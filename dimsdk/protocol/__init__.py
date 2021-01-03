@@ -28,6 +28,9 @@
 # SOFTWARE.
 # ==============================================================================
 
+from dimp.protocol import register_core_factories
+from dimp.protocol import Command, CommandFactoryBuilder
+
 from .receipt import ReceiptCommand
 from .handshake import HandshakeCommand
 from .login import LoginCommand
@@ -36,11 +39,30 @@ from .block import BlockCommand
 from .mute import MuteCommand
 from .storage import StorageCommand
 
+
+def register_all_factories():
+    # Register core factories
+    register_core_factories()
+
+    # Register command factories
+    Command.register(command=Command.RECEIPT, factory=CommandFactoryBuilder(command_class=ReceiptCommand))
+    Command.register(command=Command.HANDSHAKE, factory=CommandFactoryBuilder(command_class=HandshakeCommand))
+    Command.register(command=Command.LOGIN, factory=CommandFactoryBuilder(command_class=LoginCommand))
+
+    Command.register(command=MuteCommand.MUTE, factory=CommandFactoryBuilder(command_class=MuteCommand))
+    Command.register(command=BlockCommand.BLOCK, factory=CommandFactoryBuilder(command_class=BlockCommand))
+    # storage (contacts, private_key)
+    Command.register(command=StorageCommand.STORAGE, factory=CommandFactoryBuilder(command_class=StorageCommand))
+    Command.register(command=StorageCommand.CONTACTS, factory=CommandFactoryBuilder(command_class=StorageCommand))
+    Command.register(command=StorageCommand.PRIVATE_KEY, factory=CommandFactoryBuilder(command_class=StorageCommand))
+
+
+register_all_factories()
+
+
 __all__ = [
 
-    'ReceiptCommand',
-    'HandshakeCommand', 'LoginCommand',
+    'ReceiptCommand', 'HandshakeCommand', 'LoginCommand',
 
-    'BlockCommand', 'MuteCommand',
-    'StorageCommand',
+    'BlockCommand', 'MuteCommand', 'StorageCommand',
 ]

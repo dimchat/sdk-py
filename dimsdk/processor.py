@@ -30,11 +30,8 @@
 from typing import Optional
 
 from dimp import InstantMessage, ReliableMessage
-from dimp import Content, Command
+from dimp import Content
 from dimp import Processor
-from dimp.protocol.factory import CommandFactoryBuilder
-
-from .protocol import *
 
 from .messenger import Messenger
 
@@ -65,26 +62,3 @@ class MessageProcessor(Processor):
         cpu.messenger = self.messenger
         return cpu.process(content=content, msg=r_msg)
         # TODO: override to filter the response
-
-
-def register_factories():
-    """ Register Command Factories """
-    Command.register(command=Command.RECEIPT, factory=CommandFactoryBuilder(command_class=ReceiptCommand))
-    Command.register(command=Command.HANDSHAKE, factory=CommandFactoryBuilder(command_class=HandshakeCommand))
-    Command.register(command=Command.LOGIN, factory=CommandFactoryBuilder(command_class=LoginCommand))
-
-    Command.register(command=MuteCommand.MUTE, factory=CommandFactoryBuilder(command_class=MuteCommand))
-    Command.register(command=BlockCommand.BLOCK, factory=CommandFactoryBuilder(command_class=BlockCommand))
-
-    Command.register(command=StorageCommand.STORAGE, factory=CommandFactoryBuilder(command_class=StorageCommand))
-    Command.register(command=StorageCommand.CONTACTS, factory=CommandFactoryBuilder(command_class=StorageCommand))
-    Command.register(command=StorageCommand.PRIVATE_KEY, factory=CommandFactoryBuilder(command_class=StorageCommand))
-
-
-def register_processors():
-    """ Register Content/Command Processors """
-    pass
-
-
-register_factories()
-register_processors()

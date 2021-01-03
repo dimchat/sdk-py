@@ -57,12 +57,10 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
     @property
     def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if isinstance(bits, int):
-            return bits
-        elif isinstance(bits, str):
-            return int(bits)
-        else:
+        if bits is None:
             return 1024  # RSA-1024
+        else:
+            return int(bits)
 
     def encrypt(self, data: bytes) -> bytes:
         # noinspection PyTypeChecker
@@ -120,12 +118,10 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
     @property
     def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if isinstance(bits, int):
-            return bits
-        elif isinstance(bits, str):
-            return int(bits)
-        else:
+        if bits is None:
             return 1024  # RSA-1024
+        else:
+            return int(bits)
 
     @property
     def public_key(self) -> Union[PublicKey, EncryptKey]:

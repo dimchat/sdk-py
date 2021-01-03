@@ -83,7 +83,7 @@ class DocumentCommandProcessor(CommandProcessor):
         doc = cmd.document
         if doc is None:
             doc_type = cmd.get('doc_type')
-            if not isinstance(doc_type, str):
+            if doc_type is None:
                 doc_type = '*'
             return self.__get(identifier=identifier, doc_type=doc_type)
         else:

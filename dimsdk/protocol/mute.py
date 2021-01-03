@@ -36,7 +36,7 @@
     If value of 'list' is None, means querying mute-list from station
 """
 
-from typing import Optional
+from typing import Optional, List
 
 from dimp import ID, Command
 
@@ -67,13 +67,13 @@ class MuteCommand(Command):
     #   mute-list
     #
     @property
-    def mute_list(self) -> Optional[list]:
+    def mute_list(self) -> Optional[List[ID]]:
         array = self.get('list')
-        if isinstance(array, list):
+        if array is not None:
             return ID.convert(members=array)
 
     @mute_list.setter
-    def mute_list(self, value: Optional[list]):
+    def mute_list(self, value: List[ID]):
         if value is None:
             self.pop('list', None)
         else:

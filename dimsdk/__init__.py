@@ -34,7 +34,7 @@ from .plugins import *
 
 from .network import ServiceProvider, Station, Robot
 
-from .group import Polylogue
+from .group import Polylogue, Chatroom, ChatroomDataSource
 
 from .protocol import ReceiptCommand, HandshakeCommand, LoginCommand
 from .protocol import BlockCommand, MuteCommand, StorageCommand
@@ -45,9 +45,12 @@ from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProce
 from .cpu import ResetCommandProcessor, QueryCommandProcessor
 from .cpu import MetaCommandProcessor, DocumentCommandProcessor
 
-from .delegate import Callback, CompletionHandler, MessengerDelegate
+from .delegate import Callback, CompletionHandler, MessengerDelegate, MessengerDataSource
 
 from .facebook import Facebook
+from .packer import MessagePacker
+from .processor import MessageProcessor
+from .transmitter import MessageTransmitter
 from .messenger import Messenger
 
 from .ans import AddressNameService
@@ -69,13 +72,13 @@ __all__ = [
     'DataDigester', 'MD5', 'SHA1', 'SHA256', 'KECCAK256', 'RIPEMD160',
     'md5', 'sha1', 'sha256', 'keccak256', 'ripemd160',
 
-    'SOMap', 'Dictionary', 'String',
+    'Map', 'Dictionary', 'String',
 
     'CryptographyKey', 'EncryptKey', 'DecryptKey',
     'AsymmetricKey', 'SignKey', 'VerifyKey',
-    'PublicKey', 'PublicKeyFactory',
-    'PrivateKey', 'PrivateKeyFactory',
-    'SymmetricKey', 'SymmetricKeyFactory',
+    'PublicKey',
+    'PrivateKey',
+    'SymmetricKey',
 
     #
     #   MingKeMing
@@ -83,15 +86,15 @@ __all__ = [
     'NetworkType', 'MetaType',
     'Address', 'AddressFactory',
     'ID', 'ANYONE', 'EVERYONE', 'ANYWHERE', 'EVERYWHERE',
-    'Meta', 'BaseMeta', 'MetaFactory',
-    'Document', 'BaseDocument', 'DocumentFactory',
+    'Meta', 'BaseMeta',
+    'Document', 'BaseDocument',
     'Visa', 'BaseVisa', 'Bulletin', 'BaseBulletin',
 
     #
     #   DaoKeDao
     #
     'ContentType',
-    'Content', 'BaseContent', 'ContentFactory',
+    'Content', 'BaseContent',
     'Envelope',
     'Message',
     'InstantMessage', 'SecureMessage', 'ReliableMessage',
@@ -110,6 +113,9 @@ __all__ = [
 
     'MetaCommand', 'DocumentCommand',
 
+    'ContentFactoryBuilder', 'CommandFactoryBuilder',
+    'register_core_factories',
+
     #
     #   Core
     #
@@ -125,11 +131,10 @@ __all__ = [
     #   DIM SDK
     #
 
-    # network
-    'ServiceProvider', 'Station', 'Robot',
-
-    # group
-    'Polylogue',
+    # plugins
+    'PlainKey',
+    'BTCAddress', 'ETHAddress',
+    'DefaultMeta', 'BTCMeta', 'ETHMeta',
 
     # protocol
     'ReceiptCommand', 'HandshakeCommand', 'LoginCommand',
@@ -137,16 +142,23 @@ __all__ = [
 
     # cpu
     'ContentProcessor', 'ForwardContentProcessor', 'FileContentProcessor',
-    'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
+    'CommandProcessor', 'HistoryCommandProcessor',
+    'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
     'MetaCommandProcessor', 'DocumentCommandProcessor',
 
-    # delegate
-    'Callback', 'CompletionHandler', 'MessengerDelegate',
+    # network
+    'ServiceProvider', 'Station', 'Robot',
 
-    'Facebook', 'Messenger',
-    'AddressNameService',
+    # group
+    'Polylogue', 'Chatroom', 'ChatroomDataSource',
+
+    # delegate
+    'Callback', 'CompletionHandler', 'MessengerDelegate', 'MessengerDataSource',
+
+    'AddressNameService', 'Facebook',
+    'Messenger', 'MessagePacker', 'MessageProcessor', 'MessageTransmitter',
 
     #
     #  Sub Modules

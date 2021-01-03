@@ -83,9 +83,7 @@ class LoginCommand(Command):
     #
     @property
     def identifier(self) -> ID:
-        string = self.get('ID')
-        assert isinstance(string, str), 'ID error: %s' % string
-        return ID.parse(identifier=string)
+        return ID.parse(identifier=self.get('ID'))
 
     # Device ID
     @property

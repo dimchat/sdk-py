@@ -47,9 +47,7 @@ class AESKey(Dictionary, SymmetricKey):
     def data(self) -> bytes:
         if self.__data is None:
             base64 = self.get('data')
-            if isinstance(base64, str):
-                self.__data = base64_decode(string=base64)
-            else:
+            if base64 is None or len(base64) == 0:
                 # generate key data & iv
                 data, iv = generate(key_size=self.size, block_size=AES.block_size)
                 self.__data = data
@@ -58,17 +56,19 @@ class AESKey(Dictionary, SymmetricKey):
                 self['iv'] = base64_encode(data=iv)
                 # self['mode'] = 'CBC'
                 # self['padding'] = 'PKCS7'
+            else:
+                self.__data = base64_decode(string=base64)
         return self.__data
 
     @property
     def iv(self) -> bytes:
         if self.__iv is None:
             base64 = self.get('iv')
-            if isinstance(base64, str):
-                self.__iv = base64_decode(string=base64)
-            else:
+            if base64 is None or len(base64) == 0:
                 # iv = b'\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'
                 self.__iv = AES.block_size * chr(0).encode('utf-8')
+            else:
+                self.__iv = base64_decode(string=base64)
         return self.__iv
 
     @property
@@ -78,12 +78,10 @@ class AESKey(Dictionary, SymmetricKey):
     @property
     def bits(self) -> int:
         bits = self.get('sizeInBits')
-        if isinstance(bits, int):
-            return bits
-        elif isinstance(bits, str):
-            return int(bits)
-        else:
+        if bits is None:
             return 256  # AES-256
+        else:
+            return int(bits)
 
     def encrypt(self, data: bytes) -> bytes:
         data = pkcs7_pad(data=data, block_size=AES.block_size)

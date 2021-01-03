@@ -31,13 +31,13 @@ from mkm.profile import document_identifier
 
 from dimp import utf8_encode
 
-from dimp import SignKey, VerifyKey
-from dimp import PublicKey, PublicKeyFactory
-from dimp import PrivateKey, PrivateKeyFactory
-from dimp import AsymmetricKey, SymmetricKey, SymmetricKeyFactory
+from dimp import AsymmetricKey, SignKey, VerifyKey
+from dimp import PublicKey
+from dimp import PrivateKey
+from dimp import SymmetricKey
 from dimp import ID, Address, AddressFactory
-from dimp import Meta, MetaType, MetaFactory
-from dimp import Document, DocumentFactory
+from dimp import Meta, MetaType
+from dimp import Document
 from dimp import BaseDocument, BaseVisa, BaseBulletin
 
 from .rsa import RSAPublicKey, RSAPrivateKey
@@ -49,7 +49,7 @@ from .eth import ETHAddress
 from .meta import DefaultMeta, BTCMeta, ETHMeta
 
 
-class GeneralPublicFactory(PublicKeyFactory):
+class GeneralPublicFactory(PublicKey.Factory):
 
     def parse_public_key(self, key: dict) -> Optional[PublicKey]:
         algorithm = key_algorithm(key=key)
@@ -59,7 +59,7 @@ class GeneralPublicFactory(PublicKeyFactory):
             return ECCPublicKey(key=key)
 
 
-class GeneralPrivateFactory(PrivateKeyFactory):
+class GeneralPrivateFactory(PrivateKey.Factory):
 
     def __init__(self, algorithm: str):
         super().__init__()
@@ -79,7 +79,7 @@ class GeneralPrivateFactory(PrivateKeyFactory):
             return ECCPrivateKey(key=key)
 
 
-class GeneralSymmetricFactory(SymmetricKeyFactory):
+class GeneralSymmetricFactory(SymmetricKey.Factory):
 
     def __init__(self, algorithm: str):
         super().__init__()
@@ -108,7 +108,7 @@ class GeneralAddressFactory(AddressFactory):
         return BTCAddress.parse(address=address)
 
 
-class GeneralMetaFactory(MetaFactory):
+class GeneralMetaFactory(Meta.Factory):
 
     def __init__(self, version: Union[MetaType, int]):
         super().__init__()
@@ -140,7 +140,7 @@ class GeneralMetaFactory(MetaFactory):
             return ETHMeta(meta=meta)
 
 
-class GeneralDocumentFactory(DocumentFactory):
+class GeneralDocumentFactory(Document.Factory):
 
     def __init__(self, doc_type: str):
         super().__init__()
@@ -186,29 +186,33 @@ def register_key_factories():
     PublicKey.register(algorithm=AsymmetricKey.RSA, factory=factory)
     PublicKey.register(algorithm='SHA256withRSA', factory=factory)
     PublicKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=factory)
+
     # Private Key: ECC
     factory = GeneralPrivateFactory(algorithm=AsymmetricKey.ECC)
     PrivateKey.register(algorithm=AsymmetricKey.ECC, factory=factory)
+
     # Private Key: RSA
     factory = GeneralPrivateFactory(algorithm=AsymmetricKey.RSA)
     PrivateKey.register(algorithm=AsymmetricKey.RSA, factory=factory)
     PrivateKey.register(algorithm='SHA256withRSA', factory=factory)
     PrivateKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=factory)
+
     # Symmetric Key: AES
     factory = GeneralSymmetricFactory(algorithm=SymmetricKey.AES)
     SymmetricKey.register(algorithm=SymmetricKey.AES, factory=factory)
     SymmetricKey.register(algorithm='AES/CBC/PKCS7Padding', factory=factory)
+
     # Symmetric Key: Plain
     factory = GeneralSymmetricFactory(algorithm=PlainKey.PLAIN)
     SymmetricKey.register(algorithm=PlainKey.PLAIN, factory=factory)
 
 
 def register_meta_factories():
-    Meta.register_factory(version=MetaType.MKM, factory=GeneralMetaFactory(version=MetaType.MKM))
-    Meta.register_factory(version=MetaType.BTC, factory=GeneralMetaFactory(version=MetaType.BTC))
-    Meta.register_factory(version=MetaType.ExBTC, factory=GeneralMetaFactory(version=MetaType.ExBTC))
-    Meta.register_factory(version=MetaType.ETH, factory=GeneralMetaFactory(version=MetaType.ETH))
-    Meta.register_factory(version=MetaType.ExETH, factory=GeneralMetaFactory(version=MetaType.ExETH))
+    Meta.register(version=MetaType.MKM, factory=GeneralMetaFactory(version=MetaType.MKM))
+    Meta.register(version=MetaType.BTC, factory=GeneralMetaFactory(version=MetaType.BTC))
+    Meta.register(version=MetaType.ExBTC, factory=GeneralMetaFactory(version=MetaType.ExBTC))
+    Meta.register(version=MetaType.ETH, factory=GeneralMetaFactory(version=MetaType.ETH))
+    Meta.register(version=MetaType.ExETH, factory=GeneralMetaFactory(version=MetaType.ExETH))
 
 
 def register_document_factories():

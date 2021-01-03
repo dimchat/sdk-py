@@ -38,13 +38,6 @@ from .coder import *
 from .digest import *
 from .factories import *
 
-from .plain import PlainKey
-
-from .btc import BTCAddress
-from .eth import ETHAddress
-
-from .meta import DefaultMeta, BTCMeta, ETHMeta
-
 
 __all__ = [
 

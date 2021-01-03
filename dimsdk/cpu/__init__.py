@@ -34,6 +34,7 @@
 
 """
 
+from dimp import *
 
 from .content import ContentProcessor
 from .forward import ForwardContentProcessor
@@ -51,6 +52,41 @@ from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor
 
 
+def register_content_processors():
+    # default
+    ContentProcessor.register(content_type=0, cpu=ContentProcessor())
+    ContentProcessor.register(content_type=ContentType.FORWARD, cpu=ForwardContentProcessor())
+    # files
+    fpu = FileContentProcessor()
+    ContentProcessor.register(content_type=ContentType.FILE, cpu=fpu)
+    ContentProcessor.register(content_type=ContentType.IMAGE, cpu=fpu)
+    ContentProcessor.register(content_type=ContentType.AUDIO, cpu=fpu)
+    ContentProcessor.register(content_type=ContentType.VIDEO, cpu=fpu)
+    # commands
+    ContentProcessor.register(content_type=ContentType.COMMAND, cpu=CommandProcessor())
+    ContentProcessor.register(content_type=ContentType.HISTORY, cpu=HistoryCommandProcessor())
+
+
+def register_command_processors():
+    # group commands
+    CommandProcessor.register(command='group', cpu=GroupCommandProcessor())
+    CommandProcessor.register(command=GroupCommand.INVITE, cpu=InviteCommandProcessor())
+    CommandProcessor.register(command=GroupCommand.EXPEL, cpu=ExpelCommandProcessor())
+    CommandProcessor.register(command=GroupCommand.QUIT, cpu=QuitCommandProcessor())
+    CommandProcessor.register(command=GroupCommand.QUERY, cpu=QueryCommandProcessor())
+    CommandProcessor.register(command=GroupCommand.RESET, cpu=ResetCommandProcessor())
+    # meta
+    CommandProcessor.register(command=Command.META, cpu=MetaCommandProcessor())
+    # document
+    dpu = DocumentCommandProcessor()
+    CommandProcessor.register(command=Command.PROFILE, cpu=dpu)
+    CommandProcessor.register(command=Command.DOCUMENT, cpu=dpu)
+
+
+register_content_processors()
+register_command_processors()
+
+
 __all__ = [
 
     'ContentProcessor',
@@ -58,8 +94,9 @@ __all__ = [
     'FileContentProcessor',
 
     'CommandProcessor',
+    'HistoryCommandProcessor',
 
-    'HistoryCommandProcessor', 'GroupCommandProcessor',
+    'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
 
