@@ -41,7 +41,7 @@ from .messenger import Messenger
 class MessagePacker(Packer):
 
     def __init__(self, messenger: Messenger):
-        super().__init__(barrack=messenger.barrack, transceiver=messenger, key_cache=messenger.key_cache)
+        super().__init__(transceiver=messenger)
 
     @property
     def messenger(self) -> Messenger:

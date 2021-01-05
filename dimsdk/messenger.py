@@ -36,11 +36,13 @@
 """
 
 import weakref
+from abc import abstractmethod
 from typing import Optional, Union
 
 from dimp import SymmetricKey, ID
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import ContentType, Content, FileContent
+from dimp import EntityDelegate
 from dimp import Transceiver, Packer, Processor
 
 from .cpu import ContentProcessor, FileContentProcessor
@@ -57,6 +59,7 @@ class Messenger(Transceiver):
         self.__delegate: weakref.ReferenceType = None
         self.__data_source: weakref.ReferenceType = None
 
+        self.__facebook: Facebook = None
         self.__packer: Packer = None
         self.__processor: Processor = None
         self.__transmitter = None
@@ -86,13 +89,29 @@ class Messenger(Transceiver):
         self.__data_source = weakref.ref(value)
 
     #
-    #   Data source for getting entity info
+    #   Delegate for getting entity
     #
     @property
+    def barrack(self) -> EntityDelegate:
+        return self.facebook
+
+    @barrack.setter
+    def barrack(self, delegate: EntityDelegate):
+        self._set_facebook(facebook=delegate)
+
+    @property
     def facebook(self) -> Facebook:
-        barrack = self.barrack
-        assert isinstance(barrack, Facebook), 'entity delegate error: %s' % barrack
-        return barrack
+        if self.__facebook is None:
+            self._set_facebook(facebook=self._create_facebook())
+        return self.__facebook
+
+    def _set_facebook(self, facebook: EntityDelegate):
+        Transceiver.barrack.__set__(self, facebook)
+        self.__facebook = facebook
+
+    @abstractmethod
+    def _create_facebook(self) -> Facebook:
+        raise NotImplemented
 
     #
     #   Message Packer
@@ -100,11 +119,19 @@ class Messenger(Transceiver):
     @property
     def message_packer(self) -> Packer:
         if self.__packer is None:
-            self.__packer = self._create_packer()
+            self._set_packer(packer=self._create_packer())
         return self.__packer
 
+    @message_packer.setter
+    def message_packer(self, packer: Packer):
+        self._set_packer(packer=packer)
+
+    def _set_packer(self, packer: Packer):
+        Transceiver.message_packer.__set__(self, packer)
+        self.__packer = packer
+
     def _create_packer(self) -> Packer:
-        from dimsdk.packer import MessagePacker
+        from .packer import MessagePacker
         return MessagePacker(messenger=self)
 
     #
@@ -113,11 +140,19 @@ class Messenger(Transceiver):
     @property
     def message_processor(self) -> Processor:
         if self.__processor is None:
-            self.__processor = self._create_processor()
+            self._set_processor(processor=self._create_processor())
         return self.__processor
 
+    @message_processor.setter
+    def message_processor(self, processor: Processor):
+        self._set_processor(processor=processor)
+
+    def _set_processor(self, processor: Processor):
+        Transceiver.message_processor.__set__(self, processor)
+        self.__processor = processor
+
     def _create_processor(self) -> Processor:
-        from dimsdk.processor import MessageProcessor
+        from .processor import MessageProcessor
         return MessageProcessor(messenger=self)
 
     #
@@ -129,8 +164,12 @@ class Messenger(Transceiver):
             self.__transmitter = self._create_transmitter()
         return self.__transmitter
 
+    @message_transmitter.setter
+    def message_transmitter(self, transmitter):
+        self.__transmitter = transmitter
+
     def _create_transmitter(self):  # -> MessageTransmitter:
-        from dimsdk.transmitter import MessageTransmitter
+        from .transmitter import MessageTransmitter
         return MessageTransmitter(messenger=self)
 
     def __file_content_processor(self) -> FileContentProcessor:
@@ -173,16 +212,7 @@ class Messenger(Transceiver):
         return content
 
     #
-    #   Interfaces for Processing Message
-    #
-    def process_package(self, data: bytes) -> Optional[bytes]:
-        return self.message_processor.process_package(data=data)
-
-    def process_reliable_message(self, r_msg: ReliableMessage) -> Optional[ReliableMessage]:
-        return self.message_processor.process_reliable_message(r_msg=r_msg)
-
-    #
-    #   Interfaces for Sending Message
+    #   Interfaces for transmitting message
     #
     def send_content(self, sender: Optional[ID], receiver: ID, content: Content,
                      callback: Optional[Callback]=None, priority: int=0) -> bool:
@@ -199,27 +229,6 @@ class Messenger(Transceiver):
     def send_message(self, msg: Union[InstantMessage, ReliableMessage],
                      callback: Optional[Callback]=None, priority: int=0) -> bool:
         return self.message_transmitter.send_message(msg=msg, callback=callback, priority=priority)
-
-    #
-    #   Interfaces for Packing Message
-    #
-    def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
-        return self.message_packer.encrypt_message(msg=msg)
-
-    def sign_message(self, msg: SecureMessage) -> ReliableMessage:
-        return self.message_packer.sign_message(msg=msg)
-
-    def serialize_message(self, msg: ReliableMessage) -> bytes:
-        return self.message_packer.serialize_message(msg=msg)
-
-    def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        return self.message_packer.deserialize_message(data=data)
-
-    def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        return self.message_packer.verify_message(msg=msg)
-
-    def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
-        return self.message_packer.decrypt_message(msg=msg)
 
     #
     #   Interfaces for Station

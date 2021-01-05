@@ -10,6 +10,7 @@
 
 import unittest
 
+from dimp import *
 from dimsdk import *
 from dimsdk.plugins import ETHAddress, ETHMeta
 from dimsdk.immortals import Immortals
@@ -216,7 +217,7 @@ class CryptoTestCase(unittest.TestCase):
                 'data': pub
             },
         })
-        identifier = meta.generate_address(network=NetworkType.MAIN.value)
+        identifier = meta.generate_address(network=NetworkType.MAIN)
         print('ETH identifier: %s' % identifier)
         self.assertEqual(identifier, exp)
 

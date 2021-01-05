@@ -38,9 +38,9 @@
 from abc import abstractmethod
 from typing import Optional
 
-from dimsdk.plugins import PlainKey
-from dimsdk import SymmetricKey, ID
-from dimsdk import CipherKeyDelegate
+from dimp import SymmetricKey, ID
+from dimp import CipherKeyDelegate
+from dimsdk import PlainKey
 
 
 class KeyCache(CipherKeyDelegate):

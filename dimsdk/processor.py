@@ -39,7 +39,7 @@ from .messenger import Messenger
 class MessageProcessor(Processor):
 
     def __init__(self, messenger: Messenger):
-        super().__init__(barrack=messenger.barrack, transceiver=messenger, packer=messenger.message_packer)
+        super().__init__(transceiver=messenger)
 
     @property
     def messenger(self) -> Messenger:
@@ -47,9 +47,9 @@ class MessageProcessor(Processor):
         assert isinstance(transceiver, Messenger), 'messenger error: %s' % transceiver
         return transceiver
 
-    def process_instant_message(self, i_msg: InstantMessage, r_msg: ReliableMessage) -> Optional[InstantMessage]:
-        res = super().process_instant_message(i_msg=i_msg, r_msg=r_msg)
-        if self.messenger.save_message(msg=i_msg):
+    def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> Optional[InstantMessage]:
+        res = super().process_instant_message(msg=msg, r_msg=r_msg)
+        if self.messenger.save_message(msg=msg):
             return res
 
     def process_content(self, content: Content, r_msg: ReliableMessage) -> Optional[Content]:
