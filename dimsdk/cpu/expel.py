@@ -38,6 +38,7 @@
 
 from typing import Optional
 
+from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
 from dimp import Command, ExpelCommand
@@ -84,6 +85,6 @@ class ExpelCommandProcessor(GroupCommandProcessor):
         # 2.3. do expel
         if len(remove_list) > 0:
             if facebook.save_members(members=members, identifier=group):
-                cmd['removed'] = remove_list
+                cmd['removed'] = ID.revert(remove_list)
         # 3. response (no need to response this group command)
         return None

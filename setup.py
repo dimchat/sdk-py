@@ -12,7 +12,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.5.6'
+__version__ = '0.5.7'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -40,8 +40,8 @@ setup(
     ],
     install_requires=[
         'dimp>=0.10.11',
-        'mkm',
-        'dkd',
+        'mkm>=0.10.11',
+        'dkd>=0.10.11',
 
         'Crypto',  # pycryptodome==3.7.3
         'base58',  # 1.0.3

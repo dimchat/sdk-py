@@ -124,8 +124,8 @@ class ResetCommandProcessor(GroupCommandProcessor):
         if len(add_list) > 0 or len(remove_list) > 0:
             if facebook.save_members(members=new_members, identifier=group):
                 if len(add_list) > 0:
-                    cmd['added'] = add_list
+                    cmd['added'] = ID.revert(add_list)
                 if len(remove_list) > 0:
-                    cmd['removed'] = remove_list
+                    cmd['removed'] = ID.revert(remove_list)
         # 3. response (no need to response this group command)
         return None

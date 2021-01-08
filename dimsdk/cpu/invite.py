@@ -38,6 +38,7 @@
 
 from typing import Optional
 
+from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
 from dimp import Command, GroupCommand, InviteCommand
@@ -101,6 +102,6 @@ class InviteCommandProcessor(GroupCommandProcessor):
         # 2.3. do invite
         if len(add_list) > 0:
             if facebook.save_members(members=members, identifier=group):
-                cmd['added'] = add_list
+                cmd['added'] = ID.revert(add_list)
         # 3. response (no need to response this group command)
         return None
