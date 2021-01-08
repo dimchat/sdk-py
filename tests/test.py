@@ -13,13 +13,11 @@ import unittest
 from dimp import *
 from dimsdk import *
 from dimsdk.plugins import ETHAddress, ETHMeta
-from dimsdk.immortals import Immortals
 
 from tests.database import Database
 
 g_facebook = Database()
 
-g_immortals = Immortals()
 moki_id = ID.parse(identifier='moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
 hulk_id = ID.parse(identifier='hulk@4YeVEN3aUnvC1DNUufCq1bs9zoBSJTzVEj')
 
@@ -89,10 +87,10 @@ class CATestCase(unittest.TestCase):
     def test3_key(self):
         print('\n---------------- %s' % self)
 
-        moki_meta = g_immortals.meta(identifier=moki_id)
-        moki_pk = moki_meta.key
-        common['key'] = moki_pk
-        print('pubic key: ', common['key'])
+        # moki_meta = g_immortals.meta(identifier=moki_id)
+        # moki_pk = moki_meta.key
+        # common['key'] = moki_pk
+        # print('pubic key: ', common['key'])
 
     def test4_ca(self):
         print('\n---------------- %s' % self)
@@ -126,8 +124,10 @@ class EntityTestCase(unittest.TestCase):
         print('\n---------------- %s' % self)
 
         id1 = ID.parse('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
-        moki = g_facebook.user(identifier=id1)
-        print('moki: ', moki)
+        meta = g_facebook.meta(identifier=id1)
+        if meta is not None:
+            moki = g_facebook.user(identifier=id1)
+            print('moki: ', moki)
 
 
 class CommandTestCase(unittest.TestCase):

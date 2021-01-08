@@ -28,8 +28,6 @@
 # SOFTWARE.
 # ==============================================================================
 
-from dimp import *
-
 from .plugins import *
 
 from .network import ServiceProvider, Station, Robot

@@ -5,14 +5,12 @@ from dimp import SignKey
 from dimp import ID, User, Meta, Document
 
 from dimsdk import Facebook
-from dimsdk.immortals import Immortals
 
 
 class Database(Facebook):
 
     def __init__(self):
         super().__init__()
-        self.__immortals = Immortals()
 
     @property
     def local_users(self) -> Optional[List[User]]:
@@ -31,10 +29,10 @@ class Database(Facebook):
     #   EntityDataSource
     #
     def meta(self, identifier: ID) -> Optional[Meta]:
-        return self.__immortals.meta(identifier=identifier)
+        pass
 
     def document(self, identifier: ID, doc_type: Optional[str] = '*') -> Optional[Document]:
-        return self.__immortals.document(identifier=identifier)
+        pass
 
     #
     #   UserDataSource
@@ -43,13 +41,13 @@ class Database(Facebook):
         pass
 
     def private_keys_for_decryption(self, identifier: ID) -> Optional[list]:
-        return self.__immortals.private_keys_for_decryption(identifier=identifier)
+        pass
 
     def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
-        return self.__immortals.private_key_for_signature(identifier=identifier)
+        pass
 
     def private_key_for_visa_signature(self, identifier: ID) -> Optional[SignKey]:
-        return self.__immortals.private_key_for_visa_signature(identifier=identifier)
+        pass
 
     #
     #   GroupDataSource
