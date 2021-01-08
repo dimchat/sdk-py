@@ -33,6 +33,7 @@ from dimp import InstantMessage, ReliableMessage
 from dimp import Content
 from dimp import Processor
 
+from .cpu import ContentProcessor
 from .messenger import Messenger
 
 
@@ -54,7 +55,6 @@ class MessageProcessor(Processor):
 
     def process_content(self, content: Content, r_msg: ReliableMessage) -> Optional[Content]:
         # TODO: override to check group
-        from .cpu import ContentProcessor
         cpu = ContentProcessor.processor_for_content(content=content)
         if cpu is None:
             cpu = ContentProcessor.processor_for_type(content_type=0)  # unknown

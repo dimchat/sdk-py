@@ -43,7 +43,7 @@ from dimp import SymmetricKey, ID
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import ContentType, Content, FileContent
 from dimp import EntityDelegate
-from dimp import Transceiver, Packer, Processor
+from dimp import Transceiver
 
 from .cpu import ContentProcessor, FileContentProcessor
 
@@ -59,10 +59,12 @@ class Messenger(Transceiver):
         self.__delegate: weakref.ReferenceType = None
         self.__data_source: weakref.ReferenceType = None
 
+        self.__transmitter: weakref.ReferenceType = None
+
         self.__facebook: Facebook = None
-        self.__packer: Packer = None
-        self.__processor: Processor = None
-        self.__transmitter = None
+        self.__message_packer = None
+        self.__message_processor = None
+        self.__message_transmitter = None
 
     #
     #   Delegate for sending data
@@ -93,21 +95,22 @@ class Messenger(Transceiver):
     #
     @property
     def barrack(self) -> EntityDelegate:
-        return self.facebook
+        delegate = super().barrack
+        if delegate is None:
+            delegate = self.facebook
+        return delegate
 
     @barrack.setter
     def barrack(self, delegate: EntityDelegate):
-        self._set_facebook(facebook=delegate)
+        Transceiver.barrack.__set__(self, delegate)
+        if isinstance(delegate, Facebook):
+            self.__facebook = delegate
 
     @property
     def facebook(self) -> Facebook:
         if self.__facebook is None:
-            self._set_facebook(facebook=self._create_facebook())
+            self.__facebook = self._create_facebook()
         return self.__facebook
-
-    def _set_facebook(self, facebook: EntityDelegate):
-        Transceiver.barrack.__set__(self, facebook)
-        self.__facebook = facebook
 
     @abstractmethod
     def _create_facebook(self) -> Facebook:
@@ -117,20 +120,25 @@ class Messenger(Transceiver):
     #   Message Packer
     #
     @property
-    def message_packer(self) -> Packer:
-        if self.__packer is None:
-            self._set_packer(packer=self._create_packer())
-        return self.__packer
+    def packer(self) -> Transceiver.Packer:
+        delegate = super().packer
+        if delegate is None:
+            delegate = self.__get_packer()
+        return delegate
 
-    @message_packer.setter
-    def message_packer(self, packer: Packer):
-        self._set_packer(packer=packer)
+    @packer.setter
+    def packer(self, delegate: Transceiver.Packer):
+        Transceiver.packer.__set__(self, delegate)
+        from .packer import MessagePacker
+        if isinstance(delegate, MessagePacker):
+            self.__message_packer = delegate
 
-    def _set_packer(self, packer: Packer):
-        Transceiver.message_packer.__set__(self, packer)
-        self.__packer = packer
+    def __get_packer(self):  # -> MessagePacker:
+        if self.__message_packer is None:
+            self.__message_packer = self._create_packer()
+        return self.__message_packer
 
-    def _create_packer(self) -> Packer:
+    def _create_packer(self):  # -> MessagePacker:
         from .packer import MessagePacker
         return MessagePacker(messenger=self)
 
@@ -138,40 +146,90 @@ class Messenger(Transceiver):
     #   Message Processor
     #
     @property
-    def message_processor(self) -> Processor:
-        if self.__processor is None:
-            self._set_processor(processor=self._create_processor())
-        return self.__processor
+    def processor(self) -> Transceiver.Processor:
+        delegate = super().processor
+        if delegate is None:
+            delegate = self.__get_processor()
+        return delegate
 
-    @message_processor.setter
-    def message_processor(self, processor: Processor):
-        self._set_processor(processor=processor)
+    @processor.setter
+    def processor(self, delegate: Transceiver.Processor):
+        Transceiver.processor.__set__(self, delegate)
+        from .processor import MessageProcessor
+        if isinstance(delegate, MessageProcessor):
+            self.__message_processor = delegate
 
-    def _set_processor(self, processor: Processor):
-        Transceiver.message_processor.__set__(self, processor)
-        self.__processor = processor
+    def __get_processor(self):  # -> MessageProcessor
+        if self.__message_processor is None:
+            self.__message_processor = self._create_processor()
+        return self.__message_processor
 
-    def _create_processor(self) -> Processor:
+    def _create_processor(self):  # -> MessageProcessor
         from .processor import MessageProcessor
         return MessageProcessor(messenger=self)
 
     #
     #   Message Transmitter
     #
-    @property
-    def message_transmitter(self):  # -> MessageTransmitter:
-        if self.__transmitter is None:
-            self.__transmitter = self._create_transmitter()
-        return self.__transmitter
+    class Transmitter:
 
-    @message_transmitter.setter
-    def message_transmitter(self, transmitter):
-        self.__transmitter = transmitter
+        @abstractmethod
+        def send_content(self, sender: ID, receiver: ID, content: Content,
+                         callback: Optional[Callback] = None, priority: int = 0) -> bool:
+            """
+            Send message content to receiver
+
+            :param sender:   sender ID
+            :param receiver: receiver ID
+            :param content:  message content
+            :param callback: if needs callback, set it here
+            :param priority: task priority (smaller is faster)
+            :return: True on success
+            """
+            raise NotImplemented
+
+        @abstractmethod
+        def send_message(self, msg: Union[InstantMessage, ReliableMessage],
+                         callback: Optional[Callback] = None, priority: int = 0) -> bool:
+            """
+            Send instant message (encrypt and sign) onto DIM network
+
+            :param msg:      instant message
+            :param callback: callback function
+            :param priority: task priority
+            :return:         False on data/delegate error
+            """
+            raise NotImplemented
+
+    @property
+    def transmitter(self) -> Transmitter:
+        if self.__transmitter is None:
+            delegate = None
+        else:
+            delegate = self.__transmitter()
+        if delegate is None:
+            delegate = self.__get_transmitter()
+        return delegate
+
+    @transmitter.setter
+    def transmitter(self, delegate: Transmitter):
+        self.__transmitter = weakref.ref(delegate)
+        from .transmitter import MessageTransmitter
+        if isinstance(delegate, MessageTransmitter):
+            self.__message_transmitter = delegate
+
+    def __get_transmitter(self):  # -> MessageTransmitter:
+        if self.__message_transmitter is None:
+            self.__message_transmitter = self._create_transmitter()
+        return self.__message_transmitter
 
     def _create_transmitter(self):  # -> MessageTransmitter:
         from .transmitter import MessageTransmitter
         return MessageTransmitter(messenger=self)
 
+    #
+    #   FPU
+    #
     def __file_content_processor(self) -> FileContentProcessor:
         cpu = ContentProcessor.processor_for_type(ContentType.FILE)
         assert isinstance(cpu, FileContentProcessor), 'failed to get file content processor'
@@ -223,12 +281,12 @@ class Messenger(Transceiver):
             assert user is not None, 'failed to get current user'
             sender = user.identifier
 
-        return self.message_transmitter.send_content(sender=sender, receiver=receiver, content=content,
-                                                     callback=callback, priority=priority)
+        return self.transmitter.send_content(sender=sender, receiver=receiver, content=content,
+                                             callback=callback, priority=priority)
 
     def send_message(self, msg: Union[InstantMessage, ReliableMessage],
                      callback: Optional[Callback]=None, priority: int=0) -> bool:
-        return self.message_transmitter.send_message(msg=msg, callback=callback, priority=priority)
+        return self.transmitter.send_message(msg=msg, callback=callback, priority=priority)
 
     #
     #   Interfaces for Station

@@ -50,8 +50,8 @@ class MessageTransmitter:
         return self.__messenger()
 
     @property
-    def message_packer(self) -> Packer:
-        return self.messenger.message_packer
+    def packer(self) -> Packer:
+        return self.messenger.packer
 
     def send_content(self, sender: ID, receiver: ID, content: Content,
                      callback: Optional[Callback]=None, priority: int=0) -> bool:
@@ -84,12 +84,12 @@ class MessageTransmitter:
         assert isinstance(msg, InstantMessage), 'message error: %s' % msg
 
         # Send message (secured + certified) to target station
-        s_msg = self.message_packer.encrypt_message(msg=msg)
+        s_msg = self.packer.encrypt_message(msg=msg)
         if s_msg is None:
             # public key not found?
             # raise AssertionError('failed to encrypt message: %s' % msg)
             return False
-        r_msg = self.message_packer.sign_message(msg=s_msg)
+        r_msg = self.packer.sign_message(msg=s_msg)
         if r_msg is None:
             # TODO: set iMsg.state = error
             raise AssertionError('failed to sign message: %s' % s_msg)
@@ -103,5 +103,5 @@ class MessageTransmitter:
 
     def __send_message(self, msg: ReliableMessage, callback: Optional[Callback] = None, priority: int=0) -> bool:
         handler = MessageCallback(msg=msg, cb=callback)
-        data = self.message_packer.serialize_message(msg=msg)
+        data = self.packer.serialize_message(msg=msg)
         return self.messenger.send_package(data=data, handler=handler, priority=priority)
