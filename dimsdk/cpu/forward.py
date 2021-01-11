@@ -53,8 +53,11 @@ class ForwardContentProcessor(ContentProcessor):
     def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
+        messenger = self.messenger
+        # from ..messenger import Messenger
+        # assert isinstance(messenger, Messenger)
         secret = content.message
-        secret = self.messenger.process_message(msg=secret)
+        secret = messenger.process_reliable_message(msg=secret)
         # check response
         if secret is not None:
             # Over The Top
