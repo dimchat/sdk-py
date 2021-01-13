@@ -36,14 +36,10 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List
 
-from dimp import ID, ANYONE, EVERYONE, ANYWHERE
+from dimp import ID, ANYONE, EVERYONE, FOUNDER
 
-#
-#   Founder
-#
-founder = ID.create(name='moky', address=ANYWHERE)
 #
 #   Reserved names
 #
@@ -93,7 +89,7 @@ class AddressNameService(ABC):
             'everyone': EVERYONE,
             'anyone': ANYONE,
             'owner': ANYONE,
-            'founder': founder,
+            'founder': FOUNDER,
         }
 
     @staticmethod
@@ -114,7 +110,7 @@ class AddressNameService(ABC):
         """ Get ID by short name """
         return self.__caches.get(name)
 
-    def names(self, identifier: ID) -> Optional[list]:
+    def names(self, identifier: ID) -> Optional[List[str]]:
         """ Get all short names with the same ID """
         array = []
         for (key, value) in self.__caches.items():

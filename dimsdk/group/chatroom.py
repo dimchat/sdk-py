@@ -36,7 +36,7 @@
 """
 
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 from dimp import ID, NetworkType
 from dimp import Group, GroupDataSource
@@ -52,7 +52,7 @@ class ChatroomDataSource(GroupDataSource):
     """
 
     @abstractmethod
-    def admins(self, identifier: ID) -> Optional[list]:
+    def admins(self, identifier: ID) -> Optional[List[ID]]:
         """
         Get all admins in the chatroom
 
@@ -79,5 +79,5 @@ class Chatroom(Group):
     #     super(Chatroom, Chatroom).delegate.__set__(self, value)
 
     @property
-    def admins(self) -> Optional[list]:
+    def admins(self) -> Optional[List[ID]]:
         return self.delegate.admins(identifier=self.identifier)

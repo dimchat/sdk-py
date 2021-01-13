@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Optional, List
 
-from dimp import SignKey
+from dimp import SignKey, DecryptKey
 from dimp import ID, User, Meta, Document
 
 from dimsdk import Facebook
@@ -22,7 +22,7 @@ class Database(Facebook):
     def save_document(self, document: Document) -> bool:
         pass
 
-    def save_members(self, members: list, identifier: ID) -> bool:
+    def save_members(self, members: List[ID], identifier: ID) -> bool:
         pass
 
     #
@@ -37,10 +37,10 @@ class Database(Facebook):
     #
     #   UserDataSource
     #
-    def contacts(self, identifier: ID) -> Optional[list]:
+    def contacts(self, identifier: ID) -> Optional[List[ID]]:
         pass
 
-    def private_keys_for_decryption(self, identifier: ID) -> Optional[list]:
+    def private_keys_for_decryption(self, identifier: ID) -> Optional[List[DecryptKey]]:
         pass
 
     def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
@@ -52,5 +52,5 @@ class Database(Facebook):
     #
     #   GroupDataSource
     #
-    def assistants(self, identifier: ID) -> Optional[list]:
+    def assistants(self, identifier: ID) -> Optional[List[ID]]:
         pass

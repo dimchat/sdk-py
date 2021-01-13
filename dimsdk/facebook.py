@@ -36,7 +36,7 @@
 """
 
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 from dimp import NetworkType, ID
 from dimp import User, Group
@@ -85,7 +85,7 @@ class Facebook(Barrack):
     #   Group Members
     #
     @abstractmethod
-    def save_members(self, members: list, identifier: ID) -> bool:
+    def save_members(self, members: List[ID], identifier: ID) -> bool:
         """
         Save members of group
 
@@ -179,3 +179,17 @@ class Facebook(Barrack):
         if g_type == NetworkType.PROVIDER:
             return ServiceProvider(identifier=identifier)
         raise TypeError('unsupported group type: %s' % g_type)
+
+    # group membership
+
+    def is_founder(self, member: ID, group: ID) -> bool:
+        g_meta = self.meta(identifier=group)
+        assert g_meta is not None, 'failed to get meta for group: %s' % group
+        u_meta = self.meta(identifier=member)
+        assert u_meta is not None, 'failed to get meta for member: %s' % member
+        return g_meta.match_key(key=u_meta.key)
+
+    def is_owner(self, member: ID, group: ID) -> bool:
+        if group.type == NetworkType.POLYLOGUE:
+            return self.is_founder(member=member, group=group)
+        raise AssertionError('only Polylogue so far')

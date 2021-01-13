@@ -34,9 +34,9 @@
 
 """
 
-from typing import Optional
+from typing import Optional, List
 
-from dimp import ReliableMessage
+from dimp import ID, ReliableMessage
 from dimp import Content, TextContent
 from dimp import Command, GroupCommand
 
@@ -59,7 +59,7 @@ class HistoryCommandProcessor(CommandProcessor):
 class GroupCommandProcessor(HistoryCommandProcessor):
 
     @staticmethod
-    def members(cmd: GroupCommand) -> Optional[list]:
+    def members(cmd: GroupCommand) -> Optional[List[ID]]:
         # get from 'members'
         array = cmd.members
         if array is None:

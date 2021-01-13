@@ -63,6 +63,9 @@ class ResetCommandProcessor(GroupCommandProcessor):
         if new_members is None or len(new_members) == 0:
             raise ValueError('group command error: %s' % cmd)
         for item in new_members:
+            if facebook.meta(identifier=item) is None:
+                # TODO: waiting for member's meta?
+                continue
             if facebook.is_owner(member=item, group=group):
                 # it's a full list, save it now
                 if facebook.save_members(members=new_members, identifier=group):
