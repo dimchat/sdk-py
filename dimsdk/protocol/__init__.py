@@ -51,10 +51,12 @@ def register_all_factories():
 
     Command.register(command=MuteCommand.MUTE, factory=CommandFactoryBuilder(command_class=MuteCommand))
     Command.register(command=BlockCommand.BLOCK, factory=CommandFactoryBuilder(command_class=BlockCommand))
+
     # storage (contacts, private_key)
-    Command.register(command=StorageCommand.STORAGE, factory=CommandFactoryBuilder(command_class=StorageCommand))
-    Command.register(command=StorageCommand.CONTACTS, factory=CommandFactoryBuilder(command_class=StorageCommand))
-    Command.register(command=StorageCommand.PRIVATE_KEY, factory=CommandFactoryBuilder(command_class=StorageCommand))
+    factory = CommandFactoryBuilder(command_class=StorageCommand)
+    Command.register(command=StorageCommand.STORAGE, factory=factory)
+    Command.register(command=StorageCommand.CONTACTS, factory=factory)
+    Command.register(command=StorageCommand.PRIVATE_KEY, factory=factory)
 
 
 register_all_factories()

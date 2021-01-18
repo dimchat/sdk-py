@@ -147,7 +147,7 @@ class Facebook(Barrack):
         if meta is not None:
             return document.verify(public_key=meta.key)
 
-    def create_user(self, identifier: ID) -> User:
+    def create_user(self, identifier: ID) -> Optional[User]:
         if identifier.is_broadcast:
             # create user 'anyone@anywhere'
             return User(identifier=identifier)
@@ -164,7 +164,7 @@ class Facebook(Barrack):
             return Station(identifier=identifier)
         raise TypeError('unsupported user type: %s' % u_type)
 
-    def create_group(self, identifier: ID) -> Group:
+    def create_group(self, identifier: ID) -> Optional[Group]:
         if identifier.is_broadcast:
             # create group 'everyone@everywhere'
             return Group(identifier=identifier)

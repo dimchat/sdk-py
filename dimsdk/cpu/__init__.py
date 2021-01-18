@@ -53,8 +53,6 @@ from .document import DocumentCommandProcessor
 
 
 def register_content_processors():
-    # default
-    ContentProcessor.register(content_type=0, cpu=ContentProcessor())
     ContentProcessor.register(content_type=ContentType.FORWARD, cpu=ForwardContentProcessor())
     # files
     fpu = FileContentProcessor()
@@ -65,9 +63,19 @@ def register_content_processors():
     # commands
     ContentProcessor.register(content_type=ContentType.COMMAND, cpu=CommandProcessor())
     ContentProcessor.register(content_type=ContentType.HISTORY, cpu=HistoryCommandProcessor())
+    # default
+    ContentProcessor.register(content_type=0, cpu=ContentProcessor())
 
 
 def register_command_processors():
+    # meta
+    CommandProcessor.register(command=Command.META, cpu=MetaCommandProcessor())
+    # document
+    dpu = DocumentCommandProcessor()
+    CommandProcessor.register(command=Command.DOCUMENT, cpu=dpu)
+    CommandProcessor.register(command='profile', cpu=dpu)
+    CommandProcessor.register(command='visa', cpu=dpu)
+    CommandProcessor.register(command='bulletin', cpu=dpu)
     # group commands
     CommandProcessor.register(command='group', cpu=GroupCommandProcessor())
     CommandProcessor.register(command=GroupCommand.INVITE, cpu=InviteCommandProcessor())
@@ -75,12 +83,6 @@ def register_command_processors():
     CommandProcessor.register(command=GroupCommand.QUIT, cpu=QuitCommandProcessor())
     CommandProcessor.register(command=GroupCommand.QUERY, cpu=QueryCommandProcessor())
     CommandProcessor.register(command=GroupCommand.RESET, cpu=ResetCommandProcessor())
-    # meta
-    CommandProcessor.register(command=Command.META, cpu=MetaCommandProcessor())
-    # document
-    dpu = DocumentCommandProcessor()
-    CommandProcessor.register(command=Command.PROFILE, cpu=dpu)
-    CommandProcessor.register(command=Command.DOCUMENT, cpu=dpu)
 
 
 register_content_processors()

@@ -68,9 +68,9 @@ class DocumentCommandProcessor(CommandProcessor):
                 # save meta failed
                 text = 'Meta not accept: %s!' % identifier
                 return TextContent(text=text)
-        # received a new profile for ID
+        # received a new document for ID
         if not facebook.save_document(document=document):
-            # save profile failed
+            # save document failed
             text = 'Document not accept: %s!' % identifier
             return TextContent(text=text)
         # response
