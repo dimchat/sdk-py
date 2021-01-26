@@ -263,6 +263,17 @@ dTGP+WYLof56xNhMyOgZO8ltxem9izK/V9N9cnc5UQ==\n\
         ok = p_key.verify(data, Hex.decode(exp))
         self.assertTrue(ok)
 
+    def test3_aes(self):
+        print('\n---------------- %s' % self)
+        key = SymmetricKey.parse(key={
+            'algorithm': SymmetricKey.AES,
+        })
+        data = 'moky'.encode('utf-8')
+        ciphertext = key.encrypt(data=data)
+        plaintext = key.decrypt(data=ciphertext)
+        print('AES decrypt: %s' % plaintext)
+        self.assertEqual(data, plaintext, 'AES error')
+
 
 if __name__ == '__main__':
     unittest.main()

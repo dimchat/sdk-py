@@ -65,7 +65,7 @@ class StorageCommand(Command):
     CONTACTS = 'contacts'
     PRIVATE_KEY = 'private_key'
 
-    def __init__(self, cmd: Optional[dict]=None, title: Optional[str]=None):
+    def __init__(self, cmd: Optional[dict] = None, title: Optional[str] = None):
         if cmd is None:
             super().__init__(command=StorageCommand.STORAGE)
         else:
@@ -73,8 +73,8 @@ class StorageCommand(Command):
         if title is not None:
             self['title'] = title
         # lazy
-        self.__key: bytes = None
-        self.__data: bytes = None
+        self.__key: Optional[bytes] = None
+        self.__data: Optional[bytes] = None
         self.__plaintext: object = None
 
     #
@@ -140,7 +140,7 @@ class StorageCommand(Command):
             self['data'] = base64_encode(value)
         self.__data = value
 
-    def decrypt(self, password: DecryptKey=None, private_key: DecryptKey=None) -> bytes:
+    def decrypt(self, password: DecryptKey = None, private_key: DecryptKey = None) -> bytes:
         """
         Decrypt data
             1. decrypt key with private key (such as RSA) to a password

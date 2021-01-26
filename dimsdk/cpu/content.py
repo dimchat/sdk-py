@@ -47,7 +47,7 @@ class ContentProcessor:
 
     def __init__(self):
         super().__init__()
-        self.__messenger: weakref.ReferenceType = None
+        self.__messenger: Optional[weakref.ReferenceType] = None
 
     @property
     def messenger(self):  # Messenger

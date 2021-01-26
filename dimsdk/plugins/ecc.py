@@ -75,7 +75,7 @@ class ECCPublicKey(Dictionary, PublicKey):
 class ECCPrivateKey(Dictionary, PrivateKey):
     """ ECC Private Key """
 
-    def __init__(self, key: Optional[dict]=None):
+    def __init__(self, key: Optional[dict] = None):
         if key is None:
             key = {'algorithm': AsymmetricKey.ECC}
         super().__init__(key)

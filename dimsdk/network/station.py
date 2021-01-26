@@ -41,7 +41,7 @@ from dimp import NetworkType, ID, User, Group
 
 class Station(User):
 
-    def __init__(self, identifier: ID, host: str=None, port: int=0):
+    def __init__(self, identifier: ID, host: str = None, port: int = 0):
         super().__init__(identifier=identifier)
         assert identifier.type == NetworkType.STATION, 'Station ID type error: %s' % identifier
         self.__host = host
@@ -69,13 +69,13 @@ class Station(User):
 
     @property
     def port(self) -> int:
-        if self.__port is 0:
+        if self.__port == 0:
             doc = self.document(doc_type='*')
             if doc is not None:
                 value = doc.get_property('port')
                 if value is not None:
                     self.__port = int(value)
-            if self.__port is 0:
+            if self.__port == 0:
                 self.__port = 9394
         return self.__port
 

@@ -67,7 +67,7 @@ class HandshakeCommand(Command):
         }
     """
 
-    def __init__(self, cmd: Optional[dict]=None, message: Optional[str]=None, session: Optional[str]=None):
+    def __init__(self, cmd: Optional[dict] = None, message: Optional[str] = None, session: Optional[str] = None):
         if cmd is None:
             super().__init__(command=Command.HANDSHAKE)
         else:
@@ -114,7 +114,7 @@ class HandshakeCommand(Command):
     #
 
     @classmethod
-    def offer(cls, session: str=None) -> Command:
+    def offer(cls, session: str = None) -> Command:
         """
         Create client-station handshake offer
 
@@ -134,7 +134,7 @@ class HandshakeCommand(Command):
         return cls(message='DIM?', session=session)
 
     @classmethod
-    def accepted(cls, session: str=None) -> Command:
+    def accepted(cls, session: str = None) -> Command:
         """
         Create station-client handshake success notice
 

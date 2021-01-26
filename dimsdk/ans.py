@@ -97,7 +97,7 @@ class AddressNameService(ABC):
     def is_reserved(name: str) -> bool:
         return name in keywords
 
-    def cache(self, name: str, identifier: ID=None) -> bool:
+    def cache(self, name: str, identifier: ID = None) -> bool:
         if self.is_reserved(name):
             # this name is reserved, cannot register
             return False
@@ -120,7 +120,7 @@ class AddressNameService(ABC):
         return array
 
     @abstractmethod
-    def save(self, name: str, identifier: ID=None) -> bool:
+    def save(self, name: str, identifier: ID = None) -> bool:
         """
         Save ANS record
 

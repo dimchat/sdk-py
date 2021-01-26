@@ -57,7 +57,7 @@ class BlockCommand(Command):
 
     BLOCK = 'block'
 
-    def __init__(self, cmd: Optional[dict]=None):
+    def __init__(self, cmd: Optional[dict] = None):
         if cmd is None:
             super().__init__(command=BlockCommand.BLOCK)
         else:

@@ -70,7 +70,7 @@ class LoginCommand(Command):
         }
     """
 
-    def __init__(self, cmd: Optional[dict]=None, identifier: Optional[ID]=None):
+    def __init__(self, cmd: Optional[dict] = None, identifier: Optional[ID] = None):
         if cmd is None:
             super().__init__(command=Command.LOGIN)
         else:

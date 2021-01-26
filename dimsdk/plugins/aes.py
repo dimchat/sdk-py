@@ -23,9 +23,9 @@
 # SOFTWARE.
 # ==============================================================================
 
+import random
 from typing import Optional
 
-import numpy
 from Crypto.Cipher import AES
 
 from dimp import base64_encode, base64_decode
@@ -33,10 +33,16 @@ from dimp import Dictionary
 from dimp import SymmetricKey
 
 
+def random_bytes(size: int) -> bytes:
+    # return bytes(numpy.random.bytes(size))
+    bits = random.getrandbits(size * 8)
+    return bits.to_bytes(length=size, byteorder='little', signed=False)
+
+
 class AESKey(Dictionary, SymmetricKey):
     """ AES Key """
 
-    def __init__(self, key: Optional[dict]=None):
+    def __init__(self, key: Optional[dict] = None):
         if key is None:
             key = {'algorithm': SymmetricKey.AES}
         super().__init__(dictionary=key)
@@ -95,8 +101,8 @@ class AESKey(Dictionary, SymmetricKey):
 
 
 def generate(key_size: int, block_size: int) -> (bytes, bytes):
-    data = bytes(numpy.random.bytes(key_size))
-    iv = bytes(numpy.random.bytes(block_size))
+    data = random_bytes(key_size)
+    iv = random_bytes(block_size)
     return data, iv
 
 

@@ -12,14 +12,14 @@ from typing import Optional
 
 from dimp import User
 
-from .keycache import KeyCache
+from keycache import KeyCache
 
 
 class KeyStore(KeyCache):
 
     def __init__(self):
         super().__init__()
-        self.__user: User = None
+        self.__user: Optional[User] = None
         self.__base_dir: str = '/tmp/.dim/'
 
     @property

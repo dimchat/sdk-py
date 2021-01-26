@@ -81,7 +81,7 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
 class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
     """ RSA Private Key """
 
-    def __init__(self, key: Optional[dict]=None):
+    def __init__(self, key: Optional[dict] = None):
         if key is None:
             key = {'algorithm': AsymmetricKey.RSA}
         super().__init__(key)

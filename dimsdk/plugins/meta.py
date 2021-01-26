@@ -50,9 +50,9 @@ from .eth import ETHAddress
 
 class DefaultMeta(BaseMeta):
 
-    def __init__(self, meta: Optional[dict]=None,
-                 version: Union[MetaType, int]=0, key: Optional[VerifyKey]=None,
-                 seed: Optional[str]=None, fingerprint: Union[bytes, str, None]=None):
+    def __init__(self, meta: Optional[dict] = None,
+                 version: Union[MetaType, int] = 0, key: Optional[VerifyKey] = None,
+                 seed: Optional[str] = None, fingerprint: Union[bytes, str, None] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches
         self.__addresses = {}
@@ -91,12 +91,12 @@ class DefaultMeta(BaseMeta):
 
 class BTCMeta(BaseMeta):
 
-    def __init__(self, meta: Optional[dict]=None,
-                 version: Union[MetaType, int]=0, key: Optional[VerifyKey]=None,
-                 seed: Optional[str]=None, fingerprint: Union[bytes, str, None]=None):
+    def __init__(self, meta: Optional[dict] = None,
+                 version: Union[MetaType, int] = 0, key: Optional[VerifyKey] = None,
+                 seed: Optional[str] = None, fingerprint: Union[bytes, str, None] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches
-        self.__address: Address = None
+        self.__address: Optional[Address] = None
 
     def generate_address(self, network: Union[NetworkType, int]) -> Address:
         assert self.type in [MetaType.BTC, MetaType.ExBTC], 'meta version error: %d' % self.type
@@ -127,12 +127,12 @@ class BTCMeta(BaseMeta):
 
 class ETHMeta(BaseMeta):
 
-    def __init__(self, meta: Optional[dict]=None,
-                 version: Union[MetaType, int]=0, key: Optional[VerifyKey]=None,
-                 seed: Optional[str]=None, fingerprint: Union[bytes, str, None]=None):
+    def __init__(self, meta: Optional[dict] = None,
+                 version: Union[MetaType, int] = 0, key: Optional[VerifyKey] = None,
+                 seed: Optional[str] = None, fingerprint: Union[bytes, str, None] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches
-        self.__address: Address = None
+        self.__address: Optional[Address] = None
 
     def generate_address(self, network: Union[NetworkType, int]) -> Address:
         assert self.type in [MetaType.ETH, MetaType.ExETH], 'meta version error: %d' % self.type

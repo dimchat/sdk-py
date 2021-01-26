@@ -57,7 +57,7 @@ class MuteCommand(Command):
 
     MUTE = 'mute'
 
-    def __init__(self, cmd: Optional[dict]=None):
+    def __init__(self, cmd: Optional[dict] = None):
         if cmd is None:
             super().__init__(command=MuteCommand.MUTE)
         else:

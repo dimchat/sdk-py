@@ -54,7 +54,7 @@ class MessageTransmitter:
         return self.messenger.packer
 
     def send_content(self, sender: ID, receiver: ID, content: Content,
-                     callback: Optional[Callback]=None, priority: int=0) -> bool:
+                     callback: Optional[Callback] = None, priority: int = 0) -> bool:
         """
         Send message content to receiver
 
@@ -70,7 +70,7 @@ class MessageTransmitter:
         return self.send_message(msg=msg, callback=callback, priority=priority)
 
     def send_message(self, msg: Union[InstantMessage, ReliableMessage],
-                     callback: Optional[Callback]=None, priority: int=0) -> bool:
+                     callback: Optional[Callback] = None, priority: int = 0) -> bool:
         """
         Send instant message (encrypt and sign) onto DIM network
 
@@ -101,7 +101,7 @@ class MessageTransmitter:
             return False
         return ok
 
-    def __send_message(self, msg: ReliableMessage, callback: Optional[Callback] = None, priority: int=0) -> bool:
+    def __send_message(self, msg: ReliableMessage, callback: Optional[Callback] = None, priority: int = 0) -> bool:
         handler = MessageCallback(msg=msg, cb=callback)
         data = self.packer.serialize_message(msg=msg)
         return self.messenger.send_package(data=data, handler=handler, priority=priority)

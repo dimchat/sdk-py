@@ -56,12 +56,12 @@ class Messenger(Transceiver):
 
     def __init__(self):
         super().__init__()
-        self.__delegate: weakref.ReferenceType = None
-        self.__data_source: weakref.ReferenceType = None
+        self.__delegate: Optional[weakref.ReferenceType] = None
+        self.__data_source: Optional[weakref.ReferenceType] = None
 
-        self.__transmitter: weakref.ReferenceType = None
+        self.__transmitter: Optional[weakref.ReferenceType] = None
 
-        self.__facebook: Facebook = None
+        self.__facebook: Optional[Facebook] = None
         self.__message_packer = None
         self.__message_processor = None
         self.__message_transmitter = None
@@ -273,7 +273,7 @@ class Messenger(Transceiver):
     #   Interfaces for transmitting message
     #
     def send_content(self, sender: Optional[ID], receiver: ID, content: Content,
-                     callback: Optional[Callback]=None, priority: int=0) -> bool:
+                     callback: Optional[Callback] = None, priority: int = 0) -> bool:
         if sender is None:
             # Application Layer should make sure user is already login before it send message to server.
             # Application layer should put message into queue so that it will send automatically after user login
@@ -285,7 +285,7 @@ class Messenger(Transceiver):
                                              callback=callback, priority=priority)
 
     def send_message(self, msg: Union[InstantMessage, ReliableMessage],
-                     callback: Optional[Callback]=None, priority: int=0) -> bool:
+                     callback: Optional[Callback] = None, priority: int = 0) -> bool:
         return self.transmitter.send_message(msg=msg, callback=callback, priority=priority)
 
     #
@@ -297,7 +297,7 @@ class Messenger(Transceiver):
     def download_data(self, url: str, msg: InstantMessage) -> Optional[bytes]:
         return self.delegate.download_data(url=url, msg=msg)
 
-    def send_package(self, data: bytes, handler: CompletionHandler, priority: int=0) -> bool:
+    def send_package(self, data: bytes, handler: CompletionHandler, priority: int = 0) -> bool:
         return self.delegate.send_package(data=data, handler=handler, priority=priority)
 
     #

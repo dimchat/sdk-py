@@ -59,8 +59,8 @@ class ReceiptCommand(Command):
         }
     """
 
-    def __init__(self, cmd: Optional[dict]=None,
-                 envelope: Optional[Envelope]=None, message: Optional[str]=None, sn: Optional[int]=0):
+    def __init__(self, cmd: Optional[dict] = None,
+                 envelope: Optional[Envelope] = None, message: Optional[str] = None, sn: Optional[int] = 0):
         if cmd is None:
             super().__init__(command=Command.RECEIPT)
         else:

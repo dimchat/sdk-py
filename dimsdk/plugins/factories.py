@@ -114,7 +114,7 @@ class GeneralMetaFactory(Meta.Factory):
         super().__init__()
         self.__type = version
 
-    def create_meta(self, key: VerifyKey, seed: Optional[str]=None, fingerprint: Optional[bytes]=None) -> Meta:
+    def create_meta(self, key: VerifyKey, seed: Optional[str] = None, fingerprint: Optional[bytes] = None) -> Meta:
         if self.__type == MetaType.MKM:
             return DefaultMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
         if self.__type in [MetaType.BTC, MetaType.ExBTC]:
@@ -122,7 +122,7 @@ class GeneralMetaFactory(Meta.Factory):
         if self.__type in [MetaType.ETH, MetaType.ExETH]:
             return ETHMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
 
-    def generate_meta(self, key: SignKey, seed: Optional[str]=None) -> Meta:
+    def generate_meta(self, key: SignKey, seed: Optional[str] = None) -> Meta:
         if seed is None or len(seed) == 0:
             fingerprint = None
         else:
@@ -157,7 +157,7 @@ class GeneralDocumentFactory(Document.Factory):
         return self.__type
 
     def create_document(self, identifier: ID,
-                        data: Union[bytes, str, None]=None, signature: Union[bytes, str, None]=None) -> Document:
+                        data: Union[bytes, str, None] = None, signature: Union[bytes, str, None] = None) -> Document:
         doc_type = self.get_type(identifier=identifier)
         if doc_type == Document.BULLETIN:
             return BaseBulletin(identifier=identifier, data=data, signature=signature)
