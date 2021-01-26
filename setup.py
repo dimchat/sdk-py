@@ -43,7 +43,7 @@ setup(
         'dkd',
         'mkm',
 
-        'Crypto',  # pycryptodome==3.7.3
+        'pycryptodome',  # 3.7.3
         'base58',  # 1.0.3
         'ecdsa',   # 0.16.1
     ]
