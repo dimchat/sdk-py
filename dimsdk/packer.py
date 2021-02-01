@@ -102,7 +102,7 @@ class MessagePacker(Packer):
         if msg.delegate is None:
             msg.delegate = self.transceiver
         receiver = msg.receiver
-        user = self.barrack.select_user(receiver=receiver)
+        user = self.messenger.select_user(receiver=receiver)
         if user is None:
             # current users not match
             trimmed = None

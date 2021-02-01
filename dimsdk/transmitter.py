@@ -33,7 +33,6 @@ from typing import Optional, Union
 
 from dimp import ID
 from dimp import Content, Envelope, InstantMessage, ReliableMessage
-from dimp import Packer
 
 from .delegate import Callback
 from .messenger import Messenger, MessageCallback
@@ -48,10 +47,6 @@ class MessageTransmitter:
     @property
     def messenger(self) -> Messenger:
         return self.__messenger()
-
-    @property
-    def packer(self) -> Packer:
-        return self.messenger.packer
 
     def send_content(self, sender: ID, receiver: ID, content: Content,
                      callback: Optional[Callback] = None, priority: int = 0) -> bool:
@@ -84,12 +79,12 @@ class MessageTransmitter:
         assert isinstance(msg, InstantMessage), 'message error: %s' % msg
 
         # Send message (secured + certified) to target station
-        s_msg = self.packer.encrypt_message(msg=msg)
+        s_msg = self.messenger.encrypt_message(msg=msg)
         if s_msg is None:
             # public key not found?
             # raise AssertionError('failed to encrypt message: %s' % msg)
             return False
-        r_msg = self.packer.sign_message(msg=s_msg)
+        r_msg = self.messenger.sign_message(msg=s_msg)
         if r_msg is None:
             # TODO: set iMsg.state = error
             raise AssertionError('failed to sign message: %s' % s_msg)
@@ -103,5 +98,5 @@ class MessageTransmitter:
 
     def __send_message(self, msg: ReliableMessage, callback: Optional[Callback] = None, priority: int = 0) -> bool:
         handler = MessageCallback(msg=msg, cb=callback)
-        data = self.packer.serialize_message(msg=msg)
+        data = self.messenger.serialize_message(msg=msg)
         return self.messenger.send_package(data=data, handler=handler, priority=priority)
