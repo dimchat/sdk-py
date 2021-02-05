@@ -98,14 +98,13 @@ class Facebook(Barrack):
     #
     #   Document checking
     #
-    @staticmethod
-    def is_empty_document(document: Document) -> bool:
-        if document is None:
-            return True
-        json = document.get('data')
-        return json is None or len(json) == 0
+    def check_document(self, document: Document) -> bool:
+        """
+        Checking document
 
-    def is_valid_document(self, document: Document) -> bool:
+        :param document: entity document
+        :return: True on accepted
+        """
         identifier = document.identifier
         if identifier is None:
             return False

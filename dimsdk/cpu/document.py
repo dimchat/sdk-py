@@ -52,7 +52,7 @@ class DocumentCommandProcessor(CommandProcessor):
         facebook = self.facebook
         # query entity document for ID
         doc = facebook.document(identifier=identifier, doc_type=doc_type)
-        if facebook.is_empty_document(document=doc):
+        if doc is None:
             # document not found
             text = 'Sorry, document not found for ID: %s' % identifier
             return TextContent(text=text)
