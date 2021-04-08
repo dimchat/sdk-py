@@ -36,6 +36,7 @@ from dimp import Content, Envelope, InstantMessage, ReliableMessage
 
 from .delegate import Callback
 from .messenger import Messenger, MessageCallback
+from .facebook import Facebook
 
 
 class MessageTransmitter:
@@ -47,6 +48,10 @@ class MessageTransmitter:
     @property
     def messenger(self) -> Messenger:
         return self.__messenger()
+
+    @property
+    def facebook(self) -> Facebook:
+        return self.messenger.facebook
 
     def send_content(self, sender: ID, receiver: ID, content: Content,
                      callback: Optional[Callback] = None, priority: int = 0) -> bool:
@@ -60,6 +65,13 @@ class MessageTransmitter:
         :param priority: task priority (smaller is faster)
         :return: True on success
         """
+        if sender is None:
+            # Application Layer should make sure user is already login before it send message to server.
+            # Application layer should put message into queue so that it will send automatically after user login
+            user = self.facebook.current_user
+            assert user is not None, 'failed to get current user'
+            sender = user.identifier
+
         env = Envelope.create(sender=sender, receiver=receiver)
         msg = InstantMessage.create(head=env, body=content)
         return self.send_message(msg=msg, callback=callback, priority=priority)

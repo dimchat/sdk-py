@@ -274,13 +274,6 @@ class Messenger(Transceiver):
     #
     def send_content(self, sender: Optional[ID], receiver: ID, content: Content,
                      callback: Optional[Callback] = None, priority: int = 0) -> bool:
-        if sender is None:
-            # Application Layer should make sure user is already login before it send message to server.
-            # Application layer should put message into queue so that it will send automatically after user login
-            user = self.facebook.current_user
-            assert user is not None, 'failed to get current user'
-            sender = user.identifier
-
         return self.transmitter.send_content(sender=sender, receiver=receiver, content=content,
                                              callback=callback, priority=priority)
 

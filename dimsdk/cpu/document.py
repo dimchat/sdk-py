@@ -48,7 +48,7 @@ from .command import CommandProcessor
 
 class DocumentCommandProcessor(CommandProcessor):
 
-    def __get(self, identifier: ID, doc_type: str='*') -> Content:
+    def __get(self, identifier: ID, doc_type: str = '*') -> Content:
         facebook = self.facebook
         # query entity document for ID
         doc = facebook.document(identifier=identifier, doc_type=doc_type)
