@@ -71,10 +71,10 @@ class MessageTransmitter:
             user = self.facebook.current_user
             assert user is not None, 'failed to get current user'
             sender = user.identifier
-
+        # pack and send
         env = Envelope.create(sender=sender, receiver=receiver)
         msg = InstantMessage.create(head=env, body=content)
-        return self.send_message(msg=msg, callback=callback, priority=priority)
+        return self.messenger.send_message(msg=msg, callback=callback, priority=priority)
 
     def send_message(self, msg: Union[InstantMessage, ReliableMessage],
                      callback: Optional[Callback] = None, priority: int = 0) -> bool:
