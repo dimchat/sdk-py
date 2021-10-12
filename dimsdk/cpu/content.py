@@ -35,7 +35,7 @@
 """
 
 import weakref
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from dkd.content import msg_type
 
@@ -65,14 +65,14 @@ class ContentProcessor:
     #
     #   main
     #
-    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         text = 'Content (type: %s) not support yet!' % content.type
         res = TextContent(text=text)
         # check group message
         group = content.group
         if group is not None:
             res.group = group
-        return res
+        return [res]
 
     #
     #   CPU factory

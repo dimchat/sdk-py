@@ -36,7 +36,7 @@
     2. only group owner or assistant can expel member
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ID
 from dimp import ReliableMessage
@@ -48,7 +48,7 @@ from .history import GroupCommandProcessor
 
 class ExpelCommandProcessor(GroupCommandProcessor):
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, ExpelCommand), 'group command error: %s' % cmd
         facebook = self.facebook
         from ..facebook import Facebook
@@ -87,4 +87,4 @@ class ExpelCommandProcessor(GroupCommandProcessor):
             if facebook.save_members(members=members, identifier=group):
                 cmd['removed'] = ID.revert(remove_list)
         # 3. response (no need to response this group command)
-        return None
+        return []

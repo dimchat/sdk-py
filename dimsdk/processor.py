@@ -27,7 +27,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 # ==============================================================================
-from typing import Optional
+
+from typing import List
 
 from dimp import InstantMessage, ReliableMessage
 from dimp import Content
@@ -48,12 +49,12 @@ class MessageProcessor(Processor):
         assert isinstance(transceiver, Messenger), 'messenger error: %s' % transceiver
         return transceiver
 
-    def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> Optional[InstantMessage]:
-        res = super().process_instant_message(msg=msg, r_msg=r_msg)
+    def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
+        responses = super().process_instant_message(msg=msg, r_msg=r_msg)
         if self.messenger.save_message(msg=msg):
-            return res
+            return responses
 
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> Optional[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # TODO: override to check group
         cpu = ContentProcessor.processor_for_content(content=content)
         if cpu is None:

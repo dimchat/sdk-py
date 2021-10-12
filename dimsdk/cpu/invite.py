@@ -36,7 +36,7 @@
     2. any member or assistant can invite new member
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ID
 from dimp import ReliableMessage
@@ -49,7 +49,7 @@ from .history import GroupCommandProcessor
 
 class InviteCommandProcessor(GroupCommandProcessor):
 
-    def __reset(self, cmd: Command, msg: ReliableMessage) -> Content:
+    def __reset(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         """
         Call reset command processor
 
@@ -62,7 +62,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
         cpu.messenger = self.messenger
         return cpu.execute(cmd=cmd, msg=msg)
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, InviteCommand), 'group command error: %s' % cmd
         facebook = self.facebook
         from ..facebook import Facebook
@@ -104,4 +104,4 @@ class InviteCommandProcessor(GroupCommandProcessor):
             if facebook.save_members(members=members, identifier=group):
                 cmd['added'] = ID.revert(add_list)
         # 3. response (no need to response this group command)
-        return None
+        return []

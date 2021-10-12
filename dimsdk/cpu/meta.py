@@ -34,7 +34,7 @@
 
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ID, Meta
 from dimp import ReliableMessage
@@ -67,11 +67,12 @@ class MetaCommandProcessor(CommandProcessor):
         # response
         return ReceiptCommand(message='Meta received: %s' % identifier)
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, MetaCommand), 'command error: %s' % cmd
         identifier = cmd.identifier
         meta = cmd.meta
         if meta is None:
-            return self.__get(identifier=identifier)
+            res = self.__get(identifier=identifier)
         else:
-            return self.__put(identifier=identifier, meta=meta)
+            res = self.__put(identifier=identifier, meta=meta)
+        return [res]

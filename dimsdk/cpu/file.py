@@ -34,7 +34,7 @@
 
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import SymmetricKey
 from dimp import InstantMessage, SecureMessage, ReliableMessage
@@ -87,7 +87,7 @@ class FileContentProcessor(ContentProcessor):
     #
     #   main
     #
-    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, FileContent), 'file content error: %s' % content
         # TODO: process file content
-        return None
+        return []

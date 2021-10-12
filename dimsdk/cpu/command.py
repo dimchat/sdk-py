@@ -34,7 +34,7 @@
 
 """
 
-from typing import Optional, Union
+from typing import Union, List
 
 from dimp.protocol.command import command_name
 from dimp import ReliableMessage
@@ -46,19 +46,19 @@ from .content import ContentProcessor
 
 class CommandProcessor(ContentProcessor):
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         text = 'Command (name: %s) not support yet!' % cmd.command
         res = TextContent(text=text)
         # check group message
         group = cmd.group
         if group is not None:
             res.group = group
-        return res
+        return [res]
 
     #
     #   main
     #
-    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
         # process command by name
         cpu = self.processor_for_command(cmd=content)

@@ -37,7 +37,7 @@
     3. assistant can be hired/fired by owner
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ReliableMessage
 from dimp import Content
@@ -48,7 +48,7 @@ from .history import GroupCommandProcessor
 
 class QuitCommandProcessor(GroupCommandProcessor):
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, QuitCommand), 'group command error: %s' % cmd
         facebook = self.facebook
         from ..facebook import Facebook
@@ -71,4 +71,4 @@ class QuitCommandProcessor(GroupCommandProcessor):
             members.remove(sender)
             facebook.save_members(members=members, identifier=group)
         # 3. response (no need to response this group command)
-        return None
+        return []

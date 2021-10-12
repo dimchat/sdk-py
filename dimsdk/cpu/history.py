@@ -46,14 +46,14 @@ from .command import CommandProcessor
 
 class HistoryCommandProcessor(CommandProcessor):
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         text = 'History command (name: %s) not support yet!' % cmd.command
         res = TextContent(text=text)
         # check group message
         group = cmd.group
         if group is not None:
             res.group = group
-        return res
+        return [res]
 
 
 class GroupCommandProcessor(HistoryCommandProcessor):
@@ -69,19 +69,19 @@ class GroupCommandProcessor(HistoryCommandProcessor):
                 array = [item]
         return array
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         text = 'Group command (name: %s) not support yet!' % cmd.command
         res = TextContent(text=text)
         # check group message
         group = cmd.group
         if group is not None:
             res.group = group
-        return res
+        return [res]
 
     #
     #   main
     #
-    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, GroupCommand), 'group cmd error: %s' % content
         # process command by name
         cpu = CommandProcessor.processor_for_command(cmd=content)

@@ -41,7 +41,7 @@
        after that, we will send 'query' to the owner to get the newest members-list.
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ID
 from dimp import ReliableMessage
@@ -53,15 +53,16 @@ from .history import GroupCommandProcessor
 
 class ResetCommandProcessor(GroupCommandProcessor):
 
-    def __temporary_save(self, cmd: GroupCommand, sender: ID) -> Optional[Content]:
+    def __temporary_save(self, cmd: GroupCommand, sender: ID) -> List[Content]:
         facebook = self.facebook
         from ..facebook import Facebook
         assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
         # check whether the owner contained in the new members
-        group = cmd.group
         new_members = self.members(cmd=cmd)
         if new_members is None or len(new_members) == 0:
             raise ValueError('group command error: %s' % cmd)
+        group = cmd.group
+        query = GroupCommand.query(group=group)
         for item in new_members:
             if facebook.meta(identifier=item) is None:
                 # TODO: waiting for member's meta?
@@ -72,18 +73,17 @@ class ResetCommandProcessor(GroupCommandProcessor):
                     if item != sender:
                         # NOTICE: to prevent counterfeit,
                         #         query the owner for newest member-list
-                        cmd = GroupCommand.query(group=group)
                         messenger = self.messenger
                         from dimsdk import Messenger
                         assert isinstance(messenger, Messenger), 'message delegate error: %s' % messenger
-                        messenger.send_content(sender=None, receiver=item, content=cmd, priority=1)
+                        messenger.send_content(sender=None, receiver=item, content=query, priority=1)
                 # response (no need to respond this group command)
-                return None
+                return []
         # NOTICE: this is a partial member-list
         #         query the sender for full-list
-        return GroupCommand.query(group=group)
+        return [query]
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, InviteCommand) or isinstance(cmd, ResetCommand), 'group command error: %s' % cmd
         facebook = self.facebook
         from ..facebook import Facebook
@@ -131,4 +131,4 @@ class ResetCommandProcessor(GroupCommandProcessor):
                 if len(remove_list) > 0:
                     cmd['removed'] = ID.revert(remove_list)
         # 3. response (no need to response this group command)
-        return None
+        return []

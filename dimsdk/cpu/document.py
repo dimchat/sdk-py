@@ -34,7 +34,7 @@
 
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ID, Meta, Document
 from dimp import ReliableMessage
@@ -77,7 +77,7 @@ class DocumentCommandProcessor(CommandProcessor):
         text = 'Document received: %s' % identifier
         return ReceiptCommand(message=text)
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, DocumentCommand), 'command error: %s' % cmd
         identifier = cmd.identifier
         doc = cmd.document
@@ -85,8 +85,9 @@ class DocumentCommandProcessor(CommandProcessor):
             doc_type = cmd.get('doc_type')
             if doc_type is None:
                 doc_type = '*'
-            return self.__get(identifier=identifier, doc_type=doc_type)
+            res = self.__get(identifier=identifier, doc_type=doc_type)
         else:
             # check meta
             meta = cmd.meta
-            return self.__put(identifier=identifier, meta=meta, document=doc)
+            res = self.__put(identifier=identifier, meta=meta, document=doc)
+        return [res]

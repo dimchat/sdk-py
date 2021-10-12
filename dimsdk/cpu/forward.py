@@ -34,7 +34,7 @@
 
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ReliableMessage
 from dimp import Content, ForwardContent
@@ -50,23 +50,23 @@ class ForwardContentProcessor(ContentProcessor):
     #
     #   main
     #
-    def process(self, content: Content, msg: ReliableMessage) -> Optional[Content]:
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
         messenger = self.messenger
-        # from ..messenger import Messenger
-        # assert isinstance(messenger, Messenger)
+        from ..messenger import Messenger
+        assert isinstance(messenger, Messenger)
         secret = content.message
-        secret = messenger.process_reliable_message(msg=secret)
-        # check response
-        if secret is not None:
-            # Over The Top
-            return ForwardContent(message=secret)
-        # else:
-        #     receiver = content.message.receiver
-        #     text = 'Message forwarded: %s' % receiver
-        #     return ReceiptCommand.new(message=text)
-
-        # NOTICE: decrypt failed, not for you?
-        #         it means you are asked to re-pack and forward this message
-        return None
+        # 1. verify message
+        s_msg = messenger.verify_message(msg=secret)
+        if s_msg is None:
+            # waiting for sender's meta if not exists
+            return []
+        # 2. decrypt message
+        i_msg = messenger.decrypt_message(msg=s_msg)
+        if i_msg is None:
+            # NOTICE: decrypt failed, not for you?
+            #         it means you are asked to re-pack and forward this message
+            return []
+        # 3. process message content
+        return messenger.process_content(content=i_msg.content, r_msg=secret)

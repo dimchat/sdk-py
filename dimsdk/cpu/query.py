@@ -36,7 +36,7 @@
     2. any existed member or assistant can query group members-list
 """
 
-from typing import Optional
+from typing import List
 
 from dimp import ReliableMessage
 from dimp import Content, TextContent
@@ -47,7 +47,7 @@ from .history import GroupCommandProcessor
 
 class QueryCommandProcessor(GroupCommandProcessor):
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> Optional[Content]:
+    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, QueryCommand), 'group command error: %s' % cmd
         facebook = self.facebook
         from ..facebook import Facebook
@@ -60,7 +60,7 @@ class QueryCommandProcessor(GroupCommandProcessor):
             text = 'Sorry, members not found in group: %s' % group
             res = TextContent(text=text)
             res.group = group
-            return res
+            return [res]
         # 1. check permission
         sender = msg.sender
         if sender not in members:
@@ -73,6 +73,7 @@ class QueryCommandProcessor(GroupCommandProcessor):
         user = facebook.current_user
         assert user is not None, 'current user not set'
         if user.identifier == owner:
-            return GroupCommand.reset(group=group, members=members)
+            res = GroupCommand.reset(group=group, members=members)
         else:
-            return GroupCommand.invite(group=group, members=members)
+            res = GroupCommand.invite(group=group, members=members)
+        return [res]
