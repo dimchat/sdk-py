@@ -29,62 +29,51 @@
 # ==============================================================================
 
 """
-    Expel Group Command Processor
+    Query Group Command Processor
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    1. remove group member(s)
-    2. only group owner or assistant can expel member
+    1. query for group members-list
+    2. any existed member or assistant can query group members-list
 """
 
 from typing import List
 
-from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, ExpelCommand
+from dimp import Command, GroupCommand, QueryCommand
 
 from .history import GroupCommandProcessor
 
 
-class ExpelCommandProcessor(GroupCommandProcessor):
+class QueryCommandProcessor(GroupCommandProcessor):
+
+    STR_QUERY_NOT_ALLOWED = 'Sorry, you are not allowed to query this group.'
 
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, ExpelCommand), 'group command error: %s' % cmd
+        assert isinstance(cmd, QueryCommand), 'group command error: %s' % cmd
         facebook = self.facebook
-        from ..facebook import Facebook
-        assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
-        # 0. check group
+        # from ..facebook import Facebook
+        # assert isinstance(facebook, Facebook)
         group = cmd.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
+        # 0. check group
         if owner is None or members is None or len(members) == 0:
-            raise LookupError('Group not ready: %s' % group)
+            text = self.STR_GROUP_EMPTY
+            return self._respond_text(text=text, group=group)
         # 1. check permission
         sender = msg.sender
-        if sender != owner:
-            # not the owner? check assistants
+        if sender not in members:
+            # not a member? check assistants
             assistants = facebook.assistants(identifier=group)
             if assistants is None or sender not in assistants:
-                text = '%s is not the owner/assistant of group %s, cannot expel member' % (sender, group)
-                raise AssertionError(text)
-        # 2. expelling members
-        expel_list = self.members(cmd=cmd)
-        if expel_list is None or len(expel_list) == 0:
-            raise ValueError('expel command error: %s' % cmd)
-        # 2.1. check owner
-        if owner in expel_list:
-            raise AssertionError('cannot expel owner %s of group %s' % (owner, group))
-        # 2.2. build removed-list
-        remove_list = []
-        for item in expel_list:
-            if item not in members:
-                continue
-            # expelled member found
-            remove_list.append(item)
-            members.remove(item)
-        # 2.3. do expel
-        if len(remove_list) > 0:
-            if facebook.save_members(members=members, identifier=group):
-                cmd['removed'] = ID.revert(remove_list)
-        # 3. response (no need to response this group command)
-        return []
+                text = self.STR_QUERY_NOT_ALLOWED
+                return self._respond_text(text=text, group=group)
+        # 2. respond
+        user = facebook.current_user
+        # assert user is not None, 'current user not set'
+        if user.identifier == owner:
+            res = GroupCommand.reset(group=group, members=members)
+        else:
+            res = GroupCommand.invite(group=group, members=members)
+        return [res]

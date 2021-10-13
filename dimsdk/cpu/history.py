@@ -34,10 +34,10 @@
 
 """
 
-from typing import Optional, List
+from typing import List
 
 from dimp import ID, ReliableMessage
-from dimp import Content, TextContent
+from dimp import Content
 from dimp import Command, GroupCommand
 
 from .content import ContentProcessor
@@ -46,44 +46,41 @@ from .command import CommandProcessor
 
 class HistoryCommandProcessor(CommandProcessor):
 
+    FMT_HIS_CMD_NOT_SUPPORT = 'History command (name: %s) not support yet!'
+
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        text = 'History command (name: %s) not support yet!' % cmd.command
-        res = TextContent(text=text)
-        # check group message
-        group = cmd.group
-        if group is not None:
-            res.group = group
-        return [res]
+        text = self.FMT_HIS_CMD_NOT_SUPPORT % cmd.command
+        return self._respond_text(text=text, group=cmd.group)
 
 
 class GroupCommandProcessor(HistoryCommandProcessor):
 
+    FMT_GRP_CMD_NOT_SUPPORT = 'Group command (name: %s) not support yet!'
+    STR_GROUP_EMPTY = 'Group empty'
+
     @staticmethod
-    def members(cmd: GroupCommand) -> Optional[List[ID]]:
+    def members(cmd: GroupCommand) -> List[ID]:
         # get from 'members'
         array = cmd.members
         if array is None:
             # get from 'member
             item = cmd.member
-            if item is not None:
+            if item is None:
+                array = []
+            else:
                 array = [item]
         return array
 
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        text = 'Group command (name: %s) not support yet!' % cmd.command
-        res = TextContent(text=text)
-        # check group message
-        group = cmd.group
-        if group is not None:
-            res.group = group
-        return [res]
+        text = self.FMT_GRP_CMD_NOT_SUPPORT % cmd.command
+        return self._respond_text(text=text, group=cmd.group)
 
     #
     #   main
     #
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, GroupCommand), 'group cmd error: %s' % content
-        # process command by name
+        # get CPU by command name
         cpu = CommandProcessor.processor_for_command(cmd=content)
         if cpu is None:
             cpu = self

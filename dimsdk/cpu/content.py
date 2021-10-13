@@ -39,11 +39,16 @@ from typing import Optional, Union, List
 
 from dkd.content import msg_type
 
+from dimp import ID
 from dimp import ReliableMessage
 from dimp import ContentType, Content, TextContent
 
+from ..protocol import ReceiptCommand
+
 
 class ContentProcessor:
+
+    FMT_CONTENT_NOT_SUPPORT = 'Content (type: %s) not support yet!'
 
     def __init__(self):
         super().__init__()
@@ -66,13 +71,27 @@ class ContentProcessor:
     #   main
     #
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
-        text = 'Content (type: %s) not support yet!' % content.type
+        text = self.FMT_CONTENT_NOT_SUPPORT % content.type
+        return self._respond_text(text=text, group=content.group)
+
+    # noinspection PyMethodMayBeStatic
+    def _respond_text(self, text: str, group: Optional[ID] = None) -> List[Content]:
         res = TextContent(text=text)
-        # check group message
-        group = content.group
         if group is not None:
             res.group = group
         return [res]
+
+    # noinspection PyMethodMayBeStatic
+    def _respond_receipt(self, text: str) -> List[Content]:
+        res = ReceiptCommand(message=text)
+        return [res]
+
+    # noinspection PyMethodMayBeStatic
+    def _respond_content(self, content: Optional[Content]) -> List[Content]:
+        if content is None:
+            return []
+        else:
+            return [content]
 
     #
     #   CPU factory

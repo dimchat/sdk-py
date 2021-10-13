@@ -54,8 +54,8 @@ class ForwardContentProcessor(ContentProcessor):
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
         messenger = self.messenger
-        from ..messenger import Messenger
-        assert isinstance(messenger, Messenger)
+        # from ..messenger import Messenger
+        # assert isinstance(messenger, Messenger)
         secret = content.message
         # 1. verify message
         s_msg = messenger.verify_message(msg=secret)

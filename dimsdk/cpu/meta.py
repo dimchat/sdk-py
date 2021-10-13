@@ -38,41 +38,52 @@ from typing import List
 
 from dimp import ID, Meta
 from dimp import ReliableMessage
-from dimp import Content, TextContent
+from dimp import Content
 from dimp import Command, MetaCommand
-
-from ..protocol import ReceiptCommand
 
 from .command import CommandProcessor
 
 
 class MetaCommandProcessor(CommandProcessor):
 
-    def __get(self, identifier: ID) -> Content:
-        # query meta for ID
-        meta = self.facebook.meta(identifier=identifier)
-        if meta is None:
-            # meta not found
-            text = 'Sorry, meta for %s not found.' % identifier
-            return TextContent(text=text)
-        # response
-        return MetaCommand.response(identifier=identifier, meta=meta)
+    STR_META_CMD_ERROR = 'Meta command error'
+    FMT_META_NOT_FOUND = 'Sorry, meta not found for ID: %s'
+    FMT_META_NOT_ACCEPTED = 'Meta not accepted: %s'
+    FMT_META_ACCEPTED = 'Meta received: %s'
 
-    def __put(self, identifier: ID, meta: Meta) -> Content:
+    def __get_meta(self, identifier: ID) -> List[Content]:
         facebook = self.facebook
-        # received a meta for ID
+        # from dimp import Barrack
+        # assert isinstance(facebook, Barrack)
+        meta = facebook.meta(identifier=identifier)
+        if meta is None:
+            text = self.FMT_META_NOT_FOUND % identifier
+            return self._respond_text(text=text)
+        else:
+            res = MetaCommand.response(identifier=identifier, meta=meta)
+            return [res]
+
+    def __put_meta(self, identifier: ID, meta: Meta) -> List[Content]:
+        facebook = self.facebook
+        # from ..facebook import Facebook
+        # assert isinstance(facebook, Facebook)
         if not facebook.save_meta(meta=meta, identifier=identifier):
-            # save meta failed
-            return TextContent(text='Meta not accept: %s!' % identifier)
-        # response
-        return ReceiptCommand(message='Meta received: %s' % identifier)
+            text = self.FMT_META_NOT_ACCEPTED % identifier
+            return self._respond_text(text=text)
+        else:
+            text = self.FMT_META_ACCEPTED % identifier
+            return self._respond_receipt(text=text)
 
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, MetaCommand), 'command error: %s' % cmd
         identifier = cmd.identifier
         meta = cmd.meta
-        if meta is None:
-            res = self.__get(identifier=identifier)
+        if identifier is None:
+            # error
+            return self._respond_text(text=self.STR_META_CMD_ERROR)
+        elif meta is None:
+            # query meta for ID
+            return self.__get_meta(identifier=identifier)
         else:
-            res = self.__put(identifier=identifier, meta=meta)
-        return [res]
+            # received a meta for ID
+            return self.__put_meta(identifier=identifier, meta=meta)

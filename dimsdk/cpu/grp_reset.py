@@ -53,45 +53,55 @@ from .history import GroupCommandProcessor
 
 class ResetCommandProcessor(GroupCommandProcessor):
 
+    STR_RESET_CMD_ERROR = 'Reset command error.'
+    STR_RESET_NOT_ALLOWED = 'Sorry, you are not allowed to reset this group.'
+
+    def _query_owner(self, owner: ID, group: ID):
+        messenger = self.messenger
+        # from dimsdk import Messenger
+        # assert isinstance(messenger, Messenger)
+        query = GroupCommand.query(group=group)
+        messenger.send_content(sender=None, receiver=owner, content=query, priority=1)
+
     def __temporary_save(self, cmd: GroupCommand, sender: ID) -> List[Content]:
         facebook = self.facebook
-        from ..facebook import Facebook
-        assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
-        messenger = self.messenger
-        from dimsdk import Messenger
-        assert isinstance(messenger, Messenger), 'message delegate error: %s' % messenger
+        # from ..facebook import Facebook
+        # assert isinstance(facebook, Facebook)
+        group = cmd.group
         # check whether the owner contained in the new members
         new_members = self.members(cmd=cmd)
         if new_members is None or len(new_members) == 0:
-            raise ValueError('group command error: %s' % cmd)
-        group = cmd.group
-        query = GroupCommand.query(group=group)
+            text = self.STR_RESET_CMD_ERROR
+            return self._respond_text(text=text, group=group)
         for item in new_members:
             if facebook.meta(identifier=item) is None:
                 # TODO: waiting for member's meta?
                 continue
-            if facebook.is_owner(member=item, group=group):
-                # it's a full list, save it now
-                if facebook.save_members(members=new_members, identifier=group):
-                    if item != sender:
-                        # NOTICE: to prevent counterfeit,
-                        #         query the owner for newest member-list
-                        messenger.send_content(sender=None, receiver=item, content=query, priority=1)
-                # response (no need to respond this group command)
-                return []
+            elif not facebook.is_owner(member=item, group=group):
+                # not owner, skip it
+                continue
+            # it's a full list, save it now
+            if facebook.save_members(members=new_members, identifier=group):
+                if item != sender:
+                    # NOTICE: to prevent counterfeit,
+                    #         query the owner for newest member-list
+                    self._query_owner(owner=item, group=group)
+            # response (no need to respond this group command)
+            return []
         # NOTICE: this is a partial member-list
         #         query the sender for full-list
+        query = GroupCommand.query(group=group)
         return [query]
 
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, InviteCommand) or isinstance(cmd, ResetCommand), 'group command error: %s' % cmd
         facebook = self.facebook
-        from ..facebook import Facebook
-        assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
-        # 0. check group
+        # from ..facebook import Facebook
+        # assert isinstance(facebook, Facebook)
         group = cmd.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
+        # 0. check group
         if owner is None or members is None or len(members) == 0:
             # FIXME: group profile lost?
             # FIXME: how to avoid strangers impersonating group members?
@@ -102,15 +112,17 @@ class ResetCommandProcessor(GroupCommandProcessor):
             # not the owner? check assistants
             assistants = facebook.assistants(identifier=group)
             if assistants is None or sender not in assistants:
-                text = '%s is not the owner/assistant of group %s, cannot reset members' % (sender, group)
-                raise AssertionError(text)
+                text = self.STR_RESET_NOT_ALLOWED
+                return self._respond_text(text=text, group=group)
         # 2. resetting members
         new_members = self.members(cmd=cmd)
         if new_members is None or len(new_members) == 0:
-            raise ValueError('group command error: %s' % cmd)
+            text = self.STR_RESET_CMD_ERROR
+            return self._respond_text(text=text, group=group)
         # 2.1. check owner
         if owner not in new_members:
-            raise AssertionError('cannot expel owner (%s) of group: %s' % (owner, group))
+            text = self.STR_RESET_CMD_ERROR
+            return self._respond_text(text=text, group=group)
         # 2.2. build expelled-list
         remove_list = []
         for item in members:

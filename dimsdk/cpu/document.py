@@ -34,60 +34,66 @@
 
 """
 
-from typing import List
+from typing import Optional, List
 
 from dimp import ID, Meta, Document
 from dimp import ReliableMessage
-from dimp import Content, TextContent
+from dimp import Content
 from dimp import Command, DocumentCommand
 
-from ..protocol import ReceiptCommand
-
-from .command import CommandProcessor
+from .meta import MetaCommandProcessor
 
 
-class DocumentCommandProcessor(CommandProcessor):
+class DocumentCommandProcessor(MetaCommandProcessor):
 
-    def __get(self, identifier: ID, doc_type: str = '*') -> Content:
+    STR_DOC_CMD_ERROR = 'Document command error'
+    FMT_DOC_NOT_FOUND = 'Sorry, document not found for ID: %s'
+    FMT_DOC_NOT_ACCEPTED = 'Document not accept: %s'
+    FMT_DOC_ACCEPTED = 'Document received: %s'
+
+    def __get_doc(self, identifier: ID, doc_type: str = '*') -> List[Content]:
         facebook = self.facebook
-        # query entity document for ID
+        # from dimp import Barrack
+        # assert isinstance(facebook, Barrack)
         doc = facebook.document(identifier=identifier, doc_type=doc_type)
         if doc is None:
-            # document not found
-            text = 'Sorry, document not found for ID: %s' % identifier
-            return TextContent(text=text)
-        # response
-        meta: Meta = facebook.meta(identifier=identifier)
-        return DocumentCommand.response(document=doc, meta=meta, identifier=identifier)
+            text = self.FMT_DOC_NOT_FOUND % identifier
+            return self._respond_text(text=text)
+        else:
+            meta = facebook.meta(identifier=identifier)
+            res = DocumentCommand.response(document=doc, meta=meta, identifier=identifier)
+            return [res]
 
-    def __put(self, identifier: ID, meta: Meta, document: Document) -> Content:
+    def __put_doc(self, identifier: ID, meta: Optional[Meta], document: Document) -> List[Content]:
         facebook = self.facebook
+        # from ..facebook import Facebook
+        # assert isinstance(facebook, Facebook)
         if meta is not None:
             # received a meta for ID
             if not facebook.save_meta(meta=meta, identifier=identifier):
-                # save meta failed
-                text = 'Meta not accept: %s!' % identifier
-                return TextContent(text=text)
+                text = self.FMT_META_NOT_ACCEPTED % identifier
+                return self._respond_text(text=text)
         # received a new document for ID
         if not facebook.save_document(document=document):
-            # save document failed
-            text = 'Document not accept: %s!' % identifier
-            return TextContent(text=text)
-        # response
-        text = 'Document received: %s' % identifier
-        return ReceiptCommand(message=text)
+            text = self.FMT_DOC_NOT_ACCEPTED % identifier
+            return self._respond_text(text=text)
+        else:
+            text = self.FMT_DOC_ACCEPTED % identifier
+            return self._respond_receipt(text=text)
 
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, DocumentCommand), 'command error: %s' % cmd
         identifier = cmd.identifier
-        doc = cmd.document
-        if doc is None:
-            doc_type = cmd.get('doc_type')
-            if doc_type is None:
-                doc_type = '*'
-            res = self.__get(identifier=identifier, doc_type=doc_type)
-        else:
-            # check meta
-            meta = cmd.meta
-            res = self.__put(identifier=identifier, meta=meta, document=doc)
-        return [res]
+        if identifier is not None:
+            doc = cmd.document
+            if doc is None:
+                # query entity document for ID
+                doc_type = cmd.get('doc_type')
+                if doc_type is None:
+                    doc_type = '*'  # ANY
+                return self.__get_doc(identifier=identifier, doc_type=doc_type)
+            elif identifier == doc.identifier:
+                # received a new document for ID
+                return self.__put_doc(identifier=identifier, meta=cmd.meta, document=doc)
+        # error
+        return self._respond_text(text=self.STR_DOC_CMD_ERROR)

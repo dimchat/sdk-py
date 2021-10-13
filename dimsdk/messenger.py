@@ -52,7 +52,7 @@ class Callback:
     """ Messenger Callback """
 
     @abstractmethod
-    def finished(self, r_msg: ReliableMessage, error=None):
+    def finished(self, msg: ReliableMessage, error=None):
         raise NotImplemented
 
 

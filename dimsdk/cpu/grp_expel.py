@@ -29,11 +29,11 @@
 # ==============================================================================
 
 """
-    Invite Group Command Processor
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Expel Group Command Processor
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    1. add new member(s) to the group
-    2. any member or assistant can invite new member
+    1. remove group member(s)
+    2. only group owner or assistant can expel member
 """
 
 from typing import List
@@ -41,67 +41,57 @@ from typing import List
 from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, GroupCommand, InviteCommand
+from dimp import Command, ExpelCommand
 
-from .command import CommandProcessor
 from .history import GroupCommandProcessor
 
 
-class InviteCommandProcessor(GroupCommandProcessor):
+class ExpelCommandProcessor(GroupCommandProcessor):
 
-    def __reset(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        """
-        Call reset command processor
-
-        :param cmd: invite(reset) command
-        :param msg: instant message
-        :return: response from invite command processor
-        """
-        cpu = CommandProcessor.processor_for_name(command=GroupCommand.RESET)
-        assert isinstance(cpu, GroupCommandProcessor), 'failed to get "reset" command processor'
-        cpu.messenger = self.messenger
-        return cpu.execute(cmd=cmd, msg=msg)
+    STR_EXPEL_CMD_ERROR = 'Expel command error.'
+    STR_EXPEL_NOT_ALLOWED = 'Sorry, you are not allowed to expel member from this group.'
+    STR_CANNOT_EXPEL_OWNER = 'Group owner cannot be expelled.'
 
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, InviteCommand), 'group command error: %s' % cmd
+        assert isinstance(cmd, ExpelCommand), 'group command error: %s' % cmd
         facebook = self.facebook
-        from ..facebook import Facebook
-        assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
-        # 0. check group
+        # from ..facebook import Facebook
+        # assert isinstance(facebook, Facebook)
         group = cmd.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
+        # 0. check group
         if owner is None or members is None or len(members) == 0:
-            # NOTICE: group membership lost?
-            #         reset group members
-            return self.__reset(cmd=cmd, msg=msg)
+            text = self.STR_GROUP_EMPTY
+            return self._respond_text(text=text, group=group)
         # 1. check permission
         sender = msg.sender
-        if sender not in members:
-            # not a member? check assistants
+        if sender != owner:
+            # not the owner? check assistants
             assistants = facebook.assistants(identifier=group)
             if assistants is None or sender not in assistants:
-                raise AssertionError('only member/assistant can invite: %s' % msg)
-        # 2. inviting members
-        invite_list = self.members(cmd=cmd)
-        if invite_list is None or len(invite_list) == 0:
-            raise ValueError('invite command error: %s' % cmd)
-        # 2.1. check for reset
-        if sender == owner and owner in invite_list:
-            # NOTICE: owner invites owner?
-            #         it means this should be a 'reset' command
-            return self.__reset(cmd=cmd, msg=msg)
-        # 2.2. build invited-list
-        add_list = []
-        for item in invite_list:
-            if item in members:
+                text = self.STR_EXPEL_NOT_ALLOWED
+                return self._respond_text(text=text, group=group)
+        # 2. expelling members
+        expel_list = self.members(cmd=cmd)
+        if expel_list is None or len(expel_list) == 0:
+            text = self.STR_EXPEL_CMD_ERROR
+            return self._respond_text(text=text, group=group)
+        # 2.1. check owner
+        if owner in expel_list:
+            text = self.STR_CANNOT_EXPEL_OWNER
+            return self._respond_text(text=text, group=group)
+        # 2.2. build removed-list
+        remove_list = []
+        for item in expel_list:
+            if item not in members:
                 continue
-            # new member found
-            add_list.append(item)
-            members.append(item)
-        # 2.3. do invite
-        if len(add_list) > 0:
+            # expelled member found
+            remove_list.append(item)
+            members.remove(item)
+        # 2.3. do expel
+        if len(remove_list) > 0:
             if facebook.save_members(members=members, identifier=group):
-                cmd['added'] = ID.revert(add_list)
+                cmd['removed'] = ID.revert(remove_list)
         # 3. response (no need to response this group command)
         return []

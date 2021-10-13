@@ -41,11 +41,11 @@ from .forward import ForwardContentProcessor
 
 from .command import CommandProcessor
 from .history import HistoryCommandProcessor, GroupCommandProcessor
-from .invite import InviteCommandProcessor
-from .expel import ExpelCommandProcessor
-from .quit import QuitCommandProcessor
-from .reset import ResetCommandProcessor
-from .query import QueryCommandProcessor
+from .grp_invite import InviteCommandProcessor
+from .grp_expel import ExpelCommandProcessor
+from .grp_quit import QuitCommandProcessor
+from .grp_reset import ResetCommandProcessor
+from .grp_query import QueryCommandProcessor
 
 from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor

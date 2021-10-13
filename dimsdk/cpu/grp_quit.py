@@ -48,24 +48,35 @@ from .history import GroupCommandProcessor
 
 class QuitCommandProcessor(GroupCommandProcessor):
 
+    STR_OWNER_CANNOT_QUIT = 'Sorry, owner cannot quit.'
+    STR_ASSISTANT_CANNOT_QUIT = 'Sorry, assistant cannot quit.'
+
+    # noinspection PyUnusedLocal
+    def _remove_assistant(self, cmd: QuitCommand, msg: ReliableMessage) -> List[Content]:
+        # NOTICE: group assistant should be retired by the owner
+        text = self.STR_ASSISTANT_CANNOT_QUIT
+        return self._respond_text(text=text, group=cmd.group)
+
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, QuitCommand), 'group command error: %s' % cmd
         facebook = self.facebook
-        from ..facebook import Facebook
-        assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
-        # 0. check group
+        # from ..facebook import Facebook
+        # assert isinstance(facebook, Facebook)
         group = cmd.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
+        # 0. check group
         if owner is None or members is None or len(members) == 0:
-            raise LookupError('Group not ready: %s' % group)
+            text = self.STR_GROUP_EMPTY
+            return self._respond_text(text=text, group=group)
         # 1. check permission
         sender = msg.sender
         if sender == owner:
-            raise AssertionError('owner cannot quit: %s -> %s' % (sender, group))
+            text = self.STR_OWNER_CANNOT_QUIT
+            return self._respond_text(text=text, group=group)
         assistants = facebook.assistants(identifier=group)
         if assistants is not None and sender in assistants:
-            raise AssertionError('assistant cannot quit: %s -> %s' % (sender, group))
+            return self._remove_assistant(cmd=cmd, msg=msg)
         # 2. remove sender from group members
         if sender in members:
             members.remove(sender)
