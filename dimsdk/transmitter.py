@@ -29,17 +29,17 @@
 # ==============================================================================
 
 import weakref
-from typing import Optional, Union
+from abc import ABC
+from typing import Optional
 
 from dimp import ID
-from dimp import Content, Envelope, InstantMessage, ReliableMessage
+from dimp import Content, Envelope, InstantMessage
 
-from .delegate import Callback
-from .messenger import Messenger, MessageCallback
+from .messenger import Messenger, Callback
 from .facebook import Facebook
 
 
-class MessageTransmitter:
+class MessageTransmitter(Messenger.Transmitter, ABC):
 
     def __init__(self, messenger: Messenger):
         super().__init__()
@@ -55,16 +55,6 @@ class MessageTransmitter:
 
     def send_content(self, sender: ID, receiver: ID, content: Content,
                      callback: Optional[Callback] = None, priority: int = 0) -> bool:
-        """
-        Send message content to receiver
-
-        :param sender:   sender ID
-        :param receiver: receiver ID
-        :param content:  message content
-        :param callback: if needs callback, set it here
-        :param priority: task priority (smaller is faster)
-        :return: True on success
-        """
         if sender is None:
             # Application Layer should make sure user is already login before it send message to server.
             # Application layer should put message into queue so that it will send automatically after user login
@@ -74,41 +64,20 @@ class MessageTransmitter:
         # pack and send
         env = Envelope.create(sender=sender, receiver=receiver)
         msg = InstantMessage.create(head=env, body=content)
-        return self.messenger.send_message(msg=msg, callback=callback, priority=priority)
+        return self.messenger.send_instant_message(msg=msg, callback=callback, priority=priority)
 
-    def send_message(self, msg: Union[InstantMessage, ReliableMessage],
-                     callback: Optional[Callback] = None, priority: int = 0) -> bool:
-        """
-        Send instant message (encrypt and sign) onto DIM network
-
-        :param msg:      instant message
-        :param callback: callback function
-        :param priority: task priority
-        :return:         False on data/delegate error
-        """
-        if isinstance(msg, ReliableMessage):
-            return self.__send_message(msg=msg, callback=callback, priority=priority)
-        assert isinstance(msg, InstantMessage), 'message error: %s' % msg
-
+    def send_instant_message(self, msg: InstantMessage,
+                             callback: Optional[Callback] = None, priority: int = 0) -> bool:
+        messenger = self.messenger
         # Send message (secured + certified) to target station
-        s_msg = self.messenger.encrypt_message(msg=msg)
+        s_msg = messenger.encrypt_message(msg=msg)
         if s_msg is None:
             # public key not found?
             # raise AssertionError('failed to encrypt message: %s' % msg)
             return False
-        r_msg = self.messenger.sign_message(msg=s_msg)
+        r_msg = messenger.sign_message(msg=s_msg)
         if r_msg is None:
             # TODO: set iMsg.state = error
             raise AssertionError('failed to sign message: %s' % s_msg)
-
-        ok = self.__send_message(msg=r_msg, callback=callback, priority=priority)
         # TODO: if OK, set iMsg.state = sending; else set iMsg.state = waiting
-
-        if not self.messenger.save_message(msg=msg):
-            return False
-        return ok
-
-    def __send_message(self, msg: ReliableMessage, callback: Optional[Callback] = None, priority: int = 0) -> bool:
-        handler = MessageCallback(msg=msg, cb=callback)
-        data = self.messenger.serialize_message(msg=msg)
-        return self.messenger.send_package(data=data, handler=handler, priority=priority)
+        return messenger.send_reliable_message(msg=r_msg, callback=callback, priority=priority)

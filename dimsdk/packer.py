@@ -30,7 +30,6 @@
 
 from typing import Optional
 
-from dimp import ID
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Packer
 
@@ -53,47 +52,16 @@ class MessagePacker(Packer):
     def facebook(self) -> Facebook:
         return self.messenger.facebook
 
-    def __is_waiting(self, identifier: ID) -> bool:
-        if identifier.is_group:
-            # checking group meta
-            return self.facebook.meta(identifier=identifier) is None
-        else:
-            # checking visa key
-            return self.facebook.public_key_for_encryption(identifier=identifier) is None
-
-    def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
-        receiver = msg.receiver
-        group = msg.group
-        if not (receiver.is_broadcast or (group is not None and group.is_broadcast)):
-            # this message is not a broadcast message
-            if self.__is_waiting(receiver) or (group is not None and self.__is_waiting(group)):
-                # NOTICE: the application will query visa automatically,
-                #         save this message in a queue waiting sender's visa response
-                self.messenger.suspend_message(msg=msg)
-                return None
-        # make sure visa.key exists before encrypting message
-        return super().encrypt_message(msg=msg)
-
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         facebook = self.facebook
         sender = msg.sender
         # [Meta Protocol]
         meta = msg.meta
-        if meta is None:
-            # get from local storage
-            meta = facebook.meta(identifier=sender)
-        elif not facebook.save_meta(meta=meta, identifier=sender):
-            # failed to save meta attached to message
-            meta = None
-        if meta is None:
-            # NOTICE: the application will query meta automatically,
-            #         save this message in a queue waiting sender's meta response
-            self.messenger.suspend_message(msg=msg)
-            return None
+        if meta is not None:
+            facebook.save_meta(meta=meta, identifier=sender)
         # [Visa Protocol]
         visa = msg.visa
         if visa is not None:
-            # check visa attached to message
             facebook.save_document(document=visa)
         # make sure meta exists before verifying message
         return super().verify_message(msg=msg)

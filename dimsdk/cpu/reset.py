@@ -57,6 +57,9 @@ class ResetCommandProcessor(GroupCommandProcessor):
         facebook = self.facebook
         from ..facebook import Facebook
         assert isinstance(facebook, Facebook), 'entity delegate error: %s' % facebook
+        messenger = self.messenger
+        from dimsdk import Messenger
+        assert isinstance(messenger, Messenger), 'message delegate error: %s' % messenger
         # check whether the owner contained in the new members
         new_members = self.members(cmd=cmd)
         if new_members is None or len(new_members) == 0:
@@ -73,9 +76,6 @@ class ResetCommandProcessor(GroupCommandProcessor):
                     if item != sender:
                         # NOTICE: to prevent counterfeit,
                         #         query the owner for newest member-list
-                        messenger = self.messenger
-                        from dimsdk import Messenger
-                        assert isinstance(messenger, Messenger), 'message delegate error: %s' % messenger
                         messenger.send_content(sender=None, receiver=item, content=query, priority=1)
                 # response (no need to respond this group command)
                 return []

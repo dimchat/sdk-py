@@ -38,7 +38,6 @@ from dimp import *
 
 from .content import ContentProcessor
 from .forward import ForwardContentProcessor
-from .file import FileContentProcessor
 
 from .command import CommandProcessor
 from .history import HistoryCommandProcessor, GroupCommandProcessor
@@ -53,18 +52,12 @@ from .document import DocumentCommandProcessor
 
 
 def register_content_processors():
+    # contents
+    ContentProcessor.register(content_type=0, cpu=ContentProcessor())  # default
     ContentProcessor.register(content_type=ContentType.FORWARD, cpu=ForwardContentProcessor())
-    # files
-    fpu = FileContentProcessor()
-    ContentProcessor.register(content_type=ContentType.FILE, cpu=fpu)
-    ContentProcessor.register(content_type=ContentType.IMAGE, cpu=fpu)
-    ContentProcessor.register(content_type=ContentType.AUDIO, cpu=fpu)
-    ContentProcessor.register(content_type=ContentType.VIDEO, cpu=fpu)
     # commands
     ContentProcessor.register(content_type=ContentType.COMMAND, cpu=CommandProcessor())
     ContentProcessor.register(content_type=ContentType.HISTORY, cpu=HistoryCommandProcessor())
-    # default
-    ContentProcessor.register(content_type=0, cpu=ContentProcessor())
 
 
 def register_command_processors():
@@ -85,15 +78,18 @@ def register_command_processors():
     CommandProcessor.register(command=GroupCommand.RESET, cpu=ResetCommandProcessor())
 
 
-register_content_processors()
-register_command_processors()
+def register_all_processors():
+    register_content_processors()
+    register_command_processors()
+
+
+register_all_processors()
 
 
 __all__ = [
 
     'ContentProcessor',
     'ForwardContentProcessor',
-    'FileContentProcessor',
 
     'CommandProcessor',
     'HistoryCommandProcessor',

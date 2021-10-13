@@ -37,19 +37,17 @@ from .group import Polylogue, Chatroom, ChatroomDataSource
 from .protocol import ReceiptCommand, HandshakeCommand, LoginCommand
 from .protocol import BlockCommand, MuteCommand, StorageCommand
 
-from .cpu import ContentProcessor, ForwardContentProcessor, FileContentProcessor
+from .cpu import ContentProcessor, ForwardContentProcessor
 from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
 from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProcessor
 from .cpu import ResetCommandProcessor, QueryCommandProcessor
 from .cpu import MetaCommandProcessor, DocumentCommandProcessor
 
-from .delegate import Callback, CompletionHandler, MessengerDelegate, MessengerDataSource
-
 from .facebook import Facebook
 from .packer import MessagePacker
 from .processor import MessageProcessor
 from .transmitter import MessageTransmitter
-from .messenger import Messenger
+from .messenger import Messenger, Callback
 
 from .ans import AddressNameService
 
@@ -75,7 +73,7 @@ __all__ = [
     #
     #   Content/Command Processors
     #
-    'ContentProcessor', 'ForwardContentProcessor', 'FileContentProcessor',
+    'ContentProcessor', 'ForwardContentProcessor',
     'CommandProcessor', 'HistoryCommandProcessor',
     'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
@@ -89,7 +87,7 @@ __all__ = [
     'Polylogue', 'Chatroom', 'ChatroomDataSource',
 
     # delegate
-    'Callback', 'CompletionHandler', 'MessengerDelegate', 'MessengerDataSource',
+    'Callback',
 
     'AddressNameService', 'Facebook',
     'Messenger', 'MessagePacker', 'MessageProcessor', 'MessageTransmitter',

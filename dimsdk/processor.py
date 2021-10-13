@@ -30,8 +30,7 @@
 
 from typing import List
 
-from dimp import InstantMessage, ReliableMessage
-from dimp import Content
+from dimp import Content, ReliableMessage
 from dimp import Processor
 
 from .cpu import ContentProcessor
@@ -48,11 +47,6 @@ class MessageProcessor(Processor):
         transceiver = self.transceiver
         assert isinstance(transceiver, Messenger), 'messenger error: %s' % transceiver
         return transceiver
-
-    def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
-        responses = super().process_instant_message(msg=msg, r_msg=r_msg)
-        if self.messenger.save_message(msg=msg):
-            return responses
 
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # TODO: override to check group
