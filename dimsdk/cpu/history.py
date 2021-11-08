@@ -56,7 +56,7 @@ class HistoryCommandProcessor(CommandProcessor):
 class GroupCommandProcessor(HistoryCommandProcessor):
 
     FMT_GRP_CMD_NOT_SUPPORT = 'Group command (name: %s) not support yet!'
-    STR_GROUP_EMPTY = 'Group empty'
+    STR_GROUP_EMPTY = 'Group empty.'
 
     @staticmethod
     def members(cmd: GroupCommand) -> List[ID]:
