@@ -47,9 +47,7 @@ from .content import ContentProcessor
 #
 class ForwardContentProcessor(ContentProcessor):
 
-    #
-    #   main
-    #
+    # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it

@@ -52,6 +52,7 @@ class ExpelCommandProcessor(GroupCommandProcessor):
     STR_EXPEL_NOT_ALLOWED = 'Sorry, you are not allowed to expel member from this group.'
     STR_CANNOT_EXPEL_OWNER = 'Group owner cannot be expelled.'
 
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, ExpelCommand), 'group command error: %s' % cmd
         facebook = self.facebook

@@ -40,7 +40,6 @@ from dimp import ID, ReliableMessage
 from dimp import Content
 from dimp import Command, GroupCommand
 
-from .content import ContentProcessor
 from .command import CommandProcessor
 
 
@@ -48,6 +47,7 @@ class HistoryCommandProcessor(CommandProcessor):
 
     FMT_HIS_CMD_NOT_SUPPORT = 'History command (name: %s) not support yet!'
 
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         text = self.FMT_HIS_CMD_NOT_SUPPORT % cmd.command
         return self._respond_text(text=text, group=cmd.group)
@@ -71,20 +71,7 @@ class GroupCommandProcessor(HistoryCommandProcessor):
                 array = [item]
         return array
 
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         text = self.FMT_GRP_CMD_NOT_SUPPORT % cmd.command
         return self._respond_text(text=text, group=cmd.group)
-
-    #
-    #   main
-    #
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(content, GroupCommand), 'group cmd error: %s' % content
-        # get CPU by command name
-        cpu = CommandProcessor.processor_for_command(cmd=content)
-        if cpu is None:
-            cpu = self
-        else:
-            assert isinstance(cpu, ContentProcessor), 'CPU error: %s' % cpu
-            cpu.messenger = self.messenger
-        return cpu.execute(cmd=content, msg=msg)

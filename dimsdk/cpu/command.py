@@ -34,12 +34,11 @@
 
 """
 
-from typing import Union, List
+from typing import List
 
-from dimp.protocol.command import command_name
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, GroupCommand
+from dimp import Command
 
 from .content import ContentProcessor
 
@@ -49,43 +48,17 @@ class CommandProcessor(ContentProcessor):
     FMT_CMD_NOT_SUPPORT = 'Command (name: %s) not support yet!'
 
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
+        """
+        Execute command
+
+        :param cmd: command received
+        :param msg: reliable message
+        :return: response to sender
+        """
         text = self.FMT_CMD_NOT_SUPPORT % cmd.command
         return self._respond_text(text=text, group=cmd.group)
 
-    #
-    #   main
-    #
+    # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
-        # process command by name
-        cpu = self.processor_for_command(cmd=content)
-        if cpu is None:
-            if isinstance(content, GroupCommand):
-                cpu = self.processor_for_name(command='group')
-        if cpu is None:
-            cpu = self
-        else:
-            assert isinstance(cpu, CommandProcessor), 'CPU error: %s' % cpu
-            cpu.messenger = self.messenger
-        return cpu.execute(cmd=content, msg=msg)
-
-    #
-    #   CPU factory
-    #
-
-    @classmethod
-    def processor_for_command(cls, cmd: Union[Command, dict]):  # -> Optional[CommandProcessor]:
-        if isinstance(cmd, Command):
-            cmd = cmd.dictionary
-        name = command_name(cmd=cmd)
-        return cls.processor_for_name(command=name)
-
-    @classmethod
-    def processor_for_name(cls, command: str):  # -> Optional[CommandProcessor]:
-        return cls.__command_processors.get(command)
-
-    @classmethod
-    def register(cls, command: str, cpu):
-        cls.__command_processors[command] = cpu
-
-    __command_processors = {}
+        return self.execute(cmd=content, msg=msg)

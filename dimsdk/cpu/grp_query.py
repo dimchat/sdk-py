@@ -49,6 +49,7 @@ class QueryCommandProcessor(GroupCommandProcessor):
 
     STR_QUERY_NOT_ALLOWED = 'Sorry, you are not allowed to query this group.'
 
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, QueryCommand), 'group command error: %s' % cmd
         facebook = self.facebook

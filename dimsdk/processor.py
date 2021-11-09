@@ -28,12 +28,12 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import List
+from typing import List, Union
 
-from dimp import Content, ReliableMessage
+from dimp import ContentType, Content, ReliableMessage
 from dimp import Processor
 
-from .cpu import ContentProcessor
+from .cpu import ProcessorFactory
 from .messenger import Messenger
 
 
@@ -41,6 +41,17 @@ class MessageProcessor(Processor):
 
     def __init__(self, messenger: Messenger):
         super().__init__(transceiver=messenger)
+        self.__cpm = self._create_processor_factory()
+
+    # protected
+    def _create_processor_factory(self) -> ProcessorFactory:
+        return ProcessorFactory(messenger=self.messenger)
+
+    def get_processor(self, content: Content = None, msg_type: Union[int, ContentType] = None):
+        if content is None:
+            return self.__cpm.get_content_processor(msg_type=msg_type)
+        else:
+            return self.__cpm.get_processor(content=content)
 
     @property
     def messenger(self) -> Messenger:
@@ -50,10 +61,6 @@ class MessageProcessor(Processor):
 
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # TODO: override to check group
-        cpu = ContentProcessor.processor_for_content(content=content)
-        if cpu is None:
-            cpu = ContentProcessor.processor_for_type(content_type=0)  # unknown
-            assert isinstance(cpu, ContentProcessor), 'cannot process content: %s' % content
-        cpu.messenger = self.messenger
+        cpu = self.get_processor(content=content)
         return cpu.process(content=content, msg=r_msg)
         # TODO: override to filter the response

@@ -81,6 +81,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             text = self.FMT_DOC_ACCEPTED % identifier
             return self._respond_receipt(text=text)
 
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, DocumentCommand), 'command error: %s' % cmd
         identifier = cmd.identifier

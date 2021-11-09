@@ -42,6 +42,7 @@ from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcesso
 from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProcessor
 from .cpu import ResetCommandProcessor, QueryCommandProcessor
 from .cpu import MetaCommandProcessor, DocumentCommandProcessor
+from .cpu import ProcessorFactory
 
 from .facebook import Facebook
 from .packer import MessagePacker
@@ -79,6 +80,7 @@ __all__ = [
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
     'MetaCommandProcessor', 'DocumentCommandProcessor',
+    'ProcessorFactory',
 
     # network
     'ServiceProvider', 'Station', 'Robot',

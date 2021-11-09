@@ -41,30 +41,17 @@ from typing import List
 from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, GroupCommand, InviteCommand
+from dimp import Command, InviteCommand
 
-from .command import CommandProcessor
-from .history import GroupCommandProcessor
+from .grp_reset import ResetCommandProcessor
 
 
-class InviteCommandProcessor(GroupCommandProcessor):
+class InviteCommandProcessor(ResetCommandProcessor):
 
     STR_INVITE_CMD_ERROR = 'Invite command error.'
     STR_INVITE_NOT_ALLOWED = 'Sorry, you are not allowed to invite new members into this group.'
 
-    def __call_reset(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        """
-        Call reset command processor
-
-        :param cmd: invite(reset) command
-        :param msg: instant message
-        :return: response from invite command processor
-        """
-        gpu = CommandProcessor.processor_for_name(command=GroupCommand.RESET)
-        # assert isinstance(gpu, CommandProcessor)
-        gpu.messenger = self.messenger
-        return gpu.execute(cmd=cmd, msg=msg)
-
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, InviteCommand), 'group command error: %s' % cmd
         facebook = self.facebook
@@ -77,7 +64,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
         if owner is None or members is None or len(members) == 0:
             # NOTICE: group membership lost?
             #         reset group members
-            return self.__call_reset(cmd=cmd, msg=msg)
+            return self._temporary_save(cmd=cmd, sender=msg.sender)
         # 1. check permission
         sender = msg.sender
         if sender not in members:
@@ -95,7 +82,7 @@ class InviteCommandProcessor(GroupCommandProcessor):
         if sender == owner and owner in invite_list:
             # NOTICE: owner invites owner?
             #         it means this should be a 'reset' command
-            return self.__call_reset(cmd=cmd, msg=msg)
+            return self._temporary_save(cmd=cmd, sender=sender)
         # 2.2. build invited-list
         add_list = []
         for item in invite_list:

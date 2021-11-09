@@ -63,7 +63,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
         query = GroupCommand.query(group=group)
         messenger.send_content(sender=None, receiver=owner, content=query, priority=1)
 
-    def __temporary_save(self, cmd: GroupCommand, sender: ID) -> List[Content]:
+    def _temporary_save(self, cmd: GroupCommand, sender: ID) -> List[Content]:
         facebook = self.facebook
         # from ..facebook import Facebook
         # assert isinstance(facebook, Facebook)
@@ -93,6 +93,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
         query = GroupCommand.query(group=group)
         return [query]
 
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, InviteCommand) or isinstance(cmd, ResetCommand), 'group command error: %s' % cmd
         facebook = self.facebook
@@ -105,7 +106,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
         if owner is None or members is None or len(members) == 0:
             # FIXME: group profile lost?
             # FIXME: how to avoid strangers impersonating group members?
-            return self.__temporary_save(cmd=cmd, sender=msg.sender)
+            return self._temporary_save(cmd=cmd, sender=msg.sender)
         # 1. check permission
         sender = msg.sender
         if sender != owner:

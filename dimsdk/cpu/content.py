@@ -35,13 +35,11 @@
 """
 
 import weakref
-from typing import Optional, Union, List
-
-from dkd.content import msg_type
+from typing import Optional, List
 
 from dimp import ID
 from dimp import ReliableMessage
-from dimp import ContentType, Content, TextContent
+from dimp import Content, TextContent
 
 from ..protocol import ReceiptCommand
 
@@ -50,27 +48,26 @@ class ContentProcessor:
 
     FMT_CONTENT_NOT_SUPPORT = 'Content (type: %s) not support yet!'
 
-    def __init__(self):
+    def __init__(self, messenger):
         super().__init__()
-        self.__messenger: Optional[weakref.ReferenceType] = None
+        self.__messenger = weakref.ref(messenger)
 
     @property
     def messenger(self):  # Messenger
-        if self.__messenger is not None:
-            return self.__messenger()
-
-    @messenger.setter
-    def messenger(self, transceiver):
-        self.__messenger = weakref.ref(transceiver)
+        return self.__messenger()
 
     @property
     def facebook(self):  # Facebook
         return self.messenger.facebook
 
-    #
-    #   main
-    #
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        """
+        Process message content
+
+        :param content: content received
+        :param msg:     reliable message
+        :return: response to sender
+        """
         text = self.FMT_CONTENT_NOT_SUPPORT % content.type
         return self._respond_text(text=text, group=content.group)
 
@@ -92,28 +89,3 @@ class ContentProcessor:
             return []
         else:
             return [content]
-
-    #
-    #   CPU factory
-    #
-
-    @classmethod
-    def processor_for_content(cls, content: Union[Content, dict]):  # -> Optional[ContentProcessor]:
-        if isinstance(content, Content):
-            content = content.dictionary
-        content_type = msg_type(content=content)
-        return cls.processor_for_type(content_type=content_type)
-
-    @classmethod
-    def processor_for_type(cls, content_type: Union[ContentType, int]):  # -> Optional[ContentProcessor]:
-        if isinstance(content_type, ContentType):
-            content_type = content_type.value
-        return cls.__content_processors.get(content_type)
-
-    @classmethod
-    def register(cls, content_type: Union[ContentType, int], cpu):
-        if isinstance(content_type, ContentType):
-            content_type = content_type.value
-        cls.__content_processors[content_type] = cpu
-
-    __content_processors = {}

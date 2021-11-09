@@ -34,8 +34,6 @@
 
 """
 
-from dimp import *
-
 from .content import ContentProcessor
 from .forward import ForwardContentProcessor
 
@@ -50,40 +48,7 @@ from .grp_query import QueryCommandProcessor
 from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor
 
-
-def register_content_processors():
-    # contents
-    ContentProcessor.register(content_type=0, cpu=ContentProcessor())  # default
-    ContentProcessor.register(content_type=ContentType.FORWARD, cpu=ForwardContentProcessor())
-    # commands
-    ContentProcessor.register(content_type=ContentType.COMMAND, cpu=CommandProcessor())
-    ContentProcessor.register(content_type=ContentType.HISTORY, cpu=HistoryCommandProcessor())
-
-
-def register_command_processors():
-    # meta
-    CommandProcessor.register(command=Command.META, cpu=MetaCommandProcessor())
-    # document
-    dpu = DocumentCommandProcessor()
-    CommandProcessor.register(command=Command.DOCUMENT, cpu=dpu)
-    CommandProcessor.register(command='profile', cpu=dpu)
-    CommandProcessor.register(command='visa', cpu=dpu)
-    CommandProcessor.register(command='bulletin', cpu=dpu)
-    # group commands
-    CommandProcessor.register(command='group', cpu=GroupCommandProcessor())
-    CommandProcessor.register(command=GroupCommand.INVITE, cpu=InviteCommandProcessor())
-    CommandProcessor.register(command=GroupCommand.EXPEL, cpu=ExpelCommandProcessor())
-    CommandProcessor.register(command=GroupCommand.QUIT, cpu=QuitCommandProcessor())
-    CommandProcessor.register(command=GroupCommand.QUERY, cpu=QueryCommandProcessor())
-    CommandProcessor.register(command=GroupCommand.RESET, cpu=ResetCommandProcessor())
-
-
-def register_all_processors():
-    register_content_processors()
-    register_command_processors()
-
-
-register_all_processors()
+from .factory import ProcessorFactory
 
 
 __all__ = [
@@ -100,4 +65,6 @@ __all__ = [
 
     'MetaCommandProcessor',
     'DocumentCommandProcessor',
+
+    'ProcessorFactory',
 ]

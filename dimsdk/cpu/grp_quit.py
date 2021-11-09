@@ -57,6 +57,7 @@ class QuitCommandProcessor(GroupCommandProcessor):
         text = self.STR_ASSISTANT_CANNOT_QUIT
         return self._respond_text(text=text, group=cmd.group)
 
+    # Override
     def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
         assert isinstance(cmd, QuitCommand), 'group command error: %s' % cmd
         facebook = self.facebook
