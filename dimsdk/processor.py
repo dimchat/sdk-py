@@ -28,11 +28,12 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 from dimp import ContentType, Content, ReliableMessage
 from dimp import Processor
 
+from .cpu import ContentProcessor, CommandProcessor
 from .cpu import ProcessorFactory
 from .messenger import Messenger
 
@@ -47,11 +48,14 @@ class MessageProcessor(Processor):
     def _create_processor_factory(self) -> ProcessorFactory:
         return ProcessorFactory(messenger=self.messenger)
 
-    def get_processor(self, content: Content = None, msg_type: Union[int, ContentType] = None):
-        if content is None:
-            return self.__cpm.get_content_processor(msg_type=msg_type)
-        else:
-            return self.__cpm.get_processor(content=content)
+    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
+        return self.__cpm.get_processor(content=content)
+
+    def get_processor_by_type(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+        return self.__cpm.get_content_processor(msg_type=msg_type)
+
+    def get_processor_by_name(self, cmd_name: str, msg_type: Union[int, ContentType] = 0) -> Optional[CommandProcessor]:
+        return self.__cpm.get_command_processor(msg_type=msg_type, cmd_name=cmd_name)
 
     @property
     def messenger(self) -> Messenger:

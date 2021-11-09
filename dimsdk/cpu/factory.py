@@ -126,7 +126,7 @@ class ProcessorFactory:
         :return: ContentProcessor
         """
         # core contents
-        if msg_type == ContentType.FORWARD:
+        if msg_type == ContentType.FORWARD.value:
             return ForwardContentProcessor(messenger=self.messenger)
 
     # protected
@@ -145,7 +145,7 @@ class ProcessorFactory:
         if cmd_name == Command.DOCUMENT:
             return DocumentCommandProcessor(messenger=self.messenger)
         elif cmd_name in ['profile', 'visa', 'bulletin']:
-            # shared the same processor
+            # share the same processor
             cpu = self._get_command_processor(cmd_name=Command.DOCUMENT)
             if cpu is None:
                 cpu = DocumentCommandProcessor(messenger=self.messenger)
@@ -165,7 +165,7 @@ class ProcessorFactory:
         elif cmd_name == GroupCommand.RESET:
             return ResetCommandProcessor(messenger=self.messenger)
         # others
-        if msg_type == ContentType.COMMAND:
+        if msg_type == ContentType.COMMAND.value:
             return CommandProcessor(messenger=self.messenger)
-        elif msg_type == ContentType.HISTORY:
+        elif msg_type == ContentType.HISTORY.value:
             return HistoryCommandProcessor(messenger=self.messenger)
