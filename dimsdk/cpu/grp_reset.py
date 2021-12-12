@@ -57,11 +57,8 @@ class ResetCommandProcessor(GroupCommandProcessor):
     STR_RESET_NOT_ALLOWED = 'Sorry, you are not allowed to reset this group.'
 
     def _query_owner(self, owner: ID, group: ID):
-        messenger = self.messenger
-        # from dimsdk import Messenger
-        # assert isinstance(messenger, Messenger)
-        query = GroupCommand.query(group=group)
-        messenger.send_content(sender=None, receiver=owner, content=query, priority=1)
+        # TODO: send 'query' group command to owner
+        pass
 
     def _temporary_save(self, cmd: GroupCommand, sender: ID) -> List[Content]:
         facebook = self.facebook

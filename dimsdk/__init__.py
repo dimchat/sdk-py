@@ -47,8 +47,7 @@ from .cpu import ProcessorFactory
 from .facebook import Facebook
 from .packer import MessagePacker
 from .processor import MessageProcessor
-from .transmitter import MessageTransmitter
-from .messenger import Messenger, Callback
+from .messenger import Messenger
 
 from .ans import AddressNameService
 
@@ -88,9 +87,6 @@ __all__ = [
     # group
     'Polylogue', 'Chatroom', 'ChatroomDataSource',
 
-    # delegate
-    'Callback',
-
     'AddressNameService', 'Facebook',
-    'Messenger', 'MessagePacker', 'MessageProcessor', 'MessageTransmitter',
+    'Messenger', 'MessagePacker', 'MessageProcessor',
 ]
