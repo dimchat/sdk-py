@@ -39,12 +39,14 @@ class PlainKey(Dictionary, SymmetricKey):
     def size(self) -> int:
         return 0
 
-    @property
+    @property  # Override
     def data(self) -> bytes:
         return b''
 
+    # Override
     def encrypt(self, data: bytes) -> bytes:
         return data
 
+    # Override
     def decrypt(self, data: bytes) -> Optional[bytes]:
         return data

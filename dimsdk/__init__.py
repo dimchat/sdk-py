@@ -30,10 +30,6 @@
 
 from .plugins import *
 
-from .network import ServiceProvider, Station, Robot
-
-from .group import Polylogue, Chatroom, ChatroomDataSource
-
 from .protocol import ReceiptCommand, HandshakeCommand, LoginCommand
 from .protocol import BlockCommand, MuteCommand, StorageCommand
 
@@ -44,12 +40,16 @@ from .cpu import ResetCommandProcessor, QueryCommandProcessor
 from .cpu import MetaCommandProcessor, DocumentCommandProcessor
 from .cpu import ProcessorFactory
 
+from .network import ServiceProvider, Station, Robot
+from .group import Polylogue, Chatroom, ChatroomDataSource
+
+from .ans import AddressNameService
+from .delegate import CipherKeyDelegate
+
 from .facebook import Facebook
 from .packer import MessagePacker
 from .processor import MessageProcessor
 from .messenger import Messenger
-
-from .ans import AddressNameService
 
 name = 'DIM-SDK'
 
@@ -74,8 +74,7 @@ __all__ = [
     #   Content/Command Processors
     #
     'ContentProcessor', 'ForwardContentProcessor',
-    'CommandProcessor', 'HistoryCommandProcessor',
-    'GroupCommandProcessor',
+    'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
     'MetaCommandProcessor', 'DocumentCommandProcessor',
@@ -87,6 +86,6 @@ __all__ = [
     # group
     'Polylogue', 'Chatroom', 'ChatroomDataSource',
 
-    'AddressNameService', 'Facebook',
-    'Messenger', 'MessagePacker', 'MessageProcessor',
+    'AddressNameService', 'CipherKeyDelegate',
+    'Facebook', 'Messenger', 'MessagePacker', 'MessageProcessor',
 ]

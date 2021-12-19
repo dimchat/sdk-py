@@ -41,7 +41,7 @@ from dimp import NetworkType, ID, User, Group
 
 class Station(User):
 
-    def __init__(self, identifier: ID, host: str = None, port: int = 0):
+    def __init__(self, identifier: ID, host: str, port: int):
         super().__init__(identifier=identifier)
         assert identifier.type == NetworkType.STATION, 'Station ID type error: %s' % identifier
         self.__host = host

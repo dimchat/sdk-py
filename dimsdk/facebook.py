@@ -47,18 +47,45 @@ from .network import ServiceProvider, Station, Robot
 from .group import Polylogue
 
 
+def thanos(planet: dict, finger: int) -> int:
+    """ Thanos can kill half lives of a world with a snap of the finger """
+    keys = planet.keys()
+    for key in keys:
+        if (++finger & 1) == 1:
+            # kill it
+            planet.pop(key)
+    return finger
+
+
 class Facebook(Barrack):
 
-    @property
-    def current_user(self) -> Optional[User]:
-        """
-        Get current user (for signing and sending message)
+    def __init__(self):
+        super().__init__()
+        # memory caches
+        self.__users = {}   # ID -> User
+        self.__groups = {}  # ID -> Group
 
-        :return: User
+    def reduce_memory(self) -> int:
         """
-        users = self.local_users
-        if users is not None and len(users) > 0:
-            return users[0]
+        Call it when received 'UIApplicationDidReceiveMemoryWarningNotification',
+        this will remove 50% of cached objects
+
+        :return: number of survivors
+        """
+        finger = 0
+        finger = thanos(self.__users, finger)
+        finger = thanos(self.__groups, finger)
+        return finger >> 1
+
+    def cache_user(self, user: User):
+        if user.data_source is None:
+            user.data_source = self
+        self.__users[user.identifier] = user
+
+    def cache_group(self, group: Group):
+        if group.data_source is None:
+            group.data_source = self
+        self.__groups[group.identifier] = group
 
     @abstractmethod
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
@@ -146,6 +173,20 @@ class Facebook(Barrack):
         if meta is not None:
             return document.verify(public_key=meta.key)
 
+    # group membership
+
+    def is_founder(self, member: ID, group: ID) -> bool:
+        g_meta = self.meta(identifier=group)
+        assert g_meta is not None, 'failed to get meta for group: %s' % group
+        u_meta = self.meta(identifier=member)
+        assert u_meta is not None, 'failed to get meta for member: %s' % member
+        return Meta.matches(meta=g_meta, key=u_meta.key)
+
+    def is_owner(self, member: ID, group: ID) -> bool:
+        if group.type == NetworkType.POLYLOGUE:
+            return self.is_founder(member=member, group=group)
+        raise AssertionError('only Polylogue so far')
+
     def create_user(self, identifier: ID) -> Optional[User]:
         if identifier.is_broadcast:
             # create user 'anyone@anywhere'
@@ -160,7 +201,8 @@ class Facebook(Barrack):
         if u_type == NetworkType.ROBOT:
             return Robot(identifier=identifier)
         if u_type == NetworkType.STATION:
-            return Station(identifier=identifier)
+            # TODO: get station address before create it
+            return Station(identifier=identifier, host='0.0.0.0', port=0)
         raise TypeError('unsupported user type: %s' % u_type)
 
     def create_group(self, identifier: ID) -> Optional[Group]:
@@ -179,16 +221,28 @@ class Facebook(Barrack):
             return ServiceProvider(identifier=identifier)
         raise TypeError('unsupported group type: %s' % g_type)
 
-    # group membership
+    #
+    #   Entity Delegate
+    #
 
-    def is_founder(self, member: ID, group: ID) -> bool:
-        g_meta = self.meta(identifier=group)
-        assert g_meta is not None, 'failed to get meta for group: %s' % group
-        u_meta = self.meta(identifier=member)
-        assert u_meta is not None, 'failed to get meta for member: %s' % member
-        return g_meta.match_key(key=u_meta.key)
+    # Override
+    def user(self, identifier: ID) -> Optional[User]:
+        # 1. get from user cache
+        usr = self.__users.get(identifier)
+        if usr is None:
+            # 2. create and cache it
+            usr = self.create_user(identifier=identifier)
+            if usr is not None:
+                self.cache_user(user=usr)
+        return usr
 
-    def is_owner(self, member: ID, group: ID) -> bool:
-        if group.type == NetworkType.POLYLOGUE:
-            return self.is_founder(member=member, group=group)
-        raise AssertionError('only Polylogue so far')
+    # Override
+    def group(self, identifier: ID) -> Optional[Group]:
+        # 1. get from group cache
+        grp = self.__groups.get(identifier)
+        if grp is None:
+            # 2. create and cache it
+            grp = self.create_group(identifier=identifier)
+            if grp is not None:
+                self.cache_group(group=grp)
+        return grp

@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+#
+#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#
+#                                Written in 2019 by Moky <albert.moky@gmail.com>
+#
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2020 Albert Moky
+# Copyright (c) 2019 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +28,34 @@
 # SOFTWARE.
 # ==============================================================================
 
-"""
-    Base Coder
-    ~~~~~~~~~~
-
-    Base58
-"""
-
+from abc import ABC, abstractmethod
 from typing import Optional
 
-import base58
-
-from dimp import DataCoder, Base58
-
-
-"""
-    Base58
-"""
+from dimp import SymmetricKey
+from dimp import ID
 
 
-class B58(DataCoder):
+class CipherKeyDelegate(ABC):
 
-    # Override
-    def encode(self, data: bytes) -> str:
-        """ BASE-58 Encode """
-        return base58.b58encode(data).decode('utf-8')
+    @abstractmethod
+    def cipher_key(self, sender: ID, receiver: ID, generate: bool = False) -> Optional[SymmetricKey]:
+        """
+        Get cipher key for encrypt message from 'sender' to 'receiver'
 
-    # Override
-    def decode(self, string: str) -> Optional[bytes]:
-        """ BASE-58 Decode """
-        return base58.b58decode(string)
+        :param sender:   user or contact ID
+        :param receiver: contact or user/group ID
+        :param generate: generate when key not exists
+        :return:         cipher key
+        """
+        raise NotImplemented
 
+    @abstractmethod
+    def cache_cipher_key(self, key: SymmetricKey, sender: ID, receiver: ID):
+        """
+        Cache cipher key for reusing, with direction (from 'sender' to 'receiver')
 
-Base58.coder = B58()
+        :param key:      cipher key from a contact
+        :param sender:   user or contact ID
+        :param receiver: contact or user/group ID
+        """
+        raise NotImplemented

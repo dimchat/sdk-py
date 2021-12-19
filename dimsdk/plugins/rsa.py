@@ -46,7 +46,7 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
         self.__key = rsa_key
         self.__data = rsa_key.exportKey(format='DER')
 
-    @property
+    @property  # Override
     def data(self) -> bytes:
         return self.__data
 
@@ -62,11 +62,13 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
         else:
             return int(bits)
 
+    # Override
     def encrypt(self, data: bytes) -> bytes:
         # noinspection PyTypeChecker
         cipher = Cipher_PKCS1_v1_5.new(self.__key)
         return cipher.encrypt(data)
 
+    # Override
     def verify(self, data: bytes, signature: bytes) -> bool:
         hash_obj = SHA256.new(data)
         verifier = Signature_PKCS1_v1_5.new(self.__key)
@@ -107,7 +109,7 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
         self.__key = rsa_key
         self.__data = rsa_key.exportKey(format='DER')
 
-    @property
+    @property  # Override
     def data(self) -> bytes:
         return self.__data
 
@@ -123,7 +125,7 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
         else:
             return int(bits)
 
-    @property
+    @property  # Override
     def public_key(self) -> Union[PublicKey, EncryptKey]:
         pk = self.__key.publickey()
         data = pk.exportKey()
@@ -136,6 +138,7 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
         }
         return RSAPublicKey(info)
 
+    # Override
     # noinspection PyTypeChecker
     def decrypt(self, data: bytes) -> Optional[bytes]:
         cipher = Cipher_PKCS1_v1_5.new(self.__key)
@@ -146,6 +149,7 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
             print('error: ' + sentinel)
         return plaintext
 
+    # Override
     def sign(self, data: bytes) -> bytes:
         hash_obj = SHA256.new(data)
         signer = Signature_PKCS1_v1_5.new(self.__key)

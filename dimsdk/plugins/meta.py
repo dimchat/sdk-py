@@ -26,7 +26,7 @@
 from typing import Union, Optional
 
 from dimp import VerifyKey
-from dimp import ID, NetworkType, Address
+from dimp import NetworkType, Address
 from dimp import MetaType, BaseMeta
 
 from .btc import BTCAddress
@@ -57,20 +57,17 @@ class DefaultMeta(BaseMeta):
         # caches
         self.__addresses = {}
 
+    # Override
     def generate_address(self, network: Union[NetworkType, int]) -> Address:
         assert self.type == MetaType.MKM, 'meta version error: %d' % self.type
         if isinstance(network, NetworkType):
             network = network.value
         address = self.__addresses.get(network)
-        if address is None and self.valid:
+        if address is None:
             # generate and cache it
-            address = BTCAddress.generate(self.fingerprint, network=network)
+            address = BTCAddress.from_data(self.fingerprint, network=network)
             self.__addresses[network] = address
         return address
-
-    def match_identifier(self, identifier: ID) -> bool:
-        if isinstance(identifier.address, BTCAddress):
-            return super().match_identifier(identifier=identifier)
 
 
 """
@@ -98,16 +95,13 @@ class BTCMeta(BaseMeta):
         # caches
         self.__address: Optional[Address] = None
 
+    # Override
     def generate_address(self, network: Union[NetworkType, int]) -> Address:
         assert self.type in [MetaType.BTC, MetaType.ExBTC], 'meta version error: %d' % self.type
-        if self.__address is None and self.valid:
+        if self.__address is None:
             # generate and cache it
-            self.__address = BTCAddress.generate(self.key.data, network=network)
+            self.__address = BTCAddress.from_data(self.key.data, network=network)
         return self.__address
-
-    def match_identifier(self, identifier: ID) -> bool:
-        if isinstance(identifier.address, BTCAddress):
-            return super().match_identifier(identifier=identifier)
 
 
 """
@@ -134,13 +128,10 @@ class ETHMeta(BaseMeta):
         # caches
         self.__address: Optional[Address] = None
 
+    # Override
     def generate_address(self, network: Union[NetworkType, int]) -> Address:
         assert self.type in [MetaType.ETH, MetaType.ExETH], 'meta version error: %d' % self.type
-        if self.__address is None and self.valid:
+        if self.__address is None:
             # generate and cache it
-            self.__address = ETHAddress.generate(self.key.data)
+            self.__address = ETHAddress.from_data(self.key.data)
         return self.__address
-
-    def match_identifier(self, identifier: ID) -> bool:
-        if isinstance(identifier.address, ETHAddress):
-            return super().match_identifier(identifier=identifier)

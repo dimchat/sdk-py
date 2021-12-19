@@ -195,7 +195,7 @@ class CryptoTestCase(unittest.TestCase):
         s_key = self.__private_key(pem=pem)
         p_key = s_key.public_key
         pub = p_key.data
-        address = ETHAddress.generate(pub)
+        address = ETHAddress.from_data(fingerprint=pub)
         print('ETH address: %s' % address)
         self.assertEqual(exp, address)
 

@@ -48,7 +48,7 @@ class ECCPublicKey(Dictionary, PublicKey):
         self.__key = key
         self.__data = key.to_string(encoding='uncompressed')
 
-    @property
+    @property  # Override
     def data(self) -> bytes:
         return self.__data
 
@@ -64,6 +64,7 @@ class ECCPublicKey(Dictionary, PublicKey):
         else:
             return int(bits)
 
+    # Override
     def verify(self, data: bytes, signature: bytes) -> bool:
         try:
             return self.__key.verify(signature=signature, data=data,
@@ -102,7 +103,7 @@ class ECCPrivateKey(Dictionary, PrivateKey):
             self.__key = key
             self.__data = key.to_string()
 
-    @property
+    @property  # Override
     def data(self) -> bytes:
         return self.__data
 
@@ -118,7 +119,7 @@ class ECCPrivateKey(Dictionary, PrivateKey):
         else:
             return int(bits)
 
-    @property
+    @property  # Override
     def public_key(self) -> Union[PublicKey]:
         key = self.__key.get_verifying_key()
         # store public key in X.509 format
@@ -132,5 +133,6 @@ class ECCPrivateKey(Dictionary, PrivateKey):
         }
         return ECCPublicKey(info)
 
+    # Override
     def sign(self, data: bytes) -> bytes:
         return self.__key.sign(data=data, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_der)

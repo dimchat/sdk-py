@@ -35,7 +35,6 @@
     A map for short name to ID, just like DNS
 """
 
-from abc import ABC, abstractmethod
 from typing import Optional, List
 
 from dimp import ID, ANYONE, EVERYONE, FOUNDER
@@ -80,7 +79,7 @@ keywords = [
 ]
 
 
-class AddressNameService(ABC):
+class AddressNameService:
 
     def __init__(self):
         super().__init__()
@@ -97,16 +96,6 @@ class AddressNameService(ABC):
     def is_reserved(name: str) -> bool:
         return name in keywords
 
-    def cache(self, name: str, identifier: ID = None) -> bool:
-        if self.is_reserved(name):
-            # this name is reserved, cannot register
-            return False
-        if identifier is None:
-            self.__caches.pop(name, None)
-        else:
-            self.__caches[name] = identifier
-        return True
-
     def identifier(self, name: str) -> Optional[ID]:
         """ Get ID by short name """
         return self.__caches.get(name)
@@ -119,7 +108,16 @@ class AddressNameService(ABC):
                 array.append(value)
         return array
 
-    @abstractmethod
+    def cache(self, name: str, identifier: ID = None) -> bool:
+        if self.is_reserved(name):
+            # this name is reserved, cannot register
+            return False
+        if identifier is None:
+            self.__caches.pop(name, None)
+        else:
+            self.__caches[name] = identifier
+        return True
+
     def save(self, name: str, identifier: ID = None) -> bool:
         """
         Save ANS record
@@ -128,5 +126,6 @@ class AddressNameService(ABC):
         :param identifier: user ID; if empty, means delete this name
         :return: True on success
         """
-        if not self.cache(name=name, identifier=identifier):
-            return False
+        if self.cache(name=name, identifier=identifier):
+            # TODO: permanent storage?
+            return True

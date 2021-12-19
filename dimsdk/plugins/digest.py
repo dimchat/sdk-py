@@ -37,6 +37,7 @@ from dimp import DataDigester, KECCAK256
 
 class K(DataDigester):
 
+    # Override
     def digest(self, data: bytes) -> bytes:
         """ Keccak256 digest """
         hash_obj = keccak.new(digest_bits=256)

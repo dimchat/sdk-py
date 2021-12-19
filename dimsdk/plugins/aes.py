@@ -49,7 +49,7 @@ class AESKey(Dictionary, SymmetricKey):
         self.__data = None
         self.__iv = None
 
-    @property
+    @property  # Override
     def data(self) -> bytes:
         if self.__data is None:
             base64 = self.get('data')
@@ -89,11 +89,13 @@ class AESKey(Dictionary, SymmetricKey):
         else:
             return int(bits)
 
+    # Override
     def encrypt(self, data: bytes) -> bytes:
         data = pkcs7_pad(data=data, block_size=AES.block_size)
         key = AES.new(self.data, AES.MODE_CBC, self.iv)
         return key.encrypt(data)
 
+    # Override
     def decrypt(self, data: bytes) -> Optional[bytes]:
         key = AES.new(self.data, AES.MODE_CBC, self.iv)
         plaintext = key.decrypt(data)

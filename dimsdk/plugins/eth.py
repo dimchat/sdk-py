@@ -46,7 +46,7 @@ class ETHAddress(String, Address):
     def __init__(self, address: str):
         super().__init__(string=address)
 
-    @property
+    @property  # Override
     def network(self) -> int:
         return NetworkType.MAIN.value
 
@@ -64,7 +64,7 @@ class ETHAddress(String, Address):
     #   Factory methods
     #
     @classmethod
-    def generate(cls, fingerprint: bytes) -> Address:
+    def from_data(cls, fingerprint: bytes) -> Address:
         """
         Generate ETH address with key.data
 
@@ -82,7 +82,7 @@ class ETHAddress(String, Address):
         return cls(address=address)
 
     @classmethod
-    def parse(cls, address: str) -> Optional[Address]:
+    def from_str(cls, address: str) -> Optional[Address]:
         """
         Parse a string for ETH address
 

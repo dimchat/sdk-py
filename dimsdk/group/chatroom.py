@@ -68,16 +68,18 @@ class Chatroom(Group):
         super().__init__(identifier=identifier)
         assert identifier.type == NetworkType.CHATROOM, 'Chatroom ID type error: %s' % identifier
 
-    @Group.delegate.getter
-    def delegate(self) -> Optional[ChatroomDataSource]:
-        facebook = super().delegate
+    @Group.data_source.getter  # Override
+    def data_source(self) -> Optional[ChatroomDataSource]:
+        facebook = super().data_source
         assert facebook is None or isinstance(facebook, ChatroomDataSource), 'error: %s' % facebook
         return facebook
 
-    # @delegate.setter
-    # def delegate(self, value: ChatroomDataSource):
-    #     super(Chatroom, Chatroom).delegate.__set__(self, value)
+    # @data_source.setter  # Override
+    # def data_source(self, value: ChatroomDataSource):
+    #     super(Chatroom, Chatroom).data_source.__set__(self, value)
 
     @property
     def admins(self) -> Optional[List[ID]]:
-        return self.delegate.admins(identifier=self.identifier)
+        delegate = self.data_source
+        assert delegate is not None, 'chatroom delegate not set yet'
+        return delegate.admins(identifier=self.identifier)

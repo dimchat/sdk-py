@@ -54,7 +54,7 @@ class BTCAddress(String, Address):
         else:
             self.__network = network
 
-    @property
+    @property  # Override
     def network(self) -> int:
         return self.__network
 
@@ -62,7 +62,7 @@ class BTCAddress(String, Address):
     #   Factory methods
     #
     @classmethod
-    def generate(cls, fingerprint: bytes, network: Union[NetworkType, int]) -> Address:
+    def from_data(cls, fingerprint: bytes, network: Union[NetworkType, int]) -> Address:
         """
         Generate address with fingerprint and network ID
 
@@ -79,7 +79,7 @@ class BTCAddress(String, Address):
         return cls(address=address, network=network)
 
     @classmethod
-    def parse(cls, address: str) -> Optional[Address]:
+    def from_str(cls, address: str) -> Optional[Address]:
         """
         Parse a string for BTC address
 

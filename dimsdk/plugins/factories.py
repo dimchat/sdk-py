@@ -29,15 +29,17 @@ from mkm.crypto.cryptography import key_algorithm
 from mkm.meta import meta_type
 from mkm.profile import document_identifier
 
+from mkm import BaseAddressFactory
+
 from dimp import utf8_encode
 
 from dimp import AsymmetricKey, SignKey, VerifyKey
-from dimp import PublicKey
-from dimp import PrivateKey
-from dimp import SymmetricKey
-from dimp import ID, Address, AddressFactory
-from dimp import Meta, MetaType
-from dimp import Document
+from dimp import PublicKey, PublicKeyFactory
+from dimp import PrivateKey, PrivateKeyFactory
+from dimp import SymmetricKey, SymmetricKeyFactory
+from dimp import ID, Address
+from dimp import MetaType, Meta, MetaFactory
+from dimp import Document, DocumentFactory
 from dimp import BaseDocument, BaseVisa, BaseBulletin
 
 from .rsa import RSAPublicKey, RSAPrivateKey
@@ -49,8 +51,9 @@ from .eth import ETHAddress
 from .meta import DefaultMeta, BTCMeta, ETHMeta
 
 
-class GeneralPublicFactory(PublicKey.Factory):
+class GeneralPublicFactory(PublicKeyFactory):
 
+    # Override
     def parse_public_key(self, key: dict) -> Optional[PublicKey]:
         algorithm = key_algorithm(key=key)
         if algorithm == AsymmetricKey.RSA:
@@ -59,18 +62,20 @@ class GeneralPublicFactory(PublicKey.Factory):
             return ECCPublicKey(key=key)
 
 
-class GeneralPrivateFactory(PrivateKey.Factory):
+class GeneralPrivateFactory(PrivateKeyFactory):
 
     def __init__(self, algorithm: str):
         super().__init__()
         self.__algorithm = algorithm
 
+    # Override
     def generate_private_key(self) -> Optional[PrivateKey]:
         if self.__algorithm == AsymmetricKey.RSA:
             return RSAPrivateKey()
         if self.__algorithm == AsymmetricKey.ECC:
             return ECCPrivateKey()
 
+    # Override
     def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
         algorithm = key_algorithm(key=key)
         if algorithm == AsymmetricKey.RSA:
@@ -79,19 +84,21 @@ class GeneralPrivateFactory(PrivateKey.Factory):
             return ECCPrivateKey(key=key)
 
 
-class GeneralSymmetricFactory(SymmetricKey.Factory):
+class GeneralSymmetricFactory(SymmetricKeyFactory):
 
     def __init__(self, algorithm: str):
         super().__init__()
         self.__algorithm = algorithm
         self.__plain_key = PlainKey()
 
+    # Override
     def generate_symmetric_key(self) -> Optional[SymmetricKey]:
         if self.__algorithm == SymmetricKey.AES:
             return AESKey()
         if self.__algorithm == PlainKey.PLAIN:
             return self.__plain_key
 
+    # Override
     def parse_symmetric_key(self, key: dict) -> Optional[SymmetricKey]:
         algorithm = key_algorithm(key=key)
         if algorithm == SymmetricKey.AES:
@@ -100,29 +107,23 @@ class GeneralSymmetricFactory(SymmetricKey.Factory):
             return self.__plain_key
 
 
-class GeneralAddressFactory(AddressFactory):
+class GeneralAddressFactory(BaseAddressFactory):
 
+    # Override
     def create_address(self, address: str) -> Optional[Address]:
         if len(address) == 42:
-            return ETHAddress.parse(address=address)
-        return BTCAddress.parse(address=address)
+            return ETHAddress.from_str(address=address)
+        return BTCAddress.from_str(address=address)
 
 
-class GeneralMetaFactory(Meta.Factory):
+class GeneralMetaFactory(MetaFactory):
 
     def __init__(self, version: Union[MetaType, int]):
         super().__init__()
         self.__type = version
 
-    def create_meta(self, key: VerifyKey, seed: Optional[str] = None, fingerprint: Optional[bytes] = None) -> Meta:
-        if self.__type == MetaType.MKM:
-            return DefaultMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
-        if self.__type in [MetaType.BTC, MetaType.ExBTC]:
-            return BTCMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
-        if self.__type in [MetaType.ETH, MetaType.ExETH]:
-            return ETHMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
-
-    def generate_meta(self, key: SignKey, seed: Optional[str] = None) -> Meta:
+    # Override
+    def generate_meta(self, key: SignKey, seed: Optional[str]) -> Meta:
         if seed is None or len(seed) == 0:
             fingerprint = None
         else:
@@ -130,17 +131,31 @@ class GeneralMetaFactory(Meta.Factory):
         assert isinstance(key, PrivateKey), 'private key error: %s' % key
         return self.create_meta(key=key.public_key, seed=seed, fingerprint=fingerprint)
 
+    # Override
+    def create_meta(self, key: VerifyKey, seed: Optional[str], fingerprint: Optional[bytes]) -> Meta:
+        if self.__type == MetaType.MKM:
+            return DefaultMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
+        if self.__type in [MetaType.BTC, MetaType.ExBTC]:
+            return BTCMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
+        if self.__type in [MetaType.ETH, MetaType.ExETH]:
+            return ETHMeta(version=self.__type, key=key, seed=seed, fingerprint=fingerprint)
+
+    # Override
     def parse_meta(self, meta: dict) -> Optional[Meta]:
         version = meta_type(meta=meta)
         if version == MetaType.MKM:
-            return DefaultMeta(meta=meta)
-        if version in [MetaType.BTC, MetaType.ExBTC]:
-            return BTCMeta(meta=meta)
-        if version in [MetaType.ETH, MetaType.ExETH]:
-            return ETHMeta(meta=meta)
+            out = DefaultMeta(meta=meta)
+        elif version in [MetaType.BTC, MetaType.ExBTC]:
+            out = BTCMeta(meta=meta)
+        elif version in [MetaType.ETH, MetaType.ExETH]:
+            out = ETHMeta(meta=meta)
+        else:
+            raise TypeError('unknown meta type: %d' % version)
+        if Meta.check(meta=out):
+            return out
 
 
-class GeneralDocumentFactory(Document.Factory):
+class GeneralDocumentFactory(DocumentFactory):
 
     def __init__(self, doc_type: str):
         super().__init__()
@@ -156,8 +171,9 @@ class GeneralDocumentFactory(Document.Factory):
                 return Document.PROFILE
         return self.__type
 
+    # Override
     def create_document(self, identifier: ID,
-                        data: Union[bytes, str, None] = None, signature: Union[bytes, str, None] = None) -> Document:
+                        data: Union[bytes, str, None], signature: Union[bytes, str, None]) -> Document:
         doc_type = self.get_type(identifier=identifier)
         if doc_type == Document.BULLETIN:
             return BaseBulletin(identifier=identifier, data=data, signature=signature)
@@ -166,6 +182,7 @@ class GeneralDocumentFactory(Document.Factory):
         else:
             return BaseDocument(doc_type=doc_type, identifier=identifier, data=data, signature=signature)
 
+    # Override
     def parse_document(self, document: dict) -> Optional[Document]:
         identifier = document_identifier(document=document)
         if identifier is not None:
