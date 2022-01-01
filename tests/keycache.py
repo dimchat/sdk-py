@@ -11,7 +11,7 @@ from abc import abstractmethod
 from typing import Optional
 
 from dimp import SymmetricKey, ID
-from dimp import CipherKeyDelegate
+from dimsdk import CipherKeyDelegate
 from dimsdk import PlainKey
 
 

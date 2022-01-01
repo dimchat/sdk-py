@@ -35,74 +35,39 @@
     Transform and send message
 """
 
-import weakref
 from typing import Optional, List
 
-from dimp import ID, SymmetricKey, SecureMessage
-from dimp import EntityDelegate
+from dimp.transceiver import is_broadcast
+from dimp import ID, SymmetricKey
+from dimp import Content
+from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Transceiver, Packer, Processor
-from dkd import InstantMessage, ReliableMessage, Content
 
-from .facebook import Facebook
 from .delegate import CipherKeyDelegate
+from .transmitter import Transmitter
 
 
-class Messenger(Transceiver, Packer, Processor, CipherKeyDelegate):
+class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, Transmitter):
 
-    def __init__(self):
-        super().__init__()
-        self.__facebook = None   # ReferenceType
-        self.__key_cache = None  # ReferenceType
-        self.__packer = None     # ReferenceType
-        self.__processor = None  # ReferenceType
-
-    #
-    #   Delegate for User/Group
-    #
-    @property
-    def facebook(self) -> Facebook:
-        return self.__facebook()
-
-    @facebook.setter
-    def facebook(self, barrack: Facebook):
-        self.__facebook = weakref.ref(barrack)
-
-    @property  # Override
-    def barrack(self) -> EntityDelegate:
-        return self.facebook
-
-    #
-    #   Delegate for Cipher Key
-    #
     @property
     def key_cache(self) -> CipherKeyDelegate:
-        return self.__key_cache()
+        """ Delegate for Cipher Key """
+        raise NotImplemented
 
-    @key_cache.setter
-    def key_cache(self, delegate: CipherKeyDelegate):
-        self.__key_cache = weakref.ref(delegate)
-
-    #
-    #   Delegate for Packing Message
-    #
     @property
     def packer(self) -> Packer:
-        return self.__packer()
+        """ Delegate for Packing Message """
+        raise NotImplemented
 
-    @packer.setter
-    def packer(self, delegate: Packer):
-        self.__packer = weakref.ref(delegate)
-
-    #
-    #   Delegate for Processing Message
-    #
     @property
     def processor(self) -> Processor:
-        return self.__processor()
+        """ Delegate for Processing Message """
+        raise NotImplemented
 
-    @processor.setter
-    def processor(self, delegate: Processor):
-        self.__processor = weakref.ref(delegate)
+    @property
+    def transmitter(self) -> Transmitter:
+        """ Delegate for Transmitting Message """
+        raise NotImplemented
 
     #
     #   Interfaces for Cipher Key
@@ -187,6 +152,25 @@ class Messenger(Transceiver, Packer, Processor, CipherKeyDelegate):
         return delegate.process_content(content=content, r_msg=r_msg)
 
     #
+    #   Interfaces for Transmitting Message
+    #
+
+    # Override
+    def send_content(self, sender: Optional[ID], receiver: ID, content: Content, priority: int) -> bool:
+        delegate = self.transmitter
+        return delegate.send_content(sender=sender, receiver=receiver, content=content, priority=priority)
+
+    # Override
+    def send_instant_message(self, msg: InstantMessage, priority: int) -> bool:
+        delegate = self.transmitter
+        return delegate.send_instant_message(msg=msg, priority=priority)
+
+    # Override
+    def send_reliable_message(self, msg: ReliableMessage, priority: int) -> bool:
+        delegate = self.transmitter
+        return delegate.send_reliable_message(msg=msg, priority=priority)
+
+    #
     #   SecureMessageDelegate
     #
 
@@ -203,7 +187,7 @@ class Messenger(Transceiver, Packer, Processor, CipherKeyDelegate):
     def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
         content = super().deserialize_content(data=data, key=key, msg=msg)
         assert content is not None, 'content error: %d' % len(data)
-        if not self._is_broadcast(msg=msg):
+        if not is_broadcast(msg=msg):
             # check and cache key for reuse
             group = self.overt_group(content=content)
             if group is None:

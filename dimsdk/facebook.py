@@ -221,6 +221,48 @@ class Facebook(Barrack):
             return ServiceProvider(identifier=identifier)
         raise TypeError('unsupported group type: %s' % g_type)
 
+    @property
+    def local_users(self) -> List[User]:
+        """
+        Get all local users (for decrypting received message)
+
+        :return: users with private key
+        """
+        raise NotImplemented
+
+    @property
+    def current_user(self) -> Optional[User]:
+        """ Get current user (for signing and sending message) """
+        users = self.local_users
+        if users is not None and len(users) > 0:
+            return users[0]
+
+    def select_user(self, receiver: ID) -> Optional[User]:
+        """ Select local user for receiver """
+        users = self.local_users
+        assert users is not None and len(users) > 0, 'local users should not be empty'
+        if receiver.is_broadcast:
+            return users[0]
+        if receiver.is_group:
+            # group message (recipient not designated)
+            members = self.members(identifier=receiver)
+            if members is None or len(members) == 0:
+                # TODO: group not ready, waiting for group info
+                return None
+            for item in users:
+                assert isinstance(item, User), 'local user error: %s' % item
+                if item.identifier in members:
+                    # DISCUSS: set this item to be current user?
+                    return item
+        else:
+            # 1. personal message
+            # 2. split group message
+            for item in users:
+                assert isinstance(item, User), 'local user error: %s' % item
+                if item.identifier == receiver:
+                    # DISCUSS: set this item to be current user?
+                    return item
+
     #
     #   Entity Delegate
     #

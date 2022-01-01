@@ -42,14 +42,15 @@ from .facebook import Facebook
 
 class MessageProcessor(Processor):
 
-    def __init__(self, messenger: Messenger):
+    def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__()
+        self.__facebook = weakref.ref(facebook)
         self.__messenger = weakref.ref(messenger)
         self.__factory = self._create_processor_factory()
 
     # protected
     def _create_processor_factory(self) -> ProcessorFactory:
-        return ProcessorFactory(messenger=self.messenger)
+        return ProcessorFactory(facebook=self.facebook, messenger=self.messenger)
 
     @property
     def messenger(self) -> Messenger:
@@ -57,7 +58,7 @@ class MessageProcessor(Processor):
 
     @property
     def facebook(self) -> Facebook:
-        return self.messenger.facebook
+        return self.__facebook()
 
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
         return self.__factory.get_processor(content=content)

@@ -57,8 +57,9 @@ from .grp_reset import ResetCommandProcessor
 
 class ProcessorFactory:
 
-    def __init__(self, messenger):
+    def __init__(self, facebook, messenger):
         super().__init__()
+        self.__facebook = weakref.ref(facebook)
         self.__messenger = weakref.ref(messenger)
         self.__content_processors: Dict[int, ContentProcessor] = {}
         self.__command_processors: Dict[str, CommandProcessor] = {}
@@ -66,6 +67,10 @@ class ProcessorFactory:
     @property
     def messenger(self):  # Messenger
         return self.__messenger()
+
+    @property
+    def facebook(self):  # Facebook
+        return self.__facebook()
 
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
         """
@@ -127,7 +132,7 @@ class ProcessorFactory:
         """
         # core contents
         if msg_type == ContentType.FORWARD.value:
-            return ForwardContentProcessor(messenger=self.messenger)
+            return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
     # protected
     def _create_command_processor(self, msg_type: int, cmd_name: str) -> Optional[CommandProcessor]:
@@ -140,32 +145,32 @@ class ProcessorFactory:
         """
         # meta
         if cmd_name == Command.META:
-            return MetaCommandProcessor(messenger=self.messenger)
+            return MetaCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         # document
         if cmd_name == Command.DOCUMENT:
-            return DocumentCommandProcessor(messenger=self.messenger)
+            return DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif cmd_name in ['profile', 'visa', 'bulletin']:
             # share the same processor
             cpu = self._get_command_processor(cmd_name=Command.DOCUMENT)
             if cpu is None:
-                cpu = DocumentCommandProcessor(messenger=self.messenger)
+                cpu = DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
                 self._put_command_processor(cmd_name=Command.DOCUMENT, cpu=cpu)
             return cpu
         # group
         if cmd_name == 'group':
-            return GroupCommandProcessor(messenger=self.messenger)
+            return GroupCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif cmd_name == GroupCommand.INVITE:
-            return InviteCommandProcessor(messenger=self.messenger)
+            return InviteCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif cmd_name == GroupCommand.EXPEL:
-            return ExpelCommandProcessor(messenger=self.messenger)
+            return ExpelCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif cmd_name == GroupCommand.QUIT:
-            return QuitCommandProcessor(messenger=self.messenger)
+            return QuitCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif cmd_name == GroupCommand.QUERY:
-            return QueryCommandProcessor(messenger=self.messenger)
+            return QueryCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif cmd_name == GroupCommand.RESET:
-            return ResetCommandProcessor(messenger=self.messenger)
+            return ResetCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         # others
         if msg_type == ContentType.COMMAND.value:
-            return CommandProcessor(messenger=self.messenger)
+            return CommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif msg_type == ContentType.HISTORY.value:
-            return HistoryCommandProcessor(messenger=self.messenger)
+            return HistoryCommandProcessor(facebook=self.facebook, messenger=self.messenger)

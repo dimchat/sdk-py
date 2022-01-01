@@ -42,8 +42,9 @@ from .messenger import Messenger
 
 class MessagePacker(Packer):
 
-    def __init__(self, messenger: Messenger):
+    def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__()
+        self.__facebook = weakref.ref(facebook)
         self.__messenger = weakref.ref(messenger)
 
     @property
@@ -52,7 +53,7 @@ class MessagePacker(Packer):
 
     @property
     def facebook(self) -> Facebook:
-        return self.messenger.facebook
+        return self.__facebook()
 
     # Override
     def overt_group(self, content: Content) -> Optional[ID]:

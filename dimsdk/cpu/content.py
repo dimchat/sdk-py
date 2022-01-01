@@ -48,8 +48,9 @@ class ContentProcessor:
 
     FMT_CONTENT_NOT_SUPPORT = 'Content (type: %s) not support yet!'
 
-    def __init__(self, messenger):
+    def __init__(self, facebook, messenger):
         super().__init__()
+        self.__facebook = weakref.ref(facebook)
         self.__messenger = weakref.ref(messenger)
 
     @property
@@ -58,7 +59,7 @@ class ContentProcessor:
 
     @property
     def facebook(self):  # Facebook
-        return self.messenger.facebook
+        return self.__facebook()
 
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         """

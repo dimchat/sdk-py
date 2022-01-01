@@ -45,6 +45,7 @@ from .group import Polylogue, Chatroom, ChatroomDataSource
 
 from .ans import AddressNameService
 from .delegate import CipherKeyDelegate
+from .transmitter import Transmitter
 
 from .facebook import Facebook
 from .packer import MessagePacker
@@ -86,6 +87,6 @@ __all__ = [
     # group
     'Polylogue', 'Chatroom', 'ChatroomDataSource',
 
-    'AddressNameService', 'CipherKeyDelegate',
+    'AddressNameService', 'CipherKeyDelegate', 'Transmitter',
     'Facebook', 'Messenger', 'MessagePacker', 'MessageProcessor',
 ]
