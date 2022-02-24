@@ -37,19 +37,41 @@ class ECCPublicKey(Dictionary, PublicKey):
 
     def __init__(self, key: dict):
         super().__init__(key)
-        # data in 'PEM' format
-        data = key['data']
-        data_len = len(data)
-        if data_len == 130 or data_len == 128:
-            data = bytes.fromhex(data)
-            key = ecdsa.VerifyingKey.from_string(data, curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
-        else:
-            key = ecdsa.VerifyingKey.from_pem(data, hashfunc=hashlib.sha256)
-        self.__key = key
-        self.__data = key.to_string(encoding='uncompressed')
+        self.__key = None
+        self.__data = None
+
+    @property
+    def curve(self):
+        return ecdsa.SECP256k1
+
+    @property
+    def hash_func(self):
+        return hashlib.sha256
+
+    @property
+    def sig_decode(self):
+        return ecdsa.util.sigdecode_der
+
+    @property  # private
+    def ecc_key(self) -> ecdsa.VerifyingKey:
+        if self.__key is None:
+            # data in 'PEM' format
+            data = self.get('data')
+            assert data is not None, 'failed to get key data: %s' % self
+            data_len = len(data)
+            if data_len == 130 or data_len == 128:
+                data = bytes.fromhex(data)
+                self.__key = ecdsa.VerifyingKey.from_string(data, curve=self.curve, hashfunc=self.hash_func)
+            else:
+                self.__key = ecdsa.VerifyingKey.from_pem(data, hashfunc=self.hash_func)
+        return self.__key
 
     @property  # Override
     def data(self) -> bytes:
+        if self.__data is None:
+            ecc_key = self.ecc_key
+            assert ecc_key is not None, 'ecc key error: %s' % self
+            self.__data = ecc_key.to_string(encoding='uncompressed')
         return self.__data
 
     @property
@@ -67,8 +89,8 @@ class ECCPublicKey(Dictionary, PublicKey):
     # Override
     def verify(self, data: bytes, signature: bytes) -> bool:
         try:
-            return self.__key.verify(signature=signature, data=data,
-                                     hashfunc=hashlib.sha256, sigdecode=ecdsa.util.sigdecode_der)
+            verifier = self.ecc_key
+            return verifier.verify(signature=signature, data=data, hashfunc=self.hash_func, sigdecode=self.sig_decode)
         except ecdsa.BadSignatureError:
             return False
 
@@ -80,12 +102,11 @@ class ECCPrivateKey(Dictionary, PrivateKey):
         if key is None:
             key = {'algorithm': AsymmetricKey.ECC}
         super().__init__(key)
-        # data in 'PEM' format
-        data = key.get('data')
-        if data is None or len(data) == 0:
+        # check key data
+        pem: str = key.get('data')
+        if pem is None or len(pem) == 0:
             # generate private key data
-            key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
-            data = key.to_string()
+            key, data = generate(curve=self.curve, hash_func=self.hash_func)
             # store private key in PKCS#8 format
             pem = key.to_pem(format='pkcs8').decode('utf-8')
             # pem = data.hex()
@@ -95,16 +116,41 @@ class ECCPrivateKey(Dictionary, PrivateKey):
             self['curve'] = 'SECP256k1'
             self['digest'] = 'SHA256'
         else:
+            self.__key = None
+            self.__data = None
+
+    @property
+    def curve(self):
+        return ecdsa.SECP256k1
+
+    @property
+    def hash_func(self):
+        return hashlib.sha256
+
+    @property
+    def sig_encode(self):
+        return ecdsa.util.sigencode_der
+
+    @property  # private
+    def ecc_key(self) -> ecdsa.SigningKey:
+        if self.__key is None:
+            data = self.get('data')
+            assert data is not None, 'failed to get key data: %s' % self
             if len(data) == 64:
+                # key data in 'HEX' format
                 data = bytes.fromhex(data)
-                key = ecdsa.SigningKey.from_string(data, curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+                self.__key = ecdsa.SigningKey.from_string(data, curve=self.curve, hashfunc=self.hash_func)
             else:
-                key = ecdsa.SigningKey.from_pem(data, hashfunc=hashlib.sha256)
-            self.__key = key
-            self.__data = key.to_string()
+                # key data in 'PEM' format
+                self.__key = ecdsa.SigningKey.from_pem(data, hashfunc=self.hash_func)
+        return self.__key
 
     @property  # Override
     def data(self) -> bytes:
+        if self.__data is None:
+            ecc_key = self.ecc_key
+            assert ecc_key is not None, 'ecc key error: %s' % self
+            self.__data = ecc_key.to_string()
         return self.__data
 
     @property
@@ -121,9 +167,8 @@ class ECCPrivateKey(Dictionary, PrivateKey):
 
     @property  # Override
     def public_key(self) -> Union[PublicKey]:
-        key = self.__key.get_verifying_key()
-        # store public key in X.509 format
-        pem = key.to_pem().decode('utf-8')
+        pub = self.ecc_key.get_verifying_key()
+        pem = pub.to_pem().decode('utf-8')
         # pem = key.to_string(encoding='uncompressed').hex()
         info = {
             'algorithm': PublicKey.ECC,
@@ -135,4 +180,10 @@ class ECCPrivateKey(Dictionary, PrivateKey):
 
     # Override
     def sign(self, data: bytes) -> bytes:
-        return self.__key.sign(data=data, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_der)
+        signer = self.ecc_key
+        return signer.sign(data=data, hashfunc=self.hash_func, sigencode=self.sig_encode)
+
+
+def generate(curve, hash_func) -> (ecdsa.SigningKey, bytes):
+    key = ecdsa.SigningKey.generate(curve=curve, hashfunc=hash_func)
+    return key, key.to_string()

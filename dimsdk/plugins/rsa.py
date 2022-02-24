@@ -40,14 +40,24 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
 
     def __init__(self, key: dict):
         super().__init__(key)
-        # data in 'PEM' format
-        data = key['data']
-        rsa_key = RSA.importKey(data)
-        self.__key = rsa_key
-        self.__data = rsa_key.exportKey(format='DER')
+        self.__key = None
+        self.__data = None
+
+    @property  # private
+    def rsa_key(self) -> RSA.RsaKey:
+        if self.__key is None:
+            # data in 'PEM' format
+            data = self.get('data')
+            assert data is not None, 'failed to get key data: %s' % self
+            self.__key = RSA.importKey(data)
+        return self.__key
 
     @property  # Override
     def data(self) -> bytes:
+        if self.__data is None:
+            rsa_key = self.rsa_key
+            assert rsa_key is not None, 'rsa key error: %s' % self
+            self.__data = rsa_key.exportKey(format='DER')
         return self.__data
 
     @property
@@ -64,17 +74,16 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
 
     # Override
     def encrypt(self, data: bytes) -> bytes:
-        # noinspection PyTypeChecker
-        cipher = Cipher_PKCS1_v1_5.new(self.__key)
+        cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)
         return cipher.encrypt(data)
 
     # Override
     def verify(self, data: bytes, signature: bytes) -> bool:
-        hash_obj = SHA256.new(data)
-        verifier = Signature_PKCS1_v1_5.new(self.__key)
+        hash_obj = SHA256.SHA256Hash(data)
+        verifier = Signature_PKCS1_v1_5.new(self.rsa_key)
         try:
-            # noinspection PyTypeChecker
-            return verifier.verify(hash_obj, signature)
+            verifier.verify(hash_obj, signature)
+            return True
         except ValueError:
             # raise ValueError("Invalid signature")
             return False
@@ -87,30 +96,44 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
         if key is None:
             key = {'algorithm': AsymmetricKey.RSA}
         super().__init__(key)
-        # data in 'PEM' format
-        data: str = key.get('data')
-        if data is None or len(data) == 0:
+        # check key data
+        pem: str = key.get('data')
+        if pem is None or len(pem) == 0:
             # generate private key data
-            private_key = RSA.generate(bits=self.bits)
-            data: bytes = private_key.exportKey()
-            self['data'] = data.decode('utf-8')
+            key, data = generate(bits=self.bits)
+            # store private key in PKCS#1 format
+            pem = data.decode('utf-8')
+            self.__key = key
+            self.__data = data
+            self['data'] = pem
             self['mode'] = 'ECB'
             self['padding'] = 'PKCS1'
             self['digest'] = 'SHA256'
         else:
+            self.__key = None
+            self.__data = None
+
+    @property  # private
+    def rsa_key(self) -> RSA.RsaKey:
+        if self.__key is None:
+            # data in 'PEM' format
+            data = self.get('data')
+            assert data is not None, 'failed to get key data: %s' % self
             tag1 = '-----BEGIN RSA PRIVATE KEY-----'
             tag2 = '-----END RSA PRIVATE KEY-----'
-            pos2 = data.find(tag2)
+            pos2 = data.rfind(tag2)
             if pos2 > 0:
                 pos1 = data.find(tag1)
                 data = data[pos1: pos2 + len(tag2)]
-        # create key
-        rsa_key = RSA.importKey(data)
-        self.__key = rsa_key
-        self.__data = rsa_key.exportKey(format='DER')
+            self.__key = RSA.importKey(data)
+        return self.__key
 
     @property  # Override
     def data(self) -> bytes:
+        if self.__data is None:
+            rsa_key = self.rsa_key
+            assert rsa_key is not None, 'rsa key error: %s' % self
+            self.__data = rsa_key.exportKey(format='DER')
         return self.__data
 
     @property
@@ -127,11 +150,11 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
 
     @property  # Override
     def public_key(self) -> Union[PublicKey, EncryptKey]:
-        pk = self.__key.publickey()
-        data = pk.exportKey()
+        pub = self.rsa_key.publickey()
+        pem = pub.exportKey().decode('utf-8')
         info = {
             'algorithm': PublicKey.RSA,
-            'data': data.decode('utf-8'),
+            'data': pem,
             'mode': 'ECB',
             'padding': 'PKCS1',
             'digest': 'SHA256'
@@ -141,16 +164,16 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
     # Override
     # noinspection PyTypeChecker
     def decrypt(self, data: bytes) -> Optional[bytes]:
-        cipher = Cipher_PKCS1_v1_5.new(self.__key)
-        sentinel = ''
-        # noinspection PyArgumentList
-        plaintext = cipher.decrypt(data, sentinel)
-        if sentinel:
-            print('error: ' + sentinel)
-        return plaintext
+        cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)
+        return cipher.decrypt(data, None)
 
     # Override
     def sign(self, data: bytes) -> bytes:
-        hash_obj = SHA256.new(data)
-        signer = Signature_PKCS1_v1_5.new(self.__key)
+        hash_obj = SHA256.SHA256Hash(data)
+        signer = Signature_PKCS1_v1_5.new(self.rsa_key)
         return signer.sign(hash_obj)
+
+
+def generate(bits: int) -> (RSA.RsaKey, bytes):
+    key = RSA.generate(bits=bits)
+    return key, key.exportKey()

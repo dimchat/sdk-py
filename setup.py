@@ -12,7 +12,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.6.3'
+__version__ = '0.6.4'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -43,7 +43,7 @@ setup(
         'dkd>=0.11.1',
         'mkm>=0.11.1',
 
-        'pycryptodome',  # 3.7.3
+        'pycryptodome',  # 3.14.1
         'base58',  # 1.0.3
         'ecdsa',   # 0.16.1
     ]

@@ -89,7 +89,7 @@ class ProcessorFactory:
     def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
         if isinstance(msg_type, ContentType):
             msg_type = msg_type.value
-        cpu = self.__content_processors.get(msg_type)
+        cpu = self._get_content_processor(msg_type=msg_type)
         if cpu is None:
             cpu = self._create_content_processor(msg_type=msg_type)
             if cpu is not None:

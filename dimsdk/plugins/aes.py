@@ -46,24 +46,27 @@ class AESKey(Dictionary, SymmetricKey):
         if key is None:
             key = {'algorithm': SymmetricKey.AES}
         super().__init__(dictionary=key)
-        self.__data = None
-        self.__iv = None
+        # check key data
+        base64 = self.get('data')
+        if base64 is None or len(base64) == 0:
+            # generate key data & iv
+            data, iv = generate(key_size=self.size, block_size=AES.block_size)
+            self.__data = data
+            self.__iv = iv
+            self['data'] = base64_encode(data=data)
+            self['iv'] = base64_encode(data=iv)
+            # self['mode'] = 'CBC'
+            # self['padding'] = 'PKCS7'
+        else:
+            self.__data = None
+            self.__iv = None
 
     @property  # Override
     def data(self) -> bytes:
         if self.__data is None:
             base64 = self.get('data')
-            if base64 is None or len(base64) == 0:
-                # generate key data & iv
-                data, iv = generate(key_size=self.size, block_size=AES.block_size)
-                self.__data = data
-                self.__iv = iv
-                self['data'] = base64_encode(data=data)
-                self['iv'] = base64_encode(data=iv)
-                # self['mode'] = 'CBC'
-                # self['padding'] = 'PKCS7'
-            else:
-                self.__data = base64_decode(string=base64)
+            assert len(base64) > 0, 'failed to get key data: %s' % self
+            self.__data = base64_decode(string=base64)
         return self.__data
 
     @property
