@@ -35,7 +35,6 @@
     Transform and send message
 """
 
-from abc import abstractmethod
 from typing import Optional, List
 
 from dimp.transceiver import is_broadcast
@@ -62,19 +61,6 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor):
     @property
     def processor(self) -> Processor:
         """ Delegate for Processing Message """
-        raise NotImplemented
-
-    @abstractmethod
-    def send_content(self, sender: Optional[ID], receiver: ID, content: Content, priority: int) -> bool:
-        """
-        Send content from sender to receiver with priority
-
-        :param sender:   from where
-        :param receiver: to where
-        :param content:  message content
-        :param priority: smaller is faster
-        :return: False on error
-        """
         raise NotImplemented
 
     #
