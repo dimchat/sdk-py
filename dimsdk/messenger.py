@@ -35,6 +35,7 @@
     Transform and send message
 """
 
+from abc import abstractmethod
 from typing import Optional, List
 
 from dimp.transceiver import is_broadcast
@@ -44,10 +45,9 @@ from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Transceiver, Packer, Processor
 
 from .delegate import CipherKeyDelegate
-from .transmitter import Transmitter
 
 
-class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, Transmitter):
+class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor):
 
     @property
     def key_cache(self) -> CipherKeyDelegate:
@@ -64,9 +64,17 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, Transmitter):
         """ Delegate for Processing Message """
         raise NotImplemented
 
-    @property
-    def transmitter(self) -> Transmitter:
-        """ Delegate for Transmitting Message """
+    @abstractmethod
+    def send_content(self, sender: Optional[ID], receiver: ID, content: Content, priority: int) -> bool:
+        """
+        Send content from sender to receiver with priority
+
+        :param sender:   from where
+        :param receiver: to where
+        :param content:  message content
+        :param priority: smaller is faster
+        :return: False on error
+        """
         raise NotImplemented
 
     #
@@ -150,25 +158,6 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, Transmitter):
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         delegate = self.processor
         return delegate.process_content(content=content, r_msg=r_msg)
-
-    #
-    #   Interfaces for Transmitting Message
-    #
-
-    # Override
-    def send_content(self, sender: Optional[ID], receiver: ID, content: Content, priority: int) -> bool:
-        delegate = self.transmitter
-        return delegate.send_content(sender=sender, receiver=receiver, content=content, priority=priority)
-
-    # Override
-    def send_instant_message(self, msg: InstantMessage, priority: int) -> bool:
-        delegate = self.transmitter
-        return delegate.send_instant_message(msg=msg, priority=priority)
-
-    # Override
-    def send_reliable_message(self, msg: ReliableMessage, priority: int) -> bool:
-        delegate = self.transmitter
-        return delegate.send_reliable_message(msg=msg, priority=priority)
 
     #
     #   SecureMessageDelegate

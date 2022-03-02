@@ -38,10 +38,10 @@
 
 from typing import Optional, List
 
-from dimp import ID, Command
+from dimp import ID, BaseCommand
 
 
-class BlockCommand(Command):
+class BlockCommand(BaseCommand):
     """
         Block Command
         ~~~~~~~~~~~~~

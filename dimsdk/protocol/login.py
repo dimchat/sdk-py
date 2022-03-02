@@ -38,12 +38,12 @@
 from typing import Union, Optional
 
 from dimp import ID
-from dimp import Command
+from dimp import Command, BaseCommand
 
 from ..network import Station, ServiceProvider
 
 
-class LoginCommand(Command):
+class LoginCommand(BaseCommand):
     """
         Login Command
         ~~~~~~~~~~~~~~~

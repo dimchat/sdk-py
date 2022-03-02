@@ -41,7 +41,7 @@
 from enum import IntEnum
 from typing import Optional
 
-from dimp import Command
+from dimp import Command, BaseCommand
 
 
 class HandshakeState(IntEnum):
@@ -52,7 +52,7 @@ class HandshakeState(IntEnum):
     Success = 4  # S -> C, handshake accepted
 
 
-class HandshakeCommand(Command):
+class HandshakeCommand(BaseCommand):
     """
         Handshake Command
         ~~~~~~~~~~~~~~~~~

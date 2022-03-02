@@ -39,10 +39,10 @@ from typing import Optional
 
 from dimp import base64_encode, base64_decode, json_decode
 from dimp import DecryptKey, SymmetricKey, ID
-from dimp import Command
+from dimp import BaseCommand
 
 
-class StorageCommand(Command):
+class StorageCommand(BaseCommand):
     """
         Storage Command
         ~~~~~~~~~~~~~~~

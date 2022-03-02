@@ -38,10 +38,10 @@
 from typing import Optional
 
 from dimp import Envelope
-from dimp import Command
+from dimp import Command, BaseCommand
 
 
-class ReceiptCommand(Command):
+class ReceiptCommand(BaseCommand):
     """
         Receipt Command
         ~~~~~~~~~~~~~~~

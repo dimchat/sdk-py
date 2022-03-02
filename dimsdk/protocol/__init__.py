@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from dimp.protocol import register_core_factories
+from dimp.protocol import register_content_factories, register_command_factories
 from dimp.protocol import Command, CommandFactoryBuilder
 
 from .receipt import ReceiptCommand
@@ -42,7 +42,8 @@ from .storage import StorageCommand
 
 def register_all_factories():
     # Register core factories
-    register_core_factories()
+    register_content_factories()
+    register_command_factories()
 
     # Register command factories
     Command.register(command=Command.RECEIPT, factory=CommandFactoryBuilder(command_class=ReceiptCommand))

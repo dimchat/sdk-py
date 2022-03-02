@@ -38,10 +38,10 @@
 
 from typing import Optional, List
 
-from dimp import ID, Command
+from dimp import ID, BaseCommand
 
 
-class MuteCommand(Command):
+class MuteCommand(BaseCommand):
     """
         Mute Command
         ~~~~~~~~~~~~
