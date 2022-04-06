@@ -40,10 +40,10 @@ from dimp import ReliableMessage
 from dimp import Content
 from dimp import Command
 
-from .content import ContentProcessor
+from .content import BaseContentProcessor
 
 
-class CommandProcessor(ContentProcessor):
+class CommandProcessor(BaseContentProcessor):
 
     FMT_CMD_NOT_SUPPORT = 'Command (name: %s) not support yet!'
 

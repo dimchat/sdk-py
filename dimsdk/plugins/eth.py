@@ -26,11 +26,11 @@
 from typing import Optional
 
 from dimp import hex_encode, keccak256
-from dimp import String
+from dimp import StringWrapper
 from dimp import Address, NetworkType
 
 
-class ETHAddress(String, Address):
+class ETHAddress(StringWrapper, Address):
     """
         Address like Ethereum
         ~~~~~~~~~~~~~~~~~~~~~

@@ -12,11 +12,11 @@
 
 from setuptools import setup, find_packages
 
-__version__ = '0.6.5'
+__version__ = '0.6.6'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
-with open('README.md', 'r') as fh:
+with open('README.md', 'r', encoding='utf-8') as fh:
     readme = fh.read()
 
 setup(
@@ -39,9 +39,9 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.11.3',
-        'dkd>=0.11.2',
-        'mkm>=0.11.2',
+        'dimp>=0.11.4',
+        'dkd>=0.11.3',
+        'mkm>=0.11.3',
 
         'pycryptodome',  # 3.14.1
         'base58',  # 1.0.3

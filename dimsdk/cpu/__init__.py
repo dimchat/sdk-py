@@ -34,7 +34,7 @@
 
 """
 
-from .content import ContentProcessor
+from .content import ContentProcessor, BaseContentProcessor
 from .forward import ForwardContentProcessor
 
 from .command import CommandProcessor
@@ -53,7 +53,7 @@ from .factory import ProcessorFactory
 
 __all__ = [
 
-    'ContentProcessor',
+    'ContentProcessor', 'BaseContentProcessor',
     'ForwardContentProcessor',
 
     'CommandProcessor',

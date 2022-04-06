@@ -33,7 +33,7 @@ from .plugins import *
 from .protocol import ReceiptCommand, HandshakeCommand, LoginCommand
 from .protocol import BlockCommand, MuteCommand, StorageCommand
 
-from .cpu import ContentProcessor, ForwardContentProcessor
+from .cpu import ContentProcessor, BaseContentProcessor, ForwardContentProcessor
 from .cpu import CommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
 from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProcessor
 from .cpu import ResetCommandProcessor, QueryCommandProcessor
@@ -73,7 +73,7 @@ __all__ = [
     #
     #   Content/Command Processors
     #
-    'ContentProcessor', 'ForwardContentProcessor',
+    'ContentProcessor', 'BaseContentProcessor', 'ForwardContentProcessor',
     'CommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',

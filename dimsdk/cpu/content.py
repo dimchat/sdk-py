@@ -35,16 +35,76 @@
 """
 
 import weakref
-from typing import Optional, List
+from abc import ABC, abstractmethod
+from typing import Optional, Union, List
 
 from dimp import ID
 from dimp import ReliableMessage
-from dimp import Content, TextContent
+from dimp import ContentType, Content, TextContent
 
 from ..protocol import ReceiptCommand
 
 
-class ContentProcessor:
+class ContentProcessor(ABC):
+
+    @abstractmethod
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        """
+        Process message content
+
+        :param content: content received
+        :param msg:     reliable message
+        :return: responses to sender
+        """
+        raise NotImplemented
+
+
+class ContentProcessorFactory(ABC):
+
+    @abstractmethod
+    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
+        """
+        Get content/command processor
+
+        :param content: Content/Command
+        :return: ContentProcessor
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+        raise NotImplemented
+
+    @abstractmethod
+    def get_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
+        raise NotImplemented
+
+
+class ContentProcessorCreator(ABC):
+
+    @abstractmethod
+    def create_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+        """
+        Create content processor with type
+
+        :param msg_type: content type
+        :return ContentProcessor
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    def create_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
+        """
+        Create command processor with name
+
+        :param msg_type: content type
+        :param cmd_name: command name
+        :return CommandProcessor
+        """
+        raise NotImplemented
+
+
+class BaseContentProcessor(ContentProcessor):
 
     FMT_CONTENT_NOT_SUPPORT = 'Content (type: %s) not support yet!'
 

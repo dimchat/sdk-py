@@ -26,11 +26,11 @@
 from typing import Optional, Union
 
 from dimp import base58_encode, base58_decode, sha256, ripemd160
-from dimp import String
+from dimp import StringWrapper
 from dimp import Address, NetworkType
 
 
-class BTCAddress(String, Address):
+class BTCAddress(StringWrapper, Address):
     """
         Address like BitCoin
         ~~~~~~~~~~~~~~~~~~~~

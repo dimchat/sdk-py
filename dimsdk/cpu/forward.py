@@ -39,13 +39,13 @@ from typing import List
 from dimp import ReliableMessage
 from dimp import Content, ForwardContent
 
-from .content import ContentProcessor
+from .content import BaseContentProcessor
 
 
 #
 #   Forward Content Processor
 #
-class ForwardContentProcessor(ContentProcessor):
+class ForwardContentProcessor(BaseContentProcessor):
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
