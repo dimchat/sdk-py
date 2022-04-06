@@ -28,38 +28,34 @@
 # SOFTWARE.
 # ==============================================================================
 
-import weakref
 from typing import List, Union, Optional
 
 from dimp import ContentType, Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Processor
 
-from .cpu import ContentProcessor
-from .cpu import ProcessorFactory
-from .messenger import Messenger
+from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
 from .facebook import Facebook
+from .messenger import Messenger
+from .proc_content import TwinsHelper
 
 
-class MessageProcessor(Processor):
+class MessageProcessor(TwinsHelper, Processor):
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
-        super().__init__()
-        self.__facebook = weakref.ref(facebook)
-        self.__messenger = weakref.ref(messenger)
-        self.__factory = self._create_processor_factory()
+        super().__init__(facebook=facebook, messenger=messenger)
+        self.__factory = self._create_factory()
 
     # protected
-    def _create_processor_factory(self) -> ProcessorFactory:
-        return ProcessorFactory(facebook=self.facebook, messenger=self.messenger)
+    def _create_factory(self) -> ContentProcessorFactory:
+        creator = self._create_creator()
+        from .cpu import GeneralContentProcessorFactory
+        return GeneralContentProcessorFactory(facebook=self.facebook, messenger=self.messenger, creator=creator)
 
-    @property
-    def messenger(self) -> Messenger:
-        return self.__messenger()
-
-    @property
-    def facebook(self) -> Facebook:
-        return self.__facebook()
+    # protected
+    def _create_creator(self) -> ContentProcessorCreator:
+        from .cpu import BaseContentProcessorCreator
+        return BaseContentProcessorCreator(facebook=self.facebook, messenger=self.messenger)
 
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
         return self.__factory.get_processor(content=content)

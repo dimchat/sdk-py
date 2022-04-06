@@ -53,8 +53,6 @@ class QueryCommandProcessor(GroupCommandProcessor):
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, QueryCommand), 'query command error: %s' % content
         facebook = self.facebook
-        # from ..facebook import Facebook
-        # assert isinstance(facebook, Facebook)
         group = content.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)

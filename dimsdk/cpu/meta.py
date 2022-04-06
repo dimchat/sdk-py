@@ -41,7 +41,7 @@ from dimp import ReliableMessage
 from dimp import Content
 from dimp import MetaCommand
 
-from .command import BaseCommandProcessor
+from .base import BaseCommandProcessor
 
 
 class MetaCommandProcessor(BaseCommandProcessor):
@@ -52,10 +52,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
     FMT_META_ACCEPTED = 'Meta received: %s'
 
     def __get_meta(self, identifier: ID) -> List[Content]:
-        facebook = self.facebook
-        # from dimp import Barrack
-        # assert isinstance(facebook, Barrack)
-        meta = facebook.meta(identifier=identifier)
+        meta = self.facebook.meta(identifier=identifier)
         if meta is None:
             text = self.FMT_META_NOT_FOUND % identifier
             return self._respond_text(text=text)
@@ -64,10 +61,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
             return [res]
 
     def __put_meta(self, identifier: ID, meta: Meta) -> List[Content]:
-        facebook = self.facebook
-        # from ..facebook import Facebook
-        # assert isinstance(facebook, Facebook)
-        if not facebook.save_meta(meta=meta, identifier=identifier):
+        if not self.facebook.save_meta(meta=meta, identifier=identifier):
             text = self.FMT_META_NOT_ACCEPTED % identifier
             return self._respond_text(text=text)
         else:

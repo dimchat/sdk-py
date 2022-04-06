@@ -2,12 +2,12 @@
 #
 #   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
-#                                Written in 2019 by Moky <albert.moky@gmail.com>
+#                                Written in 2022 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2019 Albert Moky
+# Copyright (c) 2022 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,24 +28,22 @@
 # SOFTWARE.
 # ==============================================================================
 
-"""
-    Content Processor
-    ~~~~~~~~~~~~~~~~~
-
-"""
-
 import weakref
 from abc import ABC, abstractmethod
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
-from dimp import ID
+from dimp import Content, ContentType
 from dimp import ReliableMessage
-from dimp import ContentType, Content, TextContent
 
-from ..protocol import ReceiptCommand
+from .facebook import Facebook
+from .messenger import Messenger
 
 
 class ContentProcessor(ABC):
+    """
+        CPU: Content Processing Unit
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """
 
     @abstractmethod
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
@@ -60,6 +58,12 @@ class ContentProcessor(ABC):
 
 
 class ContentProcessorFactory(ABC):
+    """
+        CPU Factory
+        ~~~~~~~~~~~
+
+        Delegate for Message Processor
+    """
 
     @abstractmethod
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
@@ -81,6 +85,12 @@ class ContentProcessorFactory(ABC):
 
 
 class ContentProcessorCreator(ABC):
+    """
+        CPU Creator
+        ~~~~~~~~~~~
+
+        Delegate for CPU Factory
+    """
 
     @abstractmethod
     def create_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
@@ -104,49 +114,23 @@ class ContentProcessorCreator(ABC):
         raise NotImplemented
 
 
-class BaseContentProcessor(ContentProcessor):
+class TwinsHelper:
+    """
+        Messenger Shadow
+        ~~~~~~~~~~~~~~~~
 
-    FMT_CONTENT_NOT_SUPPORT = 'Content (type: %s) not support yet!'
+        Delegate for Messenger
+    """
 
-    def __init__(self, facebook, messenger):
+    def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__()
         self.__facebook = weakref.ref(facebook)
         self.__messenger = weakref.ref(messenger)
 
     @property
-    def messenger(self):  # Messenger
+    def messenger(self) -> Messenger:
         return self.__messenger()
 
     @property
-    def facebook(self):  # Facebook
+    def facebook(self) -> Facebook:
         return self.__facebook()
-
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
-        """
-        Process message content
-
-        :param content: content received
-        :param msg:     reliable message
-        :return: response to sender
-        """
-        text = self.FMT_CONTENT_NOT_SUPPORT % content.type
-        return self._respond_text(text=text, group=content.group)
-
-    # noinspection PyMethodMayBeStatic
-    def _respond_text(self, text: str, group: Optional[ID] = None) -> List[Content]:
-        res = TextContent(text=text)
-        if group is not None:
-            res.group = group
-        return [res]
-
-    # noinspection PyMethodMayBeStatic
-    def _respond_receipt(self, text: str) -> List[Content]:
-        res = ReceiptCommand(message=text)
-        return [res]
-
-    # noinspection PyMethodMayBeStatic
-    def _respond_content(self, content: Optional[Content]) -> List[Content]:
-        if content is None:
-            return []
-        else:
-            return [content]

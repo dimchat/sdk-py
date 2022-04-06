@@ -34,10 +34,15 @@
 
 """
 
-from .content import ContentProcessor, BaseContentProcessor
-from .forward import ForwardContentProcessor
+from .creator import BaseContentProcessorCreator
+from .factory import GeneralContentProcessorFactory
 
-from .command import BaseCommandProcessor
+from .base import BaseContentProcessor, BaseCommandProcessor
+
+from .forward import ForwardContentProcessor
+from .meta import MetaCommandProcessor
+from .document import DocumentCommandProcessor
+
 from .history import HistoryCommandProcessor, GroupCommandProcessor
 from .grp_invite import InviteCommandProcessor
 from .grp_expel import ExpelCommandProcessor
@@ -45,26 +50,21 @@ from .grp_quit import QuitCommandProcessor
 from .grp_reset import ResetCommandProcessor
 from .grp_query import QueryCommandProcessor
 
-from .meta import MetaCommandProcessor
-from .document import DocumentCommandProcessor
-
-from .factory import ProcessorFactory
-
 
 __all__ = [
 
-    'ContentProcessor', 'BaseContentProcessor',
-    'ForwardContentProcessor',
+    'BaseContentProcessorCreator',
+    'GeneralContentProcessorFactory',
 
+    'BaseContentProcessor',
     'BaseCommandProcessor',
-    'HistoryCommandProcessor',
 
-    'GroupCommandProcessor',
-    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
-    'ResetCommandProcessor', 'QueryCommandProcessor',
-
+    'ForwardContentProcessor',
     'MetaCommandProcessor',
     'DocumentCommandProcessor',
 
-    'ProcessorFactory',
+    'HistoryCommandProcessor',
+    'GroupCommandProcessor',
+    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
+    'ResetCommandProcessor', 'QueryCommandProcessor',
 ]

@@ -35,83 +35,41 @@
     produce content/command processors
 """
 
-import weakref
 from typing import Dict, Optional, Union
 
 from dimp import ContentType, Content, Command, GroupCommand
 
-from .content import ContentProcessor
-from .forward import ForwardContentProcessor
+from ..facebook import Facebook
+from ..messenger import Messenger
+from ..proc_content import TwinsHelper
+from ..proc_content import ContentProcessor
+from ..proc_content import ContentProcessorFactory
 
-from .command import BaseCommandProcessor
-from .meta import MetaCommandProcessor
-from .document import DocumentCommandProcessor
-
-from .history import HistoryCommandProcessor, GroupCommandProcessor
-from .grp_invite import InviteCommandProcessor
-from .grp_expel import ExpelCommandProcessor
-from .grp_quit import QuitCommandProcessor
-from .grp_query import QueryCommandProcessor
-from .grp_reset import ResetCommandProcessor
+from .creator import ContentProcessorCreator
 
 
-class ProcessorFactory:
+class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
 
-    def __init__(self, facebook, messenger):
-        super().__init__()
-        self.__facebook = weakref.ref(facebook)
-        self.__messenger = weakref.ref(messenger)
+    def __init__(self, facebook: Facebook, messenger: Messenger, creator: ContentProcessorCreator):
+        super().__init__(facebook=facebook, messenger=messenger)
+        self.__creator = creator
         self.__content_processors: Dict[int, ContentProcessor] = {}
         self.__command_processors: Dict[str, ContentProcessor] = {}
 
-    @property
-    def messenger(self):  # Messenger
-        return self.__messenger()
-
-    @property
-    def facebook(self):  # Facebook
-        return self.__facebook()
-
-    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
-        """
-        Get content/command processor
-
-        :param content: Content/Command
-        :return: ContentProcessor
-        """
-        msg_type = content.type
-        if isinstance(content, Command):
-            name = content.command
-            return self.get_command_processor(msg_type=msg_type, cmd_name=name)
-        else:
-            return self.get_content_processor(msg_type=msg_type)
-
-    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
-        if isinstance(msg_type, ContentType):
-            msg_type = msg_type.value
-        cpu = self._get_content_processor(msg_type=msg_type)
-        if cpu is None:
-            cpu = self._create_content_processor(msg_type=msg_type)
-            if cpu is not None:
-                self._put_content_processor(msg_type=msg_type, cpu=cpu)
-        return cpu
-
-    def get_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
-        cpu = self._get_command_processor(cmd_name=cmd_name)
-        if cpu is None:
-            if isinstance(msg_type, ContentType):
-                msg_type = msg_type.value
-            cpu = self._create_command_processor(msg_type=msg_type, cmd_name=cmd_name)
-            if cpu is not None:
-                self._put_command_processor(cmd_name=cmd_name, cpu=cpu)
-        return cpu
+    @property  # protected
+    def creator(self) -> ContentProcessorCreator:
+        return self.__creator
 
     # protected
-    def _get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
+    def _get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+        if isinstance(msg_type, ContentType):
+            msg_type = msg_type.value
         return self.__content_processors.get(msg_type)
 
     # protected
-    def _put_content_processor(self, msg_type: int, cpu: ContentProcessor):
+    def _put_content_processor(self, msg_type: Union[int, ContentType], cpu: ContentProcessor):
+        if isinstance(msg_type, ContentType):
+            msg_type = msg_type.value
         self.__content_processors[msg_type] = cpu
 
     # protected
@@ -122,55 +80,45 @@ class ProcessorFactory:
     def _put_command_processor(self, cmd_name: str, cpu: ContentProcessor):
         self.__command_processors[cmd_name] = cpu
 
-    # protected
-    def _create_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
-        """
-        Create content processor with type
+    #
+    #   ContentProcessorFactory
+    #
 
-        :param msg_type: content type
-        :return: ContentProcessor
-        """
-        # core contents
-        if msg_type == ContentType.FORWARD.value:
-            return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
+    # Override
+    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
+        msg_type = content.type
+        if isinstance(content, Command):
+            name = content.command
+            # command processor
+            cpu = self.get_command_processor(msg_type=msg_type, cmd_name=name)
+            if cpu is not None:
+                return cpu
+            if isinstance(content, GroupCommand):
+                # group command processor
+                cpu = self.get_command_processor(msg_type=msg_type, cmd_name='group')
+                if cpu is not None:
+                    return cpu
+        # content processor
+        cpu = self.get_content_processor(msg_type=msg_type)
+        if cpu is None:
+            # default content processor
+            cpu = self.get_content_processor(msg_type=0)
+        return cpu
 
-    # protected
-    def _create_command_processor(self, msg_type: int, cmd_name: str) -> Optional[ContentProcessor]:
-        """
-        Create command processor with name
+    # Override
+    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+        cpu = self._get_content_processor(msg_type=msg_type)
+        if cpu is None:
+            cpu = self.creator.create_content_processor(msg_type=msg_type)
+            if cpu is not None:
+                self._put_content_processor(msg_type=msg_type, cpu=cpu)
+        return cpu
 
-        :param msg_type: content type
-        :param cmd_name: command name
-        :return: CommandProcessor
-        """
-        # meta
-        if cmd_name == Command.META:
-            return MetaCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        # document
-        if cmd_name == Command.DOCUMENT:
-            return DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name in ['profile', 'visa', 'bulletin']:
-            # share the same processor
-            cpu = self._get_command_processor(cmd_name=Command.DOCUMENT)
-            if cpu is None:
-                cpu = DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-                self._put_command_processor(cmd_name=Command.DOCUMENT, cpu=cpu)
-            return cpu
-        # group
-        if cmd_name == 'group':
-            return GroupCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.INVITE:
-            return InviteCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.EXPEL:
-            return ExpelCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.QUIT:
-            return QuitCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.QUERY:
-            return QueryCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.RESET:
-            return ResetCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        # others
-        if msg_type == ContentType.COMMAND.value:
-            return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif msg_type == ContentType.HISTORY.value:
-            return HistoryCommandProcessor(facebook=self.facebook, messenger=self.messenger)
+    # Override
+    def get_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
+        cpu = self._get_command_processor(cmd_name=cmd_name)
+        if cpu is None:
+            cpu = self.creator.create_command_processor(msg_type=msg_type, cmd_name=cmd_name)
+            if cpu is not None:
+                self._put_command_processor(cmd_name=cmd_name, cpu=cpu)
+        return cpu

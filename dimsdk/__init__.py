@@ -30,26 +30,19 @@
 
 from .plugins import *
 
-from .protocol import ReceiptCommand, HandshakeCommand, LoginCommand
-from .protocol import BlockCommand, MuteCommand, StorageCommand
+from .protocol import *
 
-from .cpu import ContentProcessor, BaseContentProcessor, ForwardContentProcessor
-from .cpu import BaseCommandProcessor, HistoryCommandProcessor, GroupCommandProcessor
-from .cpu import InviteCommandProcessor, ExpelCommandProcessor, QuitCommandProcessor
-from .cpu import ResetCommandProcessor, QueryCommandProcessor
-from .cpu import MetaCommandProcessor, DocumentCommandProcessor
-from .cpu import ProcessorFactory
-
-from .network import ServiceProvider, Station, Robot
-from .group import Polylogue, Chatroom, ChatroomDataSource
+from .network import *
+from .group import *
 
 from .ans import AddressNameService
 from .delegate import CipherKeyDelegate
 
 from .facebook import Facebook
+from .messenger import Messenger
 from .packer import MessagePacker
 from .processor import MessageProcessor
-from .messenger import Messenger
+from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
 
 name = 'DIM-SDK'
 
@@ -71,21 +64,20 @@ __all__ = [
     'BlockCommand', 'MuteCommand', 'StorageCommand',
 
     #
-    #   Content/Command Processors
+    #  network
     #
-    'ContentProcessor', 'BaseContentProcessor', 'ForwardContentProcessor',
-    'BaseCommandProcessor', 'HistoryCommandProcessor', 'GroupCommandProcessor',
-    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
-    'ResetCommandProcessor', 'QueryCommandProcessor',
-    'MetaCommandProcessor', 'DocumentCommandProcessor',
-    'ProcessorFactory',
-
-    # network
     'ServiceProvider', 'Station', 'Robot',
 
-    # group
+    #
+    #  group
+    #
     'Polylogue', 'Chatroom', 'ChatroomDataSource',
 
+    #
+    #  SDK
+    #
     'AddressNameService', 'CipherKeyDelegate',
-    'Facebook', 'Messenger', 'MessagePacker', 'MessageProcessor',
+    'Facebook', 'Messenger',
+    'MessagePacker', 'MessageProcessor',
+    'ContentProcessor', 'ContentProcessorFactory', 'ContentProcessorCreator',
 ]

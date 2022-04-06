@@ -39,7 +39,7 @@ from typing import List
 from dimp import ReliableMessage
 from dimp import Content, ForwardContent
 
-from .content import BaseContentProcessor
+from .base import BaseContentProcessor
 
 
 #
@@ -52,8 +52,6 @@ class ForwardContentProcessor(BaseContentProcessor):
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
         messenger = self.messenger
-        # from ..messenger import Messenger
-        # assert isinstance(messenger, Messenger)
         secret = content.message
         # 1. verify message
         s_msg = messenger.verify_message(msg=secret)

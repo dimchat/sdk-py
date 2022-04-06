@@ -53,8 +53,6 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 
     def __get_doc(self, identifier: ID, doc_type: str = '*') -> List[Content]:
         facebook = self.facebook
-        # from dimp import Barrack
-        # assert isinstance(facebook, Barrack)
         doc = facebook.document(identifier=identifier, doc_type=doc_type)
         if doc is None:
             text = self.FMT_DOC_NOT_FOUND % identifier
@@ -66,8 +64,6 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 
     def __put_doc(self, identifier: ID, meta: Optional[Meta], document: Document) -> List[Content]:
         facebook = self.facebook
-        # from ..facebook import Facebook
-        # assert isinstance(facebook, Facebook)
         if meta is not None:
             # received a meta for ID
             if not facebook.save_meta(meta=meta, identifier=identifier):

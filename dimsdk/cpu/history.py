@@ -40,7 +40,7 @@ from dimp import ID, ReliableMessage
 from dimp import Content
 from dimp import Command, GroupCommand
 
-from .command import BaseCommandProcessor
+from .base import BaseCommandProcessor
 
 
 class HistoryCommandProcessor(BaseCommandProcessor):

@@ -62,8 +62,6 @@ class ResetCommandProcessor(GroupCommandProcessor):
 
     def _temporary_save(self, cmd: GroupCommand, sender: ID) -> List[Content]:
         facebook = self.facebook
-        # from ..facebook import Facebook
-        # assert isinstance(facebook, Facebook)
         group = cmd.group
         # check whether the owner contained in the new members
         new_members = self.members(cmd=cmd)
