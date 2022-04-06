@@ -43,7 +43,7 @@ from dimp import ContentType, Content, Command, GroupCommand
 from .content import ContentProcessor
 from .forward import ForwardContentProcessor
 
-from .command import CommandProcessor
+from .command import BaseCommandProcessor
 from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor
 
@@ -62,7 +62,7 @@ class ProcessorFactory:
         self.__facebook = weakref.ref(facebook)
         self.__messenger = weakref.ref(messenger)
         self.__content_processors: Dict[int, ContentProcessor] = {}
-        self.__command_processors: Dict[str, CommandProcessor] = {}
+        self.__command_processors: Dict[str, ContentProcessor] = {}
 
     @property
     def messenger(self):  # Messenger
@@ -96,7 +96,7 @@ class ProcessorFactory:
                 self._put_content_processor(msg_type=msg_type, cpu=cpu)
         return cpu
 
-    def get_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[CommandProcessor]:
+    def get_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
         cpu = self._get_command_processor(cmd_name=cmd_name)
         if cpu is None:
             if isinstance(msg_type, ContentType):
@@ -115,11 +115,11 @@ class ProcessorFactory:
         self.__content_processors[msg_type] = cpu
 
     # protected
-    def _get_command_processor(self, cmd_name: str) -> Optional[CommandProcessor]:
+    def _get_command_processor(self, cmd_name: str) -> Optional[ContentProcessor]:
         return self.__command_processors.get(cmd_name)
 
     # protected
-    def _put_command_processor(self, cmd_name: str, cpu: CommandProcessor):
+    def _put_command_processor(self, cmd_name: str, cpu: ContentProcessor):
         self.__command_processors[cmd_name] = cpu
 
     # protected
@@ -135,7 +135,7 @@ class ProcessorFactory:
             return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
     # protected
-    def _create_command_processor(self, msg_type: int, cmd_name: str) -> Optional[CommandProcessor]:
+    def _create_command_processor(self, msg_type: int, cmd_name: str) -> Optional[ContentProcessor]:
         """
         Create command processor with name
 
@@ -171,6 +171,6 @@ class ProcessorFactory:
             return ResetCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         # others
         if msg_type == ContentType.COMMAND.value:
-            return CommandProcessor(facebook=self.facebook, messenger=self.messenger)
+            return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif msg_type == ContentType.HISTORY.value:
             return HistoryCommandProcessor(facebook=self.facebook, messenger=self.messenger)

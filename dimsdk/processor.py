@@ -35,7 +35,7 @@ from dimp import ContentType, Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Processor
 
-from .cpu import ContentProcessor, CommandProcessor
+from .cpu import ContentProcessor
 from .cpu import ProcessorFactory
 from .messenger import Messenger
 from .facebook import Facebook
@@ -67,7 +67,7 @@ class MessageProcessor(Processor):
     def get_processor_by_type(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
         return self.__factory.get_content_processor(msg_type=msg_type)
 
-    def get_processor_by_name(self, cmd_name: str, msg_type: Union[int, ContentType] = 0) -> Optional[CommandProcessor]:
+    def get_processor_by_name(self, cmd_name: str, msg_type: Union[int, ContentType] = 0) -> Optional[ContentProcessor]:
         return self.__factory.get_command_processor(msg_type=msg_type, cmd_name=cmd_name)
 
     #

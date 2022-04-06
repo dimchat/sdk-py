@@ -41,10 +41,10 @@ from dimp import ReliableMessage
 from dimp import Content
 from dimp import Command, MetaCommand
 
-from .command import CommandProcessor
+from .command import BaseCommandProcessor
 
 
-class MetaCommandProcessor(CommandProcessor):
+class MetaCommandProcessor(BaseCommandProcessor):
 
     STR_META_CMD_ERROR = 'Meta command error'
     FMT_META_NOT_FOUND = 'Sorry, meta not found for ID: %s'

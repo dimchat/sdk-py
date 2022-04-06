@@ -40,10 +40,10 @@ from dimp import ID, ReliableMessage
 from dimp import Content
 from dimp import Command, GroupCommand
 
-from .command import CommandProcessor
+from .command import BaseCommandProcessor
 
 
-class HistoryCommandProcessor(CommandProcessor):
+class HistoryCommandProcessor(BaseCommandProcessor):
 
     FMT_HIS_CMD_NOT_SUPPORT = 'History command (name: %s) not support yet!'
 

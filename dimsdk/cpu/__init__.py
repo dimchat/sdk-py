@@ -37,7 +37,7 @@
 from .content import ContentProcessor, BaseContentProcessor
 from .forward import ForwardContentProcessor
 
-from .command import CommandProcessor
+from .command import BaseCommandProcessor
 from .history import HistoryCommandProcessor, GroupCommandProcessor
 from .grp_invite import InviteCommandProcessor
 from .grp_expel import ExpelCommandProcessor
@@ -56,7 +56,7 @@ __all__ = [
     'ContentProcessor', 'BaseContentProcessor',
     'ForwardContentProcessor',
 
-    'CommandProcessor',
+    'BaseCommandProcessor',
     'HistoryCommandProcessor',
 
     'GroupCommandProcessor',

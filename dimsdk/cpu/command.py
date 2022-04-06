@@ -43,7 +43,7 @@ from dimp import Command
 from .content import BaseContentProcessor
 
 
-class CommandProcessor(BaseContentProcessor):
+class BaseCommandProcessor(BaseContentProcessor):
 
     FMT_CMD_NOT_SUPPORT = 'Command (name: %s) not support yet!'
 
