@@ -28,15 +28,11 @@
 # SOFTWARE.
 # ==============================================================================
 
-import weakref
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 from dimp import Content, ContentType
 from dimp import ReliableMessage
-
-from .facebook import Facebook
-from .messenger import Messenger
 
 
 class ContentProcessor(ABC):
@@ -112,25 +108,3 @@ class ContentProcessorCreator(ABC):
         :return CommandProcessor
         """
         raise NotImplemented
-
-
-class TwinsHelper:
-    """
-        Messenger Shadow
-        ~~~~~~~~~~~~~~~~
-
-        Delegate for Messenger
-    """
-
-    def __init__(self, facebook: Facebook, messenger: Messenger):
-        super().__init__()
-        self.__facebook = weakref.ref(facebook)
-        self.__messenger = weakref.ref(messenger)
-
-    @property
-    def messenger(self) -> Messenger:
-        return self.__messenger()
-
-    @property
-    def facebook(self) -> Facebook:
-        return self.__facebook()

@@ -34,10 +34,10 @@ from dimp import ContentType, Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Processor
 
-from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
 from .facebook import Facebook
 from .messenger import Messenger
-from .proc_content import TwinsHelper
+from .helper import TwinsHelper
+from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
 
 
 class MessageProcessor(TwinsHelper, Processor):

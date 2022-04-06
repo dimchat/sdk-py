@@ -42,7 +42,7 @@ from dimp import Content, TextContent, Command
 
 from ..protocol import ReceiptCommand
 
-from ..proc_content import TwinsHelper
+from ..helper import TwinsHelper
 from ..proc_content import ContentProcessor
 
 

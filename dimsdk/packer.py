@@ -35,7 +35,7 @@ from dimp import Content, Command
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Packer
 
-from .proc_content import TwinsHelper
+from .helper import TwinsHelper
 
 
 class MessagePacker(TwinsHelper, Packer):

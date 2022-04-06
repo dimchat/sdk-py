@@ -41,7 +41,7 @@ from dimp import ContentType, Content, Command, GroupCommand
 
 from ..facebook import Facebook
 from ..messenger import Messenger
-from ..proc_content import TwinsHelper
+from ..helper import TwinsHelper
 from ..proc_content import ContentProcessor
 from ..proc_content import ContentProcessorFactory
 

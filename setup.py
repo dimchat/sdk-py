@@ -10,13 +10,15 @@
     communications between accounts safely by end-to-end encryption.
 """
 
+import io
+
 from setuptools import setup, find_packages
 
 __version__ = '0.6.6'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
-with open('README.md', 'r', encoding='utf-8') as fh:
+with io.open('README.md', 'r', encoding='utf-8') as fh:
     readme = fh.read()
 
 setup(

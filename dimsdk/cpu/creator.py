@@ -38,7 +38,7 @@ from typing import Optional, Union
 
 from dimp import ContentType, Command, GroupCommand
 
-from ..proc_content import TwinsHelper
+from ..helper import TwinsHelper
 from ..proc_content import ContentProcessor, ContentProcessorCreator
 
 from .base import BaseContentProcessor, BaseCommandProcessor
