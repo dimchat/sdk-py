@@ -40,7 +40,7 @@ from typing import List
 
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, GroupCommand, QueryCommand
+from dimp import GroupCommand, QueryCommand
 
 from .history import GroupCommandProcessor
 
@@ -50,12 +50,12 @@ class QueryCommandProcessor(GroupCommandProcessor):
     STR_QUERY_NOT_ALLOWED = 'Sorry, you are not allowed to query this group.'
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, QueryCommand), 'group command error: %s' % cmd
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, QueryCommand), 'query command error: %s' % content
         facebook = self.facebook
         # from ..facebook import Facebook
         # assert isinstance(facebook, Facebook)
-        group = cmd.group
+        group = content.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
         # 0. check group

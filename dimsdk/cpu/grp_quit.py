@@ -41,7 +41,7 @@ from typing import List
 
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, QuitCommand
+from dimp import QuitCommand
 
 from .history import GroupCommandProcessor
 
@@ -58,12 +58,12 @@ class QuitCommandProcessor(GroupCommandProcessor):
         return self._respond_text(text=text, group=cmd.group)
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, QuitCommand), 'group command error: %s' % cmd
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, QuitCommand), 'quit command error: %s' % content
         facebook = self.facebook
         # from ..facebook import Facebook
         # assert isinstance(facebook, Facebook)
-        group = cmd.group
+        group = content.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
         # 0. check group
@@ -77,7 +77,7 @@ class QuitCommandProcessor(GroupCommandProcessor):
             return self._respond_text(text=text, group=group)
         assistants = facebook.assistants(identifier=group)
         if assistants is not None and sender in assistants:
-            return self._remove_assistant(cmd=cmd, msg=msg)
+            return self._remove_assistant(cmd=content, msg=msg)
         # 2. remove sender from group members
         if sender in members:
             members.remove(sender)

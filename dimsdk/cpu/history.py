@@ -48,9 +48,10 @@ class HistoryCommandProcessor(BaseCommandProcessor):
     FMT_HIS_CMD_NOT_SUPPORT = 'History command (name: %s) not support yet!'
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        text = self.FMT_HIS_CMD_NOT_SUPPORT % cmd.command
-        return self._respond_text(text=text, group=cmd.group)
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, Command), 'history command error: %s' % content
+        text = self.FMT_HIS_CMD_NOT_SUPPORT % content.command
+        return self._respond_text(text=text, group=content.group)
 
 
 class GroupCommandProcessor(HistoryCommandProcessor):
@@ -72,6 +73,7 @@ class GroupCommandProcessor(HistoryCommandProcessor):
         return array
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        text = self.FMT_GRP_CMD_NOT_SUPPORT % cmd.command
-        return self._respond_text(text=text, group=cmd.group)
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, GroupCommand), 'group command error: %s' % content
+        text = self.FMT_GRP_CMD_NOT_SUPPORT % content.command
+        return self._respond_text(text=text, group=content.group)

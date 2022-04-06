@@ -39,7 +39,7 @@ from typing import List
 from dimp import ID, Meta
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, MetaCommand
+from dimp import MetaCommand
 
 from .command import BaseCommandProcessor
 
@@ -75,10 +75,10 @@ class MetaCommandProcessor(BaseCommandProcessor):
             return self._respond_receipt(text=text)
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, MetaCommand), 'command error: %s' % cmd
-        identifier = cmd.identifier
-        meta = cmd.meta
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, MetaCommand), 'meta command error: %s' % content
+        identifier = content.identifier
+        meta = content.meta
         if identifier is None:
             # error
             return self._respond_text(text=self.STR_META_CMD_ERROR)

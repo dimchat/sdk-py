@@ -46,7 +46,7 @@ from typing import List
 from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, GroupCommand, InviteCommand, ResetCommand
+from dimp import GroupCommand, InviteCommand, ResetCommand
 
 from .history import GroupCommandProcessor
 
@@ -91,19 +91,19 @@ class ResetCommandProcessor(GroupCommandProcessor):
         return [query]
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, InviteCommand) or isinstance(cmd, ResetCommand), 'group command error: %s' % cmd
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, InviteCommand) or isinstance(content, ResetCommand), 'group cmd error: %s' % content
         facebook = self.facebook
         # from ..facebook import Facebook
         # assert isinstance(facebook, Facebook)
-        group = cmd.group
+        group = content.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
         # 0. check group
         if owner is None or members is None or len(members) == 0:
             # FIXME: group profile lost?
             # FIXME: how to avoid strangers impersonating group members?
-            return self._temporary_save(cmd=cmd, sender=msg.sender)
+            return self._temporary_save(cmd=content, sender=msg.sender)
         # 1. check permission
         sender = msg.sender
         if sender != owner:
@@ -113,7 +113,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
                 text = self.STR_RESET_NOT_ALLOWED
                 return self._respond_text(text=text, group=group)
         # 2. resetting members
-        new_members = self.members(cmd=cmd)
+        new_members = self.members(cmd=content)
         if new_members is None or len(new_members) == 0:
             text = self.STR_RESET_CMD_ERROR
             return self._respond_text(text=text, group=group)
@@ -137,8 +137,8 @@ class ResetCommandProcessor(GroupCommandProcessor):
         if len(add_list) > 0 or len(remove_list) > 0:
             if facebook.save_members(members=new_members, identifier=group):
                 if len(add_list) > 0:
-                    cmd['added'] = ID.revert(add_list)
+                    content['added'] = ID.revert(add_list)
                 if len(remove_list) > 0:
-                    cmd['removed'] = ID.revert(remove_list)
+                    content['removed'] = ID.revert(remove_list)
         # 3. response (no need to response this group command)
         return []

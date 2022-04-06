@@ -41,7 +41,7 @@ from typing import List
 from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, InviteCommand
+from dimp import InviteCommand
 
 from .grp_reset import ResetCommandProcessor
 
@@ -52,19 +52,19 @@ class InviteCommandProcessor(ResetCommandProcessor):
     STR_INVITE_NOT_ALLOWED = 'Sorry, you are not allowed to invite new members into this group.'
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, InviteCommand), 'group command error: %s' % cmd
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, InviteCommand), 'invite command error: %s' % content
         facebook = self.facebook
         # from ..facebook import Facebook
         # assert isinstance(facebook, Facebook)
-        group = cmd.group
+        group = content.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
         # 0. check group
         if owner is None or members is None or len(members) == 0:
             # NOTICE: group membership lost?
             #         reset group members
-            return self._temporary_save(cmd=cmd, sender=msg.sender)
+            return self._temporary_save(cmd=content, sender=msg.sender)
         # 1. check permission
         sender = msg.sender
         if sender not in members:
@@ -74,7 +74,7 @@ class InviteCommandProcessor(ResetCommandProcessor):
                 text = self.STR_INVITE_NOT_ALLOWED
                 return self._respond_text(text=text, group=group)
         # 2. inviting members
-        invite_list = self.members(cmd=cmd)
+        invite_list = self.members(cmd=content)
         if invite_list is None or len(invite_list) == 0:
             text = self.STR_INVITE_CMD_ERROR
             return self._respond_text(text=text, group=group)
@@ -82,7 +82,7 @@ class InviteCommandProcessor(ResetCommandProcessor):
         if sender == owner and owner in invite_list:
             # NOTICE: owner invites owner?
             #         it means this should be a 'reset' command
-            return self._temporary_save(cmd=cmd, sender=sender)
+            return self._temporary_save(cmd=content, sender=sender)
         # 2.2. build invited-list
         add_list = []
         for item in invite_list:
@@ -94,6 +94,6 @@ class InviteCommandProcessor(ResetCommandProcessor):
         # 2.3. do invite
         if len(add_list) > 0:
             if facebook.save_members(members=members, identifier=group):
-                cmd['added'] = ID.revert(add_list)
+                content['added'] = ID.revert(add_list)
         # 3. response (no need to response this group command)
         return []

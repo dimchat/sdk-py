@@ -47,18 +47,8 @@ class BaseCommandProcessor(BaseContentProcessor):
 
     FMT_CMD_NOT_SUPPORT = 'Command (name: %s) not support yet!'
 
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        """
-        Execute command
-
-        :param cmd: command received
-        :param msg: reliable message
-        :return: response to sender
-        """
-        text = self.FMT_CMD_NOT_SUPPORT % cmd.command
-        return self._respond_text(text=text, group=cmd.group)
-
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
-        return self.execute(cmd=content, msg=msg)
+        text = self.FMT_CMD_NOT_SUPPORT % content.command
+        return self._respond_text(text=text, group=content.group)

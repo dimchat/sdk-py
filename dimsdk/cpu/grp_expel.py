@@ -41,7 +41,7 @@ from typing import List
 from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import Command, ExpelCommand
+from dimp import ExpelCommand
 
 from .history import GroupCommandProcessor
 
@@ -53,12 +53,12 @@ class ExpelCommandProcessor(GroupCommandProcessor):
     STR_CANNOT_EXPEL_OWNER = 'Group owner cannot be expelled.'
 
     # Override
-    def execute(self, cmd: Command, msg: ReliableMessage) -> List[Content]:
-        assert isinstance(cmd, ExpelCommand), 'group command error: %s' % cmd
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, ExpelCommand), 'expel command error: %s' % content
         facebook = self.facebook
         # from ..facebook import Facebook
         # assert isinstance(facebook, Facebook)
-        group = cmd.group
+        group = content.group
         owner = facebook.owner(identifier=group)
         members = facebook.members(identifier=group)
         # 0. check group
@@ -74,7 +74,7 @@ class ExpelCommandProcessor(GroupCommandProcessor):
                 text = self.STR_EXPEL_NOT_ALLOWED
                 return self._respond_text(text=text, group=group)
         # 2. expelling members
-        expel_list = self.members(cmd=cmd)
+        expel_list = self.members(cmd=content)
         if expel_list is None or len(expel_list) == 0:
             text = self.STR_EXPEL_CMD_ERROR
             return self._respond_text(text=text, group=group)
@@ -93,6 +93,6 @@ class ExpelCommandProcessor(GroupCommandProcessor):
         # 2.3. do expel
         if len(remove_list) > 0:
             if facebook.save_members(members=members, identifier=group):
-                cmd['removed'] = ID.revert(remove_list)
+                content['removed'] = ID.revert(remove_list)
         # 3. response (no need to response this group command)
         return []
