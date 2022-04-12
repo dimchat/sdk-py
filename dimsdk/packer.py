@@ -30,7 +30,7 @@
 
 from typing import Optional
 
-from dimp import ID, json_encode, json_decode
+from dimp import ID, json_encode, json_decode, utf8_encode, utf8_decode
 from dimp import Content, Command
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Packer
@@ -140,14 +140,16 @@ class MessagePacker(TwinsHelper, Packer):
         return msg.sign()
 
     def serialize_message(self, msg: ReliableMessage) -> bytes:
-        return json_encode(o=msg.dictionary)
+        js = json_encode(obj=msg.dictionary)
+        return utf8_encode(string=js)
 
     #
     #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
     #
 
     def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        dictionary = json_decode(data=data)
+        js = utf8_decode(data=data)
+        dictionary = json_decode(string=js)
         # TODO: translate short keys
         #       'S' -> 'sender'
         #       'R' -> 'receiver'

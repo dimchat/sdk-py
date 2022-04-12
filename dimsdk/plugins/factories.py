@@ -172,8 +172,7 @@ class GeneralDocumentFactory(DocumentFactory):
         return self.__type
 
     # Override
-    def create_document(self, identifier: ID,
-                        data: Union[bytes, str, None], signature: Union[bytes, str, None]) -> Document:
+    def create_document(self, identifier: ID, data: Optional[str], signature: Union[bytes, str, None]) -> Document:
         doc_type = self.get_type(identifier=identifier)
         if doc_type == Document.BULLETIN:
             return BaseBulletin(identifier=identifier, data=data, signature=signature)

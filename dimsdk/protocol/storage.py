@@ -37,7 +37,7 @@
 
 from typing import Optional
 
-from dimp import base64_encode, base64_decode, json_decode
+from dimp import base64_encode, base64_decode, json_decode, utf8_decode
 from dimp import DecryptKey, SymmetricKey, ID
 from dimp import BaseCommand
 
@@ -159,7 +159,8 @@ class StorageCommand(BaseCommand):
             elif private_key is not None:
                 # assert isinstance(private_key, PrivateKey), 'private key error: %s' % private_key
                 key_data = private_key.decrypt(self.key)
-                key = SymmetricKey.parse(key=json_decode(data=key_data))
+                js = utf8_decode(data=key_data)
+                key = SymmetricKey.parse(key=json_decode(string=js))
             # get encrypted data
             data = self.data
             if key is not None and data is not None:
