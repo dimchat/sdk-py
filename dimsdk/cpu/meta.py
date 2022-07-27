@@ -66,7 +66,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
             return self._respond_text(text=text)
         else:
             text = self.FMT_META_ACCEPTED % identifier
-            return self._respond_receipt(text=text)
+            return self._respond_text(text=text)
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:

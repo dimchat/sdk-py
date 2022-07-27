@@ -60,11 +60,11 @@ class ResetCommandProcessor(GroupCommandProcessor):
         # TODO: send 'query' group command to owner
         pass
 
-    def _temporary_save(self, cmd: GroupCommand, sender: ID) -> List[Content]:
+    def _temporary_save(self, content: GroupCommand, sender: ID) -> List[Content]:
         facebook = self.facebook
-        group = cmd.group
+        group = content.group
         # check whether the owner contained in the new members
-        new_members = self.members(cmd=cmd)
+        new_members = self.members(content=content)
         if new_members is None or len(new_members) == 0:
             text = self.STR_RESET_CMD_ERROR
             return self._respond_text(text=text, group=group)
@@ -101,7 +101,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
         if owner is None or members is None or len(members) == 0:
             # FIXME: group profile lost?
             # FIXME: how to avoid strangers impersonating group members?
-            return self._temporary_save(cmd=content, sender=msg.sender)
+            return self._temporary_save(content=content, sender=msg.sender)
         # 1. check permission
         sender = msg.sender
         if sender != owner:
@@ -111,7 +111,7 @@ class ResetCommandProcessor(GroupCommandProcessor):
                 text = self.STR_RESET_NOT_ALLOWED
                 return self._respond_text(text=text, group=group)
         # 2. resetting members
-        new_members = self.members(cmd=content)
+        new_members = self.members(content=content)
         if new_members is None or len(new_members) == 0:
             text = self.STR_RESET_CMD_ERROR
             return self._respond_text(text=text, group=group)

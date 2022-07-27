@@ -72,7 +72,7 @@ class ExpelCommandProcessor(GroupCommandProcessor):
                 text = self.STR_EXPEL_NOT_ALLOWED
                 return self._respond_text(text=text, group=group)
         # 2. expelling members
-        expel_list = self.members(cmd=content)
+        expel_list = self.members(content=content)
         if expel_list is None or len(expel_list) == 0:
             text = self.STR_EXPEL_CMD_ERROR
             return self._respond_text(text=text, group=group)

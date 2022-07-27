@@ -38,9 +38,7 @@ from typing import Optional, List
 
 from dimp import ID
 from dimp import ReliableMessage
-from dimp import Content, TextContent, Command
-
-from ..protocol import ReceiptCommand
+from dimp import Content, BaseTextContent, Command
 
 from ..helper import TwinsHelper
 from ..proc_content import ContentProcessor
@@ -57,14 +55,9 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
 
     # noinspection PyMethodMayBeStatic
     def _respond_text(self, text: str, group: Optional[ID] = None) -> List[Content]:
-        res = TextContent(text=text)
+        res = BaseTextContent(text=text)
         if group is not None:
             res.group = group
-        return [res]
-
-    # noinspection PyMethodMayBeStatic
-    def _respond_receipt(self, text: str) -> List[Content]:
-        res = ReceiptCommand(message=text)
         return [res]
 
     # noinspection PyMethodMayBeStatic
@@ -82,5 +75,5 @@ class BaseCommandProcessor(BaseContentProcessor):
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
-        text = self.FMT_CMD_NOT_SUPPORT % content.command
+        text = self.FMT_CMD_NOT_SUPPORT % content.cmd
         return self._respond_text(text=text, group=content.group)

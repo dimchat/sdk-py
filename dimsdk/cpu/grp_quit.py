@@ -52,10 +52,10 @@ class QuitCommandProcessor(GroupCommandProcessor):
     STR_ASSISTANT_CANNOT_QUIT = 'Sorry, assistant cannot quit.'
 
     # noinspection PyUnusedLocal
-    def _remove_assistant(self, cmd: QuitCommand, msg: ReliableMessage) -> List[Content]:
+    def _remove_assistant(self, content: QuitCommand, msg: ReliableMessage) -> List[Content]:
         # NOTICE: group assistant should be retired by the owner
         text = self.STR_ASSISTANT_CANNOT_QUIT
-        return self._respond_text(text=text, group=cmd.group)
+        return self._respond_text(text=text, group=content.group)
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
@@ -75,7 +75,7 @@ class QuitCommandProcessor(GroupCommandProcessor):
             return self._respond_text(text=text, group=group)
         assistants = facebook.assistants(identifier=group)
         if assistants is not None and sender in assistants:
-            return self._remove_assistant(cmd=content, msg=msg)
+            return self._remove_assistant(content=content, msg=msg)
         # 2. remove sender from group members
         if sender in members:
             members.remove(sender)

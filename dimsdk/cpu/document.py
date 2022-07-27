@@ -75,7 +75,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             return self._respond_text(text=text)
         else:
             text = self.FMT_DOC_ACCEPTED % identifier
-            return self._respond_receipt(text=text)
+            return self._respond_text(text=text)
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:

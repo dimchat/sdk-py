@@ -50,7 +50,7 @@ class HistoryCommandProcessor(BaseCommandProcessor):
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'history command error: %s' % content
-        text = self.FMT_HIS_CMD_NOT_SUPPORT % content.command
+        text = self.FMT_HIS_CMD_NOT_SUPPORT % content.cmd
         return self._respond_text(text=text, group=content.group)
 
 
@@ -60,12 +60,12 @@ class GroupCommandProcessor(HistoryCommandProcessor):
     STR_GROUP_EMPTY = 'Group empty.'
 
     @staticmethod
-    def members(cmd: GroupCommand) -> List[ID]:
+    def members(content: GroupCommand) -> List[ID]:
         # get from 'members'
-        array = cmd.members
+        array = content.members
         if array is None:
             # get from 'member
-            item = cmd.member
+            item = content.member
             if item is None:
                 array = []
             else:
@@ -75,5 +75,5 @@ class GroupCommandProcessor(HistoryCommandProcessor):
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, GroupCommand), 'group command error: %s' % content
-        text = self.FMT_GRP_CMD_NOT_SUPPORT % content.command
+        text = self.FMT_GRP_CMD_NOT_SUPPORT % content.cmd
         return self._respond_text(text=text, group=content.group)

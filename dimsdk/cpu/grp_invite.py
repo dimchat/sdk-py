@@ -62,7 +62,7 @@ class InviteCommandProcessor(ResetCommandProcessor):
         if owner is None or members is None or len(members) == 0:
             # NOTICE: group membership lost?
             #         reset group members
-            return self._temporary_save(cmd=content, sender=msg.sender)
+            return self._temporary_save(content=content, sender=msg.sender)
         # 1. check permission
         sender = msg.sender
         if sender not in members:
@@ -72,7 +72,7 @@ class InviteCommandProcessor(ResetCommandProcessor):
                 text = self.STR_INVITE_NOT_ALLOWED
                 return self._respond_text(text=text, group=group)
         # 2. inviting members
-        invite_list = self.members(cmd=content)
+        invite_list = self.members(content=content)
         if invite_list is None or len(invite_list) == 0:
             text = self.STR_INVITE_CMD_ERROR
             return self._respond_text(text=text, group=group)
@@ -80,7 +80,7 @@ class InviteCommandProcessor(ResetCommandProcessor):
         if sender == owner and owner in invite_list:
             # NOTICE: owner invites owner?
             #         it means this should be a 'reset' command
-            return self._temporary_save(cmd=content, sender=sender)
+            return self._temporary_save(content=content, sender=sender)
         # 2.2. build invited-list
         add_list = []
         for item in invite_list:

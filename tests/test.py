@@ -135,8 +135,8 @@ class CommandTestCase(unittest.TestCase):
     def test1_receipt(self):
         print('\n---------------- %s' % self)
 
-        cmd = ReceiptCommand(message='OK!')
-        print('receipt: %s' % cmd)
+        content = ReceiptCommand(message='OK!')
+        print('receipt: %s' % content)
 
 
 class CryptoTestCase(unittest.TestCase):

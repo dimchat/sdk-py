@@ -88,7 +88,7 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
         msg_type = content.type
         if isinstance(content, Command):
-            name = content.command
+            name = content.cmd
             # command processor
             cpu = self.get_command_processor(msg_type=msg_type, cmd_name=name)
             if cpu is not None:

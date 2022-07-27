@@ -37,7 +37,7 @@
 from typing import List
 
 from dimp import ReliableMessage
-from dimp import Content, ForwardContent
+from dimp import Content, ForwardContent, SecretContent
 
 from .base import BaseContentProcessor
 
@@ -52,17 +52,13 @@ class ForwardContentProcessor(BaseContentProcessor):
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
         messenger = self.messenger
-        secret = content.message
-        # 1. verify message
-        s_msg = messenger.verify_message(msg=secret)
-        if s_msg is None:
-            # waiting for sender's meta if not exists
-            return []
-        # 2. decrypt message
-        i_msg = messenger.decrypt_message(msg=s_msg)
-        if i_msg is None:
-            # NOTICE: decrypt failed, not for you?
-            #         it means you are asked to re-pack and forward this message
-            return []
-        # 3. process message content
-        return messenger.process_content(content=i_msg.content, r_msg=secret)
+        secrets = content.secrets
+        responses = []
+        for msg in secrets:
+            results = messenger.process_reliable_message(msg=msg)
+            if results is None:  # or len(results) == 0:
+                continue
+            for res in results:
+                responses.append(res)
+        forward = SecretContent(messages=responses)
+        return self._respond_content(content=forward)

@@ -36,24 +36,111 @@
     SP      : DIM network service provider
 """
 
-from dimp import NetworkType, ID, User, Group
+from typing import Optional, List
+
+from dimp import NetworkType, ID, Meta, Document, Visa
+from dimp import ANYWHERE
+from dimp import User, Group, UserDataSource
+from dimp import BaseUser
 
 
 class Station(User):
 
-    def __init__(self, identifier: ID, host: str, port: int):
-        super().__init__(identifier=identifier)
-        assert identifier.type == NetworkType.STATION, 'Station ID type error: %s' % identifier
+    ANY = ID.create(name='station', address=ANYWHERE)
+
+    def __init__(self, identifier: Optional[ID] = None,
+                 host: Optional[str] = None, port: Optional[int] = 0):
+        super().__init__()
+        if identifier is None:
+            identifier = self.ANY
+        else:
+            assert identifier.type == NetworkType.STATION, 'Station ID type error: %s' % identifier
+        self.__user = BaseUser(identifier=identifier)
         self.__host = host
         self.__port = port
 
-    def __str__(self):
+    def __eq__(self, other) -> bool:
+        if self is other:
+            return True
+        elif isinstance(other, ID):
+            return self.identifier == other
+        elif isinstance(other, User):
+            return self.identifier == other.identifier
+
+    def __str__(self) -> str:
         clazz = self.__class__.__name__
         identifier = self.identifier
         network = identifier.address.network
         host = self.host
         port = self.port
         return '<%s: %s(%d) host="%s" port=%d />' % (clazz, identifier, network, host, port)
+
+    #
+    #   Entity
+    #
+
+    @property  # Override
+    def identifier(self) -> ID:
+        return self.__user.identifier
+
+    @identifier.setter
+    def identifier(self, sid: ID):
+        delegate = self.data_source
+        user = BaseUser(identifier=sid)
+        user.data_source = delegate
+        self.__user = user
+
+    @property  # Override
+    def type(self) -> int:
+        return self.__user.type
+
+    @property  # Override
+    def data_source(self) -> Optional[UserDataSource]:
+        return self.__user.data_source
+
+    @data_source.setter  # Override
+    def data_source(self, delegate: UserDataSource):
+        self.__user.data_source = delegate
+
+    @property  # Override
+    def meta(self) -> Meta:
+        return self.__user.meta
+
+    # Override
+    def document(self, doc_type: Optional[str] = '*') -> Optional[Document]:
+        return self.__user.document(doc_type=doc_type)
+
+    #
+    #   User
+    #
+
+    @property  # Override
+    def visa(self) -> Optional[Visa]:
+        return self.__user.visa
+
+    @property  # Override
+    def contacts(self) -> List[ID]:
+        return self.__user.contacts
+
+    # Override
+    def verify(self, data: bytes, signature: bytes) -> bool:
+        return self.__user.verify(data=data, signature=signature)
+
+    # Override
+    def encrypt(self, data: bytes) -> bytes:
+        return self.__user.encrypt(data=data)
+
+    # Override
+    def sign_visa(self, visa: Visa) -> Visa:
+        return self.__user.sign_visa(visa=visa)
+
+    # Override
+    def verify_visa(self, visa: Visa) -> bool:
+        return self.__user.verify_visa(visa=visa)
+
+    #
+    #   Server
+    #
 
     @property
     def host(self) -> str:
