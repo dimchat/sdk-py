@@ -25,7 +25,8 @@
 
 from typing import Optional
 
-from dimp import Dictionary, SymmetricKey
+from mkm.types import Dictionary
+from mkm.crypto import SymmetricKey
 
 
 class PlainKey(Dictionary, SymmetricKey):

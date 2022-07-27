@@ -25,13 +25,12 @@
 
 from typing import Optional, Union
 
+from mkm.crypto import utf8_encode
 from mkm.crypto.cryptography import key_algorithm
 from mkm.meta import meta_type
 from mkm.profile import document_identifier
 
 from mkm import BaseAddressFactory
-
-from dimp import utf8_encode
 
 from dimp import AsymmetricKey, SignKey, VerifyKey
 from dimp import PublicKey, PublicKeyFactory

@@ -25,12 +25,12 @@
 
 from typing import Optional, Union
 
-from dimp import base58_encode, base58_decode, sha256, ripemd160
-from dimp import StringWrapper
+from mkm.types import ConstantString
+from mkm.crypto import base58_encode, base58_decode, sha256, ripemd160
 from dimp import Address, NetworkType
 
 
-class BTCAddress(StringWrapper, Address):
+class BTCAddress(ConstantString, Address):
     """
         Address like BitCoin
         ~~~~~~~~~~~~~~~~~~~~

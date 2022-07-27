@@ -25,12 +25,12 @@
 
 from typing import Optional
 
-from dimp import hex_encode, keccak256
-from dimp import StringWrapper
+from mkm.types import ConstantString
+from mkm.crypto import hex_encode, keccak256
 from dimp import Address, NetworkType
 
 
-class ETHAddress(StringWrapper, Address):
+class ETHAddress(ConstantString, Address):
     """
         Address like Ethereum
         ~~~~~~~~~~~~~~~~~~~~~

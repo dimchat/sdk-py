@@ -32,7 +32,7 @@
 
 from Crypto.Hash import keccak
 
-from dimp import DataDigester, KECCAK256
+from mkm.crypto import DataDigester, KECCAK256
 
 
 class K(DataDigester):

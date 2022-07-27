@@ -34,7 +34,7 @@ from typing import Optional
 
 import base58
 
-from dimp import DataCoder, Base58
+from mkm.crypto import DataCoder, Base58
 
 
 """

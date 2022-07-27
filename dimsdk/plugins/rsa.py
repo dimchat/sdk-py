@@ -30,9 +30,9 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
 from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
-from dimp import Dictionary
-from dimp import EncryptKey, DecryptKey
-from dimp import AsymmetricKey, PublicKey, PrivateKey
+from mkm.types import Dictionary
+from mkm.crypto import EncryptKey, DecryptKey
+from mkm.crypto import AsymmetricKey, PublicKey, PrivateKey
 
 
 class RSAPublicKey(Dictionary, PublicKey, EncryptKey):

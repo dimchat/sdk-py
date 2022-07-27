@@ -28,9 +28,9 @@ from typing import Optional
 
 from Crypto.Cipher import AES
 
-from dimp import base64_encode, base64_decode
-from dimp import Dictionary
-from dimp import SymmetricKey
+from mkm.types import Dictionary
+from mkm.crypto import SymmetricKey
+from mkm.crypto import base64_encode, base64_decode
 
 
 def random_bytes(size: int) -> bytes:

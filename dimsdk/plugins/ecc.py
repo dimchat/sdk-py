@@ -28,8 +28,8 @@ from typing import Union, Optional
 
 import ecdsa
 
-from dimp import Dictionary
-from dimp import AsymmetricKey, PublicKey, PrivateKey
+from mkm.types import Dictionary
+from mkm.crypto import AsymmetricKey, PublicKey, PrivateKey
 
 
 class ECCPublicKey(Dictionary, PublicKey):

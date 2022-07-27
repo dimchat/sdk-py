@@ -130,13 +130,13 @@ class EntityTestCase(unittest.TestCase):
             print('moki: ', moki)
 
 
-class CommandTestCase(unittest.TestCase):
-
-    def test1_receipt(self):
-        print('\n---------------- %s' % self)
-
-        content = ReceiptCommand(message='OK!')
-        print('receipt: %s' % content)
+# class CommandTestCase(unittest.TestCase):
+#
+#     def test1_receipt(self):
+#         print('\n---------------- %s' % self)
+#
+#         content = ReceiptCommand(message='OK!')
+#         print('receipt: %s' % content)
 
 
 class CryptoTestCase(unittest.TestCase):
