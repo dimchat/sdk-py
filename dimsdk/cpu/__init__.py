@@ -40,6 +40,8 @@ from .factory import GeneralContentProcessorFactory
 from .base import BaseContentProcessor, BaseCommandProcessor
 
 from .forward import ForwardContentProcessor
+from .array import ArrayContentProcessor
+from .customized import CustomizedContentProcessor, CustomizedContentHandler
 from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor
 
@@ -60,6 +62,8 @@ __all__ = [
     'BaseCommandProcessor',
 
     'ForwardContentProcessor',
+    'ArrayContentProcessor',
+    'CustomizedContentProcessor', 'CustomizedContentHandler',
     'MetaCommandProcessor',
     'DocumentCommandProcessor',
 

@@ -2,12 +2,12 @@
 #
 #   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
-#                                Written in 2019 by Moky <albert.moky@gmail.com>
+#                                Written in 2022 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2019 Albert Moky
+# Copyright (c) 2022 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,48 +28,30 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .plugins import *
+from typing import List
 
-from .network import *
-from .group import *
+from dimp import ReliableMessage
+from dimp import Content, ArrayContent, ListContent
 
-from .ans import AddressNameService
-from .delegate import CipherKeyDelegate
+from .base import BaseContentProcessor
 
-from .facebook import Facebook
-from .messenger import Messenger
-from .packer import MessagePacker
-from .processor import MessageProcessor
-from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
 
-name = 'DIM-SDK'
+class ArrayContentProcessor(BaseContentProcessor):
 
-__author__ = 'Albert Moky'
-
-__all__ = [
-
-    #
-    #   Plugins
-    #
-    'PlainKey',
-    'BTCAddress', 'ETHAddress',
-    'DefaultMeta', 'BTCMeta', 'ETHMeta',
-
-    #
-    #  network
-    #
-    'ServiceProvider', 'Station', 'Robot',
-
-    #
-    #  group
-    #
-    'Polylogue', 'Chatroom', 'ChatroomDataSource',
-
-    #
-    #  SDK
-    #
-    'AddressNameService', 'CipherKeyDelegate',
-    'Facebook', 'Messenger',
-    'MessagePacker', 'MessageProcessor',
-    'ContentProcessor', 'ContentProcessorFactory', 'ContentProcessorCreator',
-]
+    # Override
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, ArrayContent), 'forward content error: %s' % content
+        # call messenger to process it
+        messenger = self.messenger
+        contents = content.contents
+        responses = []
+        for item in contents:
+            results = messenger.process_content(content=item, r_msg=msg)
+            if results is None:
+                res = ListContent(contents=[])
+            elif len(results) == 1:
+                res = results[0]
+            else:
+                res = ListContent(contents=results)
+            responses.append(res)
+        return responses

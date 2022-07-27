@@ -41,8 +41,11 @@ from dimp import ContentType, Command, GroupCommand
 from ..helper import TwinsHelper
 from ..proc_content import ContentProcessor, ContentProcessorCreator
 
-from .base import BaseContentProcessor, BaseCommandProcessor
+# from .base import BaseContentProcessor
+from .base import BaseCommandProcessor
 from .forward import ForwardContentProcessor
+from .array import ArrayContentProcessor
+# from .customized import CustomizedContentProcessor
 
 from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor
@@ -63,14 +66,22 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         # forward content
         if msg_type == ContentType.FORWARD.value:
             return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # array content
+        if msg_type == ContentType.ARRAY.value:
+            return ArrayContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # # application customized
+        # if msg_type == ContentType.APPLICATION.value:
+        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # elif msg_type == ContentType.CUSTOMIZED.value:
+        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # group commands
         if msg_type == ContentType.COMMAND.value:
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         elif msg_type == ContentType.HISTORY.value:
             return HistoryCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        # default contents
-        if msg_type == 0:
-            return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # # default contents
+        # if msg_type == 0:
+        #     return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
     # Override
     def create_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:

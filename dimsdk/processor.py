@@ -60,10 +60,10 @@ class MessageProcessor(TwinsHelper, Processor):
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
         return self.__factory.get_processor(content=content)
 
-    def get_processor_by_type(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
         return self.__factory.get_content_processor(msg_type=msg_type)
 
-    def get_processor_by_name(self, cmd_name: str, msg_type: Union[int, ContentType] = 0) -> Optional[ContentProcessor]:
+    def get_command_processor(self, cmd_name: str, msg_type: Union[int, ContentType] = 0) -> Optional[ContentProcessor]:
         return self.__factory.get_command_processor(msg_type=msg_type, cmd_name=cmd_name)
 
     #
@@ -163,5 +163,9 @@ class MessageProcessor(TwinsHelper, Processor):
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # TODO: override to check group
         cpu = self.get_processor(content=content)
+        if cpu is None:
+            # default content processor
+            cpu = self.get_content_processor(msg_type=0)
+            assert cpu is not None, 'default CPU not defined'
         return cpu.process(content=content, msg=r_msg)
         # TODO: override to filter the response

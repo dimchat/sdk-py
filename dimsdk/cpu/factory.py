@@ -93,17 +93,13 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
             cpu = self.get_command_processor(msg_type=msg_type, cmd_name=name)
             if cpu is not None:
                 return cpu
-            if isinstance(content, GroupCommand):
+            elif isinstance(content, GroupCommand):
                 # group command processor
                 cpu = self.get_command_processor(msg_type=msg_type, cmd_name='group')
                 if cpu is not None:
                     return cpu
         # content processor
-        cpu = self.get_content_processor(msg_type=msg_type)
-        if cpu is None:
-            # default content processor
-            cpu = self.get_content_processor(msg_type=0)
-        return cpu
+        return self.get_content_processor(msg_type=msg_type)
 
     # Override
     def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:

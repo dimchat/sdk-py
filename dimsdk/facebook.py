@@ -39,7 +39,7 @@ from abc import abstractmethod
 from typing import Optional, List
 
 from dimp import NetworkType, ID
-from dimp import User, Group
+from dimp import User, Group, BaseUser, BaseGroup
 from dimp import Meta, Document
 from dimp import Barrack
 
@@ -190,14 +190,14 @@ class Facebook(Barrack):
     def create_user(self, identifier: ID) -> Optional[User]:
         if identifier.is_broadcast:
             # create user 'anyone@anywhere'
-            return User(identifier=identifier)
+            return BaseUser(identifier=identifier)
         # make sure meta exists
         assert self.meta(identifier) is not None, 'failed to get meta for user: %s' % identifier
         # TODO: make sure visa key exists before calling this
         # check user type
         u_type = identifier.type
         if u_type in [NetworkType.MAIN, NetworkType.BTC_MAIN]:
-            return User(identifier=identifier)
+            return BaseUser(identifier=identifier)
         if u_type == NetworkType.ROBOT:
             return Robot(identifier=identifier)
         if u_type == NetworkType.STATION:
@@ -208,7 +208,7 @@ class Facebook(Barrack):
     def create_group(self, identifier: ID) -> Optional[Group]:
         if identifier.is_broadcast:
             # create group 'everyone@everywhere'
-            return Group(identifier=identifier)
+            return BaseGroup(identifier=identifier)
         # make sure meta exists
         assert self.meta(identifier) is not None, 'failed to get meta for group: %s' % identifier
         # check group type
