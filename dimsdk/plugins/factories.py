@@ -25,18 +25,16 @@
 
 from typing import Optional, Union
 
-from mkm.crypto import utf8_encode
 from mkm.crypto.cryptography import key_algorithm
-from mkm.meta import meta_type
-from mkm.profile import document_identifier
+from mkm.crypto import utf8_encode
+from mkm.crypto import AsymmetricKey, SignKey, VerifyKey
+from mkm.crypto import PublicKey, PublicKeyFactory
+from mkm.crypto import PrivateKey, PrivateKeyFactory
+from mkm.crypto import SymmetricKey, SymmetricKeyFactory
+from mkm.protocol import meta_type
+from mkm.core.profile import document_identifier
 
-from mkm import BaseAddressFactory
-
-from dimp import AsymmetricKey, SignKey, VerifyKey
-from dimp import PublicKey, PublicKeyFactory
-from dimp import PrivateKey, PrivateKeyFactory
-from dimp import SymmetricKey, SymmetricKeyFactory
-from dimp import ID, Address
+from dimp import ID, Address, BaseAddressFactory
 from dimp import MetaType, Meta, MetaFactory
 from dimp import Document, DocumentFactory
 from dimp import BaseDocument, BaseVisa, BaseBulletin

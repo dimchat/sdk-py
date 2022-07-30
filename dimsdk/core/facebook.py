@@ -43,8 +43,8 @@ from dimp import User, Group, BaseUser, BaseGroup
 from dimp import Meta, Document
 from dimp import Barrack
 
-from .network import ServiceProvider, Station, Robot
-from .group import Polylogue
+from ..mkm import ServiceProvider, Station, Robot
+from ..mkm import Polylogue
 
 
 def thanos(planet: dict, finger: int) -> int:

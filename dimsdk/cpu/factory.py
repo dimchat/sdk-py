@@ -39,11 +39,9 @@ from typing import Dict, Optional, Union
 
 from dimp import ContentType, Content, Command, GroupCommand
 
-from ..facebook import Facebook
-from ..messenger import Messenger
-from ..helper import TwinsHelper
-from ..proc_content import ContentProcessor
-from ..proc_content import ContentProcessorFactory
+from ..core.helper import TwinsHelper
+from ..core import Facebook, Messenger
+from ..core import ContentProcessor, ContentProcessorFactory
 
 from .creator import ContentProcessorCreator
 

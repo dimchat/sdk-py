@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from typing import Optional, List
 
-from dimp import SignKey, DecryptKey
-from dimp import ID, User, Meta, Document
-
+from dimsdk import SignKey, DecryptKey
+from dimsdk import ID, User, Meta, Document
 from dimsdk import Facebook
 
 

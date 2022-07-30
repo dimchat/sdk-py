@@ -30,7 +30,9 @@
 
 from typing import Optional
 
-from dimp import ID, json_encode, json_decode, utf8_encode, utf8_decode
+from mkm.crypto import json_encode, json_decode, utf8_encode, utf8_decode
+
+from dimp import ID
 from dimp import Content, Command
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Packer

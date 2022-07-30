@@ -25,7 +25,8 @@
 
 from typing import Union, Optional
 
-from dimp import VerifyKey
+from mkm.crypto import VerifyKey
+
 from dimp import NetworkType, Address
 from dimp import MetaType, BaseMeta
 

@@ -27,6 +27,7 @@ from typing import Optional
 
 from mkm.types import ConstantString
 from mkm.crypto import hex_encode, keccak256
+
 from dimp import Address, NetworkType
 
 
@@ -49,6 +50,18 @@ class ETHAddress(ConstantString, Address):
     @property  # Override
     def network(self) -> int:
         return NetworkType.MAIN.value
+
+    @property  # Override
+    def is_broadcast(self) -> bool:
+        return False
+
+    @property  # Override
+    def is_user(self) -> bool:
+        return True
+
+    @property  # Override
+    def is_group(self) -> bool:
+        return False
 
     @classmethod
     def validate_address(cls, address: str) -> Optional[str]:

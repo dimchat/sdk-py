@@ -10,7 +10,7 @@
 from abc import abstractmethod
 from typing import Optional
 
-from dimp import SymmetricKey, ID
+from dimsdk import SymmetricKey, ID
 from dimsdk import CipherKeyDelegate
 from dimsdk import PlainKey
 

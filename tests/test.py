@@ -10,7 +10,6 @@
 
 import unittest
 
-from dimp import *
 from dimsdk import *
 from dimsdk.plugins import ETHAddress, ETHMeta
 

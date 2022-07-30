@@ -10,7 +10,7 @@
 import os
 from typing import Optional
 
-from dimp import User
+from dimsdk import User
 
 from keycache import KeyCache
 

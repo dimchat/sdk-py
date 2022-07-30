@@ -131,6 +131,14 @@ class Station(User):
         return self.__user.encrypt(data=data)
 
     # Override
+    def sign(self, data: bytes) -> bytes:
+        return self.__user.sign(data=data)
+
+    # Override
+    def decrypt(self, data: bytes) -> Optional[bytes]:
+        return self.__user.decrypt(data=data)
+
+    # Override
     def sign_visa(self, visa: Visa) -> Visa:
         return self.__user.sign_visa(visa=visa)
 

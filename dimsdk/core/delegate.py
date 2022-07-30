@@ -31,7 +31,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from dimp import SymmetricKey
+from mkm.crypto import SymmetricKey
+
 from dimp import ID
 
 

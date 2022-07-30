@@ -28,10 +28,16 @@
 # SOFTWARE.
 # ==============================================================================
 
+from .station import ServiceProvider, Station
+from .robot import Robot
+
 from .polylogue import Polylogue
 from .chatroom import Chatroom, ChatroomDataSource
 
 __all__ = [
+
+    'ServiceProvider', 'Station',
+    'Robot',
 
     'Polylogue',
     'Chatroom', 'ChatroomDataSource',

@@ -38,8 +38,8 @@ from typing import Optional, Union
 
 from dimp import ContentType, Command, GroupCommand
 
-from ..helper import TwinsHelper
-from ..proc_content import ContentProcessor, ContentProcessorCreator
+from ..core.helper import TwinsHelper
+from ..core import ContentProcessor, ContentProcessorCreator
 
 # from .base import BaseContentProcessor
 from .base import BaseCommandProcessor

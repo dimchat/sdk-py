@@ -27,6 +27,8 @@ from typing import Optional, Union
 
 from mkm.types import ConstantString
 from mkm.crypto import base58_encode, base58_decode, sha256, ripemd160
+from mkm.protocol import network_is_user, network_is_group
+
 from dimp import Address, NetworkType
 
 
@@ -57,6 +59,18 @@ class BTCAddress(ConstantString, Address):
     @property  # Override
     def network(self) -> int:
         return self.__network
+
+    @property  # Override
+    def is_broadcast(self) -> bool:
+        return False
+
+    @property  # Override
+    def is_user(self) -> bool:
+        return network_is_user(network=self.network)
+
+    @property  # Override
+    def is_group(self) -> bool:
+        return network_is_group(network=self.network)
 
     #
     #   Factory methods

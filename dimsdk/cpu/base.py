@@ -40,8 +40,8 @@ from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content, BaseTextContent, Command
 
-from ..helper import TwinsHelper
-from ..proc_content import ContentProcessor
+from ..core.helper import TwinsHelper
+from ..core import ContentProcessor
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):

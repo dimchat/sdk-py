@@ -37,8 +37,10 @@
 
 from typing import Optional, List
 
+from mkm.crypto import SymmetricKey
+
 from dimp.transceiver import is_broadcast
-from dimp import ID, SymmetricKey
+from dimp import ID
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Transceiver, Packer, Processor
