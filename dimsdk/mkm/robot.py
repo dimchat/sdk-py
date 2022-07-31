@@ -34,10 +34,10 @@
 """
 
 from dimp import ID, NetworkType
-from dimp import User
+from dimp import BaseUser
 
 
-class Robot(User):
+class Robot(BaseUser):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)

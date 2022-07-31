@@ -39,7 +39,8 @@ from abc import abstractmethod
 from typing import Optional, List
 
 from dimp import ID, NetworkType
-from dimp import Group, GroupDataSource
+from dimp import GroupDataSource
+from dimp import BaseGroup
 
 
 class ChatroomDataSource(GroupDataSource):
@@ -62,13 +63,13 @@ class ChatroomDataSource(GroupDataSource):
         pass
 
 
-class Chatroom(Group):
+class Chatroom(BaseGroup):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)
         assert identifier.type == NetworkType.CHATROOM, 'Chatroom ID type error: %s' % identifier
 
-    @Group.data_source.getter  # Override
+    @BaseGroup.data_source.getter  # Override
     def data_source(self) -> Optional[ChatroomDataSource]:
         facebook = super().data_source
         assert facebook is None or isinstance(facebook, ChatroomDataSource), 'error: %s' % facebook

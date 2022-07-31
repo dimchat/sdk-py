@@ -40,8 +40,8 @@ from typing import Optional, List
 
 from dimp import NetworkType, ID, Meta, Document, Visa
 from dimp import ANYWHERE
-from dimp import User, Group, UserDataSource
-from dimp import BaseUser
+from dimp import User, UserDataSource
+from dimp import BaseUser, BaseGroup
 
 
 class Station(User):
@@ -175,7 +175,7 @@ class Station(User):
         return self.__port
 
 
-class ServiceProvider(Group):
+class ServiceProvider(BaseGroup):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)

@@ -35,10 +35,11 @@
     Simple group chat
 """
 
-from dimp import ID, Group, NetworkType
+from dimp import ID, NetworkType
+from dimp import BaseGroup
 
 
-class Polylogue(Group):
+class Polylogue(BaseGroup):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)
