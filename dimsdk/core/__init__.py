@@ -47,16 +47,16 @@ def register_core_factories():
     register_content_factories()
     register_command_factories()
 
-    # document
+    # Customized contents
+    factory = ContentFactoryBuilder(content_class=AppCustomizedContent)
+    Content.register(msg_type=ContentType.APPLICATION, factory=factory)
+    Content.register(msg_type=ContentType.CUSTOMIZED, factory=factory)
+
+    # Document commands
     factory = CommandFactoryBuilder(command_class=BaseDocumentCommand)
     Command.register(cmd='profile', factory=factory)
     Command.register(cmd='visa', factory=factory)
     Command.register(cmd='bulletin', factory=factory)
-
-    # customized
-    factory = ContentFactoryBuilder(content_class=AppCustomizedContent)
-    Content.register(msg_type=ContentType.APPLICATION, factory=factory)
-    Content.register(msg_type=ContentType.CUSTOMIZED, factory=factory)
 
 
 __all__ = [

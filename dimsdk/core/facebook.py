@@ -202,7 +202,8 @@ class Facebook(Barrack):
             return Robot(identifier=identifier)
         if u_type == NetworkType.STATION:
             # TODO: get station address before create it
-            return Station(identifier=identifier, host='0.0.0.0', port=0)
+            # return Station(identifier=identifier, host='0.0.0.0', port=0)
+            return Station(identifier=identifier)
         raise TypeError('unsupported user type: %s' % u_type)
 
     def create_group(self, identifier: ID) -> Optional[Group]:

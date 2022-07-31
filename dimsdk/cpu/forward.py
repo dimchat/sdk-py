@@ -37,7 +37,7 @@
 from typing import List
 
 from dimp import ReliableMessage
-from dimp import Content, ForwardContent, SecretContent
+from dimp import Content, ForwardContent
 
 from .base import BaseContentProcessor
 
@@ -54,11 +54,13 @@ class ForwardContentProcessor(BaseContentProcessor):
         messenger = self.messenger
         secrets = content.secrets
         responses = []
-        for msg in secrets:
-            results = messenger.process_reliable_message(msg=msg)
-            if results is None:  # or len(results) == 0:
-                continue
-            for res in results:
-                responses.append(res)
-        forward = SecretContent(messages=responses)
-        return self._respond_content(content=forward)
+        for item in secrets:
+            results = messenger.process_reliable_message(msg=item)
+            if results is None:
+                res = ForwardContent.create(messages=[])
+            elif len(results) == 1:
+                res = ForwardContent.create(message=results[0])
+            else:
+                res = ForwardContent.create(messages=results)
+            responses.append(res)
+        return responses

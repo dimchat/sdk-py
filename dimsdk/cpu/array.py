@@ -31,7 +31,7 @@
 from typing import List
 
 from dimp import ReliableMessage
-from dimp import Content, ArrayContent, ListContent
+from dimp import Content, ArrayContent
 
 from .base import BaseContentProcessor
 
@@ -48,10 +48,10 @@ class ArrayContentProcessor(BaseContentProcessor):
         for item in contents:
             results = messenger.process_content(content=item, r_msg=msg)
             if results is None:
-                res = ListContent(contents=[])
+                res = ArrayContent.create(contents=[])
             elif len(results) == 1:
                 res = results[0]
             else:
-                res = ListContent(contents=results)
+                res = ArrayContent.create(contents=results)
             responses.append(res)
         return responses

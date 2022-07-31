@@ -38,13 +38,17 @@ from typing import Optional, List
 
 from dimp import ID
 from dimp import ReliableMessage
-from dimp import Content, BaseTextContent, Command
+from dimp import Content, TextContent, Command
 
 from ..core.helper import TwinsHelper
 from ..core import ContentProcessor
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):
+    """
+        Content Processing Unit
+        ~~~~~~~~~~~~~~~~~~~~~~~
+    """
 
     FMT_CONTENT_NOT_SUPPORT = 'Content (type: %s) not support yet!'
 
@@ -55,7 +59,7 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
 
     # noinspection PyMethodMayBeStatic
     def _respond_text(self, text: str, group: Optional[ID] = None) -> List[Content]:
-        res = BaseTextContent(text=text)
+        res = TextContent.create(text=text)
         if group is not None:
             res.group = group
         return [res]
@@ -69,6 +73,10 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
 
 
 class BaseCommandProcessor(BaseContentProcessor):
+    """
+        Command Processing Unit
+        ~~~~~~~~~~~~~~~~~~~~~~~
+    """
 
     FMT_CMD_NOT_SUPPORT = 'Command (name: %s) not support yet!'
 

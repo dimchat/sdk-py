@@ -45,11 +45,11 @@ class CustomizedContentHandler(ABC):
     """
 
     @abstractmethod
-    def handle(self, module: str, sender: ID, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
+    def handle_action(self, act: str, sender: ID, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
         """
         Do your job
 
-        @param module:  module name
+        @param act:     action
         @param sender:  user ID
         @param content: customized content
         @param msg:     network message
@@ -64,41 +64,45 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     """
     FMT_APP_NOT_SUPPORT = 'Customized Content (app: %s) not support yet!'
-    FMT_MOD_NOT_SUPPORT = 'Customized Content (app: %s, mod: %s) not support yet!'
+    FMT_ACT_NOT_SUPPORT = 'Customized Content (app: %s, mod: %s, act: %s) not support yet!'
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, CustomizedContent), 'customized content error: %s' % content
         # 1. check app id
         app = content.application
-        responses = self._filter(application=app, content=content, msg=msg)
+        responses = self._filter(app=app, content=content, msg=msg)
         if responses is not None:
             # application ID not found
             return responses
         # 2. get handler with module name
         mod = content.module
-        handler = self._fetch(module=mod, content=content, msg=msg)
+        handler = self._fetch(mod=mod, content=content, msg=msg)
         if handler is None:
             # module not support
             return []
         # 3. do the job
+        act = content.action
         sender = msg.sender
-        return handler.handle(module=mod, sender=sender, content=content, msg=msg)
+        return handler.handle_action(act=act, sender=sender, content=content, msg=msg)
 
     # protected
-    def _filter(self, application: str, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
+    def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
         """ Override for your application """
-        text = self.FMT_APP_NOT_SUPPORT % application
+        text = self.FMT_APP_NOT_SUPPORT % app
         return self._respond_text(text=text)
 
     # protected
-    def _fetch(self, module: str, content: CustomizedContent, msg: ReliableMessage) -> CustomizedContentHandler:
+    def _fetch(self, mod: str, content: CustomizedContent, msg: ReliableMessage) -> CustomizedContentHandler:
+        """ Override for you module """
         # if the application has too many modules, I suggest you to
         # use different handler to do the job for each module.
         return self
 
     # Override
-    def handle(self, module: str, sender: ID, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
+    def handle_action(self, act: str, sender: ID, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
+        """ Override for customized actions """
         app = content.application
-        text = self.FMT_MOD_NOT_SUPPORT % (app, module)
+        mod = content.module
+        text = self.FMT_ACT_NOT_SUPPORT % (app, mod, act)
         return self._respond_text(text=text)
