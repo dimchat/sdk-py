@@ -41,8 +41,8 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.12.0',
-        'dkd>=0.12.0',
+        'dimp>=0.12.1',
+        'dkd>=0.12.1',
         'mkm>=0.12.0',
 
         'pycryptodome',  # 3.14.1

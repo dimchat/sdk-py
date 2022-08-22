@@ -156,6 +156,9 @@ class MessageProcessor(TwinsHelper, Processor):
                 continue
             env = Envelope.create(sender=me, receiver=sender)
             msg = InstantMessage.create(head=env, body=res)
+            if msg is None:
+                # should not happen
+                continue
             messages.append(msg)
         return messages
 

@@ -29,7 +29,7 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Optional, List
 
 from dimp import ID
 from dimp import ReliableMessage
@@ -87,13 +87,13 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         return handler.handle_action(act=act, sender=sender, content=content, msg=msg)
 
     # protected
-    def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
+    def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[List[Content]]:
         """ Override for your application """
         text = self.FMT_APP_NOT_SUPPORT % app
         return self._respond_text(text=text)
 
     # protected
-    def _fetch(self, mod: str, content: CustomizedContent, msg: ReliableMessage) -> CustomizedContentHandler:
+    def _fetch(self, mod: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[CustomizedContentHandler]:
         """ Override for you module """
         # if the application has too many modules, I suggest you to
         # use different handler to do the job for each module.
