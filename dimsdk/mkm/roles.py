@@ -87,6 +87,7 @@ from enum import IntEnum
 
 
 class MemberType(IntEnum):
+    """ Roles for Chatroom """
     FOUNDER = 0x20  # 0010 0000
     OWNER = 0x3F  # 0011 1111
     ADMIN = 0x0F  # 0000 1111

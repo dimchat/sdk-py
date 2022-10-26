@@ -136,7 +136,6 @@ __all__ = [
     #   Core
     #
     'ServiceProvider', 'Station', 'Bot',
-    'Polylogue', 'Chatroom', 'ChatroomDataSource',
 
     'AddressNameService', 'CipherKeyDelegate', 'TwinsHelper',
     'Facebook', 'Messenger', 'MessagePacker', 'MessageProcessor',

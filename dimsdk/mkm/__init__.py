@@ -31,14 +31,9 @@
 from .station import ServiceProvider, Station
 from .robot import Bot
 
-from .polylogue import Polylogue
-from .chatroom import Chatroom, ChatroomDataSource
-
 __all__ = [
 
-    'ServiceProvider', 'Station',
+    'ServiceProvider',
+    'Station',
     'Bot',
-
-    'Polylogue',
-    'Chatroom', 'ChatroomDataSource',
 ]
