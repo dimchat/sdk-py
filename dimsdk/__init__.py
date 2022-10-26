@@ -70,7 +70,7 @@ __all__ = [
     #
     #   MingKeMing
     #
-    'NetworkType', 'MetaType',
+    'EntityType', 'MetaType',
     'Address', 'AddressFactory',
     'ID', 'IDFactory',
     'Meta', 'MetaFactory',
@@ -135,7 +135,7 @@ __all__ = [
     #
     #   Core
     #
-    'ServiceProvider', 'Station', 'Robot',
+    'ServiceProvider', 'Station', 'Bot',
     'Polylogue', 'Chatroom', 'ChatroomDataSource',
 
     'AddressNameService', 'CipherKeyDelegate', 'TwinsHelper',

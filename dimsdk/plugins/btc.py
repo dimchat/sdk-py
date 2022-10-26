@@ -27,9 +27,9 @@ from typing import Optional, Union
 
 from mkm.types import ConstantString
 from mkm.crypto import base58_encode, base58_decode, sha256, ripemd160
-from mkm.protocol import network_is_user, network_is_group
+from mkm.protocol import entity_is_user, entity_is_group
 
-from dimp import Address, NetworkType
+from dimp import Address, EntityType
 
 
 class BTCAddress(ConstantString, Address):
@@ -49,9 +49,9 @@ class BTCAddress(ConstantString, Address):
             address     = base58_encode(network + digest + code);
     """
 
-    def __init__(self, address: str, network: Union[NetworkType, int]):
+    def __init__(self, address: str, network: Union[EntityType, int]):
         super().__init__(string=address)
-        if isinstance(network, NetworkType):
+        if isinstance(network, EntityType):
             self.__network = network.value
         else:
             self.__network = network
@@ -66,17 +66,17 @@ class BTCAddress(ConstantString, Address):
 
     @property  # Override
     def is_user(self) -> bool:
-        return network_is_user(network=self.network)
+        return network_is_user(network=self.type)
 
     @property  # Override
     def is_group(self) -> bool:
-        return network_is_group(network=self.network)
+        return network_is_group(network=self.type)
 
     #
     #   Factory methods
     #
     @classmethod
-    def from_data(cls, fingerprint: bytes, network: Union[NetworkType, int]) -> Address:
+    def from_data(cls, fingerprint: bytes, network: Union[EntityType, int]) -> Address:
         """
         Generate address with fingerprint and network ID
 
@@ -84,7 +84,7 @@ class BTCAddress(ConstantString, Address):
         :param network:     address type
         :return: Address object
         """
-        if isinstance(network, NetworkType):
+        if isinstance(network, EntityType):
             network = network.value
         prefix = chr(network).encode('latin1')
         digest = ripemd160(sha256(fingerprint))

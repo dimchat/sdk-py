@@ -29,16 +29,16 @@
 # ==============================================================================
 
 """
-    Robot User
-    ~~~~~~~~~~
+    Bot User
+    ~~~~~~~~
 """
 
-from dimp import ID, NetworkType
+from dimp import ID, EntityType
 from dimp import BaseUser
 
 
-class Robot(BaseUser):
+class Bot(BaseUser):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)
-        assert identifier.type == NetworkType.ROBOT, 'Robot ID type error: %s' % identifier
+        assert identifier.type == EntityType.BOT, 'Bot ID type error: %s' % identifier

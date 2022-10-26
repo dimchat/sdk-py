@@ -38,7 +38,7 @@
 
 from typing import Optional, List
 
-from dimp import NetworkType, ID, Meta, Document, Visa
+from dimp import EntityType, ID, Meta, Document, Visa
 from dimp import ANYWHERE
 from dimp import User, UserDataSource
 from dimp import BaseUser, BaseGroup
@@ -54,7 +54,7 @@ class Station(User):
         if identifier is None:
             identifier = self.ANY
         else:
-            assert identifier.type == NetworkType.STATION, 'Station ID type error: %s' % identifier
+            assert identifier.type == EntityType.STATION, 'Station ID type error: %s' % identifier
         self.__user = BaseUser(identifier=identifier)
         self.__host = host
         self.__port = port
@@ -70,7 +70,7 @@ class Station(User):
     def __str__(self) -> str:
         clazz = self.__class__.__name__
         identifier = self.identifier
-        network = identifier.address.network
+        network = identifier.address.type
         host = self.host
         port = self.port
         return '<%s: %s(%d) host="%s" port=%d />' % (clazz, identifier, network, host, port)
@@ -179,7 +179,7 @@ class ServiceProvider(BaseGroup):
 
     def __init__(self, identifier: ID):
         super().__init__(identifier=identifier)
-        assert identifier.type == NetworkType.PROVIDER, 'Service Provider ID type error: %s' % identifier
+        assert identifier.type == EntityType.ISP, 'Service Provider ID type error: %s' % identifier
 
     @property
     def stations(self):

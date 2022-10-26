@@ -216,7 +216,7 @@ class CryptoTestCase(unittest.TestCase):
                 'data': pub
             },
         })
-        identifier = meta.generate_address(network=NetworkType.MAIN)
+        identifier = meta.generate_address(network=EntityType.USER)
         print('ETH identifier: %s' % identifier)
         self.assertEqual(identifier, exp)
 

@@ -28,7 +28,7 @@ from typing import Optional
 from mkm.types import ConstantString
 from mkm.crypto import hex_encode, keccak256
 
-from dimp import Address, NetworkType
+from dimp import Address, EntityType
 
 
 class ETHAddress(ConstantString, Address):
@@ -49,7 +49,7 @@ class ETHAddress(ConstantString, Address):
 
     @property  # Override
     def network(self) -> int:
-        return NetworkType.MAIN.value
+        return EntityType.USER.value
 
     @property  # Override
     def is_broadcast(self) -> bool:

@@ -29,7 +29,7 @@
 # ==============================================================================
 
 from .station import ServiceProvider, Station
-from .robot import Robot
+from .robot import Bot
 
 from .polylogue import Polylogue
 from .chatroom import Chatroom, ChatroomDataSource
@@ -37,7 +37,7 @@ from .chatroom import Chatroom, ChatroomDataSource
 __all__ = [
 
     'ServiceProvider', 'Station',
-    'Robot',
+    'Bot',
 
     'Polylogue',
     'Chatroom', 'ChatroomDataSource',

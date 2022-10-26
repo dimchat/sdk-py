@@ -14,7 +14,7 @@ import io
 
 from setuptools import setup, find_packages
 
-__version__ = '0.7.2'
+__version__ = '0.7.3'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -41,9 +41,9 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.12.1',
+        'dimp>=0.12.2',
         'dkd>=0.12.1',
-        'mkm>=0.12.0',
+        'mkm>=0.12.1',
 
         'pycryptodome',  # 3.14.1
         'base58',  # 1.0.3

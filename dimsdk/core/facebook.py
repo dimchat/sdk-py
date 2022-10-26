@@ -38,13 +38,12 @@
 from abc import abstractmethod
 from typing import Optional, List
 
-from dimp import NetworkType, ID
+from dimp import EntityType, ID
 from dimp import User, Group, BaseUser, BaseGroup
 from dimp import Meta, Document
 from dimp import Barrack
 
-from ..mkm import ServiceProvider, Station, Robot
-from ..mkm import Polylogue
+from ..mkm import ServiceProvider, Station, Bot
 
 
 def thanos(planet: dict, finger: int) -> int:
@@ -155,7 +154,7 @@ class Facebook(Barrack):
             # check by owner
             owner = self.owner(identifier=identifier)
             if owner is None:
-                if identifier.type == NetworkType.POLYLOGUE:
+                if identifier.type == EntityType.GROUP:
                     # NOTICE: if this is a polylogue profile
                     #             verify it with the founder's meta.key
                     #             (which equals to the group's meta.key)
@@ -183,7 +182,7 @@ class Facebook(Barrack):
         return Meta.matches(meta=g_meta, key=u_meta.key)
 
     def is_owner(self, member: ID, group: ID) -> bool:
-        if group.type == NetworkType.POLYLOGUE:
+        if group.type == EntityType.GROUP:
             return self.is_founder(member=member, group=group)
         raise AssertionError('only Polylogue so far')
 
@@ -196,11 +195,11 @@ class Facebook(Barrack):
         # TODO: make sure visa key exists before calling this
         # check user type
         u_type = identifier.type
-        if u_type in [NetworkType.MAIN, NetworkType.BTC_MAIN]:
+        if u_type == EntityType.USER:
             return BaseUser(identifier=identifier)
-        if u_type == NetworkType.ROBOT:
-            return Robot(identifier=identifier)
-        if u_type == NetworkType.STATION:
+        if u_type == EntityType.BOT:
+            return Bot(identifier=identifier)
+        if u_type == EntityType.STATION:
             # TODO: get station address before create it
             # return Station(identifier=identifier, host='0.0.0.0', port=0)
             return Station(identifier=identifier)
@@ -214,11 +213,7 @@ class Facebook(Barrack):
         assert self.meta(identifier) is not None, 'failed to get meta for group: %s' % identifier
         # check group type
         g_type = identifier.type
-        if g_type == NetworkType.POLYLOGUE:
-            return Polylogue(identifier=identifier)
-        if g_type == NetworkType.CHATROOM:
-            raise NotImplementedError('Chatroom not implemented')
-        if g_type == NetworkType.PROVIDER:
+        if g_type == EntityType.ISP:
             return ServiceProvider(identifier=identifier)
         raise TypeError('unsupported group type: %s' % g_type)
 

@@ -27,7 +27,7 @@ from typing import Union, Optional
 
 from mkm.crypto import VerifyKey
 
-from dimp import NetworkType, Address
+from dimp import EntityType, Address
 from dimp import MetaType, BaseMeta
 
 from .btc import BTCAddress
@@ -59,9 +59,9 @@ class DefaultMeta(BaseMeta):
         self.__addresses = {}
 
     # Override
-    def generate_address(self, network: Union[NetworkType, int]) -> Address:
+    def generate_address(self, network: Union[EntityType, int]) -> Address:
         assert self.type == MetaType.MKM, 'meta version error: %d' % self.type
-        if isinstance(network, NetworkType):
+        if isinstance(network, EntityType):
             network = network.value
         address = self.__addresses.get(network)
         if address is None:
@@ -97,7 +97,7 @@ class BTCMeta(BaseMeta):
         self.__address: Optional[Address] = None
 
     # Override
-    def generate_address(self, network: Union[NetworkType, int]) -> Address:
+    def generate_address(self, network: Union[EntityType, int]) -> Address:
         assert self.type in [MetaType.BTC, MetaType.ExBTC], 'meta version error: %d' % self.type
         if self.__address is None:
             # generate and cache it
@@ -130,7 +130,7 @@ class ETHMeta(BaseMeta):
         self.__address: Optional[Address] = None
 
     # Override
-    def generate_address(self, network: Union[NetworkType, int]) -> Address:
+    def generate_address(self, network: Union[EntityType, int]) -> Address:
         assert self.type in [MetaType.ETH, MetaType.ExETH], 'meta version error: %d' % self.type
         if self.__address is None:
             # generate and cache it
