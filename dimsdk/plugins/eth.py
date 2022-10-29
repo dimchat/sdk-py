@@ -48,7 +48,7 @@ class ETHAddress(ConstantString, Address):
         super().__init__(string=address)
 
     @property  # Override
-    def network(self) -> int:
+    def type(self) -> int:
         return EntityType.USER.value
 
     @property  # Override

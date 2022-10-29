@@ -42,8 +42,8 @@ setup(
     ],
     install_requires=[
         'dimp>=0.12.2',
-        'dkd>=0.12.1',
-        'mkm>=0.12.1',
+        'dkd>=0.12.2',
+        'mkm>=0.12.2',
 
         'pycryptodome',  # 3.14.1
         'base58',  # 1.0.3
