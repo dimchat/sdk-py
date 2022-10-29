@@ -193,17 +193,16 @@ class Facebook(Barrack):
         # make sure meta exists
         assert self.meta(identifier) is not None, 'failed to get meta for user: %s' % identifier
         # TODO: make sure visa key exists before calling this
-        # check user type
         u_type = identifier.type
-        if u_type == EntityType.USER:
-            return BaseUser(identifier=identifier)
-        if u_type == EntityType.BOT:
-            return Bot(identifier=identifier)
+        # check user type
         if u_type == EntityType.STATION:
             # TODO: get station address before create it
             # return Station(identifier=identifier, host='0.0.0.0', port=0)
             return Station(identifier=identifier)
-        raise TypeError('unsupported user type: %s' % u_type)
+        elif u_type == EntityType.BOT:
+            return Bot(identifier=identifier)
+        # raise TypeError('unsupported user type: %s' % u_type)
+        return BaseUser(identifier=identifier)
 
     def create_group(self, identifier: ID) -> Optional[Group]:
         if identifier.is_broadcast:
@@ -211,11 +210,12 @@ class Facebook(Barrack):
             return BaseGroup(identifier=identifier)
         # make sure meta exists
         assert self.meta(identifier) is not None, 'failed to get meta for group: %s' % identifier
-        # check group type
         g_type = identifier.type
+        # check group type
         if g_type == EntityType.ISP:
             return ServiceProvider(identifier=identifier)
-        raise TypeError('unsupported group type: %s' % g_type)
+        # raise TypeError('unsupported group type: %s' % g_type)
+        return BaseGroup(identifier=identifier)
 
     @property
     def local_users(self) -> List[User]:

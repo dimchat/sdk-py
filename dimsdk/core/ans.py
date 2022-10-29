@@ -58,7 +58,7 @@ keywords = [
     "main", "polylogue", "chatroom",
     "social", "organization",
     "company", "school", "government", "department",
-    "provider", "station", "thing", "robot",
+    "provider", "station", "thing", "bot", "robot",
     # --------------------------------
     "message", "instant", "secure", "reliable",
     "envelope", "sender", "receiver", "time",

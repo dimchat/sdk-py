@@ -30,7 +30,7 @@ from mkm.crypto import VerifyKey
 from dimp import EntityType, Address
 from dimp import MetaType, BaseMeta
 
-from .btc import BTCAddress
+from .btc import BTCAddress, NetworkType
 from .eth import ETHAddress
 
 
@@ -59,14 +59,18 @@ class DefaultMeta(BaseMeta):
         self.__addresses = {}
 
     # Override
-    def generate_address(self, network: Union[EntityType, int]) -> Address:
+    def generate_address(self, network: Union[EntityType, NetworkType, int]) -> Address:
         assert self.type == MetaType.MKM, 'meta version error: %d' % self.type
         if isinstance(network, EntityType):
             network = network.value
+        elif isinstance(network, NetworkType):
+            network = network.value
+        # check caches
         address = self.__addresses.get(network)
         if address is None:
             # generate and cache it
-            address = BTCAddress.from_data(self.fingerprint, network=network)
+            data = self.fingerprint
+            address = BTCAddress.from_data(data, network=network)
             self.__addresses[network] = address
         return address
 
@@ -99,9 +103,11 @@ class BTCMeta(BaseMeta):
     # Override
     def generate_address(self, network: Union[EntityType, int]) -> Address:
         assert self.type in [MetaType.BTC, MetaType.ExBTC], 'meta version error: %d' % self.type
+        # assert network == NetworkType.BTC_MAIN, 'BTC address type error: %d' % network
         if self.__address is None:
             # generate and cache it
-            self.__address = BTCAddress.from_data(self.key.data, network=network)
+            data = self.key.data
+            self.__address = BTCAddress.from_data(data, network=network)
         return self.__address
 
 
@@ -132,7 +138,9 @@ class ETHMeta(BaseMeta):
     # Override
     def generate_address(self, network: Union[EntityType, int]) -> Address:
         assert self.type in [MetaType.ETH, MetaType.ExETH], 'meta version error: %d' % self.type
+        assert network == EntityType.USER, 'ETH address type error: %d' % network
         if self.__address is None:
             # generate and cache it
-            self.__address = ETHAddress.from_data(self.key.data)
+            data = self.key.data
+            self.__address = ETHAddress.from_data(data)
         return self.__address

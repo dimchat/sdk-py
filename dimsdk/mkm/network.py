@@ -30,6 +30,8 @@
 
 from enum import IntEnum
 
+from mkm import EntityType
+
 
 class NetworkType(IntEnum):
     """
@@ -124,12 +126,30 @@ class NetworkType(IntEnum):
     #  Internet of Things
     ################################
     THING = 0x80            # 1000 0000 (IoT)
-    ROBOT = 0xC8            # 1100 1000
+    BOT = 0xC8              # 1100 1000
 
 
-def network_is_user(network: int) -> bool:
-    return (network & NetworkType.MAIN) == NetworkType.MAIN or network == NetworkType.BTC_MAIN
+# def network_is_user(network: int) -> bool:
+#     return (network & NetworkType.MAIN) == NetworkType.MAIN or network == NetworkType.BTC_MAIN
+#
+#
+# def network_is_group(network: int) -> bool:
+#     return (network & NetworkType.GROUP) == NetworkType.GROUP
 
 
-def network_is_group(network: int) -> bool:
-    return (network & NetworkType.GROUP) == NetworkType.GROUP
+def network_to_type(network: int) -> int:
+    # compatible with MKM 0.9.*
+    if network == NetworkType.MAIN:
+        return EntityType.USER.value
+    elif network == NetworkType.GROUP:
+        return EntityType.GROUP.value
+    elif network == NetworkType.CHATROOM:
+        return EntityType.GROUP.value | NetworkType.CHATROOM.value
+    elif network == NetworkType.STATION:
+        return EntityType.STATION.value
+    elif network == NetworkType.PROVIDER:
+        return EntityType.ISP.value
+    elif network == NetworkType.BOT:
+        return EntityType.BOT.value
+    else:
+        return network

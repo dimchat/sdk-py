@@ -39,6 +39,8 @@ from dimp import MetaType, Meta, MetaFactory
 from dimp import Document, DocumentFactory
 from dimp import BaseDocument, BaseVisa, BaseBulletin
 
+from ..mkm.entity import EntityIDFactory
+
 from .rsa import RSAPublicKey, RSAPrivateKey
 from .ecc import ECCPublicKey, ECCPrivateKey
 from .aes import AESKey
@@ -191,25 +193,12 @@ class GeneralDocumentFactory(DocumentFactory):
                 return BaseDocument(document=document)
 
 
-def register_key_factories():
-    # Public Key: ECC
-    factory = GeneralPublicFactory()
-    PublicKey.register(algorithm=AsymmetricKey.ECC, factory=factory)
-    # Public Key: RSA
-    PublicKey.register(algorithm=AsymmetricKey.RSA, factory=factory)
-    PublicKey.register(algorithm='SHA256withRSA', factory=factory)
-    PublicKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=factory)
+#
+#   Register
+#
 
-    # Private Key: ECC
-    factory = GeneralPrivateFactory(algorithm=AsymmetricKey.ECC)
-    PrivateKey.register(algorithm=AsymmetricKey.ECC, factory=factory)
 
-    # Private Key: RSA
-    factory = GeneralPrivateFactory(algorithm=AsymmetricKey.RSA)
-    PrivateKey.register(algorithm=AsymmetricKey.RSA, factory=factory)
-    PrivateKey.register(algorithm='SHA256withRSA', factory=factory)
-    PrivateKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=factory)
-
+def register_symmetric_key_factories():
     # Symmetric Key: AES
     factory = GeneralSymmetricFactory(algorithm=SymmetricKey.AES)
     SymmetricKey.register(algorithm=SymmetricKey.AES, factory=factory)
@@ -218,6 +207,34 @@ def register_key_factories():
     # Symmetric Key: Plain
     factory = GeneralSymmetricFactory(algorithm=PlainKey.PLAIN)
     SymmetricKey.register(algorithm=PlainKey.PLAIN, factory=factory)
+
+
+def register_asymmetric_key_factories():
+    # Public Key: ECC
+    pub_fact = GeneralPublicFactory()
+    PublicKey.register(algorithm=AsymmetricKey.ECC, factory=pub_fact)
+    # Public Key: RSA
+    PublicKey.register(algorithm=AsymmetricKey.RSA, factory=pub_fact)
+    PublicKey.register(algorithm='SHA256withRSA', factory=pub_fact)
+    PublicKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=pub_fact)
+
+    # Private Key: ECC
+    ecc_fact = GeneralPrivateFactory(algorithm=AsymmetricKey.ECC)
+    PrivateKey.register(algorithm=AsymmetricKey.ECC, factory=ecc_fact)
+
+    # Private Key: RSA
+    rsa_fact = GeneralPrivateFactory(algorithm=AsymmetricKey.RSA)
+    PrivateKey.register(algorithm=AsymmetricKey.RSA, factory=rsa_fact)
+    PrivateKey.register(algorithm='SHA256withRSA', factory=rsa_fact)
+    PrivateKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=rsa_fact)
+
+
+def register_id_factory():
+    ID.register(factory=EntityIDFactory())
+
+
+def register_address_factory():
+    Address.register(factory=GeneralAddressFactory())
 
 
 def register_meta_factories():
@@ -238,10 +255,10 @@ def register_document_factories():
 #
 #   Register all factories
 #
-register_key_factories()
+register_symmetric_key_factories()
+register_asymmetric_key_factories()
 
-Address.register(factory=GeneralAddressFactory())
-
+register_id_factory()
+register_address_factory()
 register_meta_factories()
-
 register_document_factories()

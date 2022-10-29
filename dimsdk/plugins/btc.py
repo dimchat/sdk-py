@@ -31,6 +31,8 @@ from mkm.protocol import entity_is_user, entity_is_group
 
 from dimp import Address, EntityType
 
+from ..mkm.network import NetworkType, network_to_type
+
 
 class BTCAddress(ConstantString, Address):
     """
@@ -49,15 +51,17 @@ class BTCAddress(ConstantString, Address):
             address     = base58_encode(network + digest + code);
     """
 
-    def __init__(self, address: str, network: Union[EntityType, int]):
+    def __init__(self, address: str, network: Union[EntityType, NetworkType, int]):
         super().__init__(string=address)
         if isinstance(network, EntityType):
+            self.__network = network.value
+        elif isinstance(network, NetworkType):
             self.__network = network.value
         else:
             self.__network = network
 
     @property  # Override
-    def network(self) -> int:
+    def type(self) -> int:
         return self.__network
 
     @property  # Override
@@ -66,17 +70,19 @@ class BTCAddress(ConstantString, Address):
 
     @property  # Override
     def is_user(self) -> bool:
-        return network_is_user(network=self.type)
+        network = network_to_type(network=self.type)
+        return entity_is_user(network=network)
 
     @property  # Override
     def is_group(self) -> bool:
-        return network_is_group(network=self.type)
+        network = network_to_type(network=self.type)
+        return entity_is_group(network=network)
 
     #
     #   Factory methods
     #
     @classmethod
-    def from_data(cls, fingerprint: bytes, network: Union[EntityType, int]) -> Address:
+    def from_data(cls, fingerprint: bytes, network: Union[EntityType, NetworkType, int]) -> Address:
         """
         Generate address with fingerprint and network ID
 
@@ -85,6 +91,8 @@ class BTCAddress(ConstantString, Address):
         :return: Address object
         """
         if isinstance(network, EntityType):
+            network = network.value
+        elif isinstance(network, NetworkType):
             network = network.value
         prefix = chr(network).encode('latin1')
         digest = ripemd160(sha256(fingerprint))
