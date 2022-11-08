@@ -33,6 +33,7 @@ from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 from mkm.types import Dictionary
 from mkm.crypto import EncryptKey, DecryptKey
 from mkm.crypto import AsymmetricKey, PublicKey, PrivateKey
+from mkm.crypto.cryptography import key_algorithm
 
 
 class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
@@ -42,6 +43,10 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
         super().__init__(key)
         self.__key = None
         self.__data = None
+
+    @property  # Override
+    def algorithm(self) -> str:
+        return key_algorithm(key=self.dictionary)
 
     @property  # private
     def rsa_key(self) -> RSA.RsaKey:

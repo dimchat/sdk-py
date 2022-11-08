@@ -30,6 +30,7 @@ import ecdsa
 
 from mkm.types import Dictionary
 from mkm.crypto import AsymmetricKey, PublicKey, PrivateKey
+from mkm.crypto.cryptography import key_algorithm
 
 
 class ECCPublicKey(Dictionary, PublicKey):
@@ -39,6 +40,10 @@ class ECCPublicKey(Dictionary, PublicKey):
         super().__init__(key)
         self.__key = None
         self.__data = None
+
+    @property  # Override
+    def algorithm(self) -> str:
+        return key_algorithm(key=self.dictionary)
 
     @property
     def curve(self):

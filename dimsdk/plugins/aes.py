@@ -31,6 +31,7 @@ from Crypto.Cipher import AES
 from mkm.types import Dictionary
 from mkm.crypto import SymmetricKey
 from mkm.crypto import base64_encode, base64_decode
+from mkm.crypto.cryptography import key_algorithm
 
 
 def random_bytes(size: int) -> bytes:
@@ -60,6 +61,10 @@ class AESKey(Dictionary, SymmetricKey):
         else:
             self.__data = None
             self.__iv = None
+
+    @property  # Override
+    def algorithm(self) -> str:
+        return key_algorithm(key=self.dictionary)
 
     @property  # Override
     def data(self) -> bytes:

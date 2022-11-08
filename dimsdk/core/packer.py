@@ -81,7 +81,7 @@ class MessagePacker(TwinsHelper, Packer):
         #         if you don't want to share the symmetric key with other members,
         #         you could split it (set group ID into message content and
         #         set contact ID to the "receiver") before encrypting, this usually
-        #         for sending group command to assistant robot, which should not
+        #         for sending group command to assistant bot, which should not
         #         share the symmetric key (group msg key) with other members.
 
         # 1. get symmetric key

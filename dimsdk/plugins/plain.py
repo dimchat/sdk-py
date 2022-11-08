@@ -27,6 +27,7 @@ from typing import Optional
 
 from mkm.types import Dictionary
 from mkm.crypto import SymmetricKey
+from mkm.crypto.cryptography import key_algorithm
 
 
 class PlainKey(Dictionary, SymmetricKey):
@@ -35,6 +36,10 @@ class PlainKey(Dictionary, SymmetricKey):
         which will do nothing when en/decoding message data
     """
     PLAIN = 'PLAIN'
+
+    @property  # Override
+    def algorithm(self) -> str:
+        return key_algorithm(key=self.dictionary)
 
     @property
     def size(self) -> int:
