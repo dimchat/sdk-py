@@ -38,8 +38,6 @@ from .core import *
 
 from .cpu import *
 
-from .plugins import *
-
 name = 'DIM-SDK'
 
 __author__ = 'Albert Moky'
@@ -157,11 +155,4 @@ __all__ = [
     'HistoryCommandProcessor', 'GroupCommandProcessor',
     'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
     'ResetCommandProcessor', 'QueryCommandProcessor',
-
-    #
-    #   Plugins
-    #
-    'PlainKey',
-    'BTCAddress', 'ETHAddress',
-    'DefaultMeta', 'BTCMeta', 'ETHMeta',
 ]

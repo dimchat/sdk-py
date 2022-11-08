@@ -31,7 +31,7 @@ from mkm.protocol import entity_is_user, entity_is_group
 
 from dimp import Address, EntityType
 
-from ..mkm.network import NetworkType, network_to_type
+from .network import NetworkType, network_to_type
 
 
 class BTCAddress(ConstantString, Address):

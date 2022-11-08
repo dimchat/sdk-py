@@ -11,7 +11,7 @@
 import unittest
 
 from dimsdk import *
-from dimsdk.plugins import ETHAddress, ETHMeta
+from plugins.dimplugins import ETHAddress, ETHMeta
 
 from tests.database import Database
 

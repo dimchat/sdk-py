@@ -12,7 +12,7 @@ from typing import Optional
 
 from dimsdk import SymmetricKey, ID
 from dimsdk import CipherKeyDelegate
-from dimsdk import PlainKey
+from plugins.dimplugins import PlainKey
 
 
 class KeyCache(CipherKeyDelegate):

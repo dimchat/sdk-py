@@ -2,19 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-    Decentralized Instant Messaging Software Development Kit
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Decentralized Instant Messaging (Python Plugins)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This is a new protocol designed for instant messaging (IM).
-    The software provides accounts(user identity recognition) and
-    communications between accounts safely by end-to-end encryption.
+    Plugins for MingKeMing module
 """
 
 import io
 
 from setuptools import setup, find_packages
 
-__version__ = '0.8.0'
+__version__ = '0.1.0'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -22,13 +20,13 @@ with io.open('README.md', 'r', encoding='utf-8') as fh:
     readme = fh.read()
 
 setup(
-    name='dimsdk',
+    name='dimplugins',
     version=__version__,
     url='https://github.com/dimchat/sdk-py',
     license='MIT',
     author=__author__,
     author_email=__contact__,
-    description='Decentralized Instant Messaging SDK',
+    description='Decentralized Instant Messaging (Python Plugins)',
     long_description=readme,
     long_description_content_type='text/markdown',
     packages=find_packages(),
@@ -41,8 +39,10 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.12.2',
-        'dkd>=0.12.2',
         'mkm>=0.12.2',
+
+        'pycryptodome',  # 3.14.1
+        'base58',  # 1.0.3
+        'ecdsa',   # 0.16.1
     ]
 )
