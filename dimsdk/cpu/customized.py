@@ -87,12 +87,22 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         return handler.handle_action(act=act, sender=sender, content=content, msg=msg)
 
     # protected
+    # noinspection PyUnusedLocal
     def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[List[Content]]:
-        """ Override for your application """
+        """
+        Check for application
+
+        :param app:     app ID
+        :param content: customized content
+        :param msg:     received message
+        :return: None on app ID matched
+        """
+        # Override for your application
         text = self.FMT_APP_NOT_SUPPORT % app
         return self._respond_text(text=text)
 
     # protected
+    # noinspection PyUnusedLocal
     def _fetch(self, mod: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[CustomizedContentHandler]:
         """ Override for you module """
         # if the application has too many modules, I suggest you to

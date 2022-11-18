@@ -38,9 +38,10 @@
 
 from typing import List
 
+from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content
-from dimp import GroupCommand, QueryCommand
+from dimp import QueryCommand
 
 from .history import GroupCommandProcessor
 
@@ -48,6 +49,16 @@ from .history import GroupCommandProcessor
 class QueryCommandProcessor(GroupCommandProcessor):
 
     STR_QUERY_NOT_ALLOWED = 'Sorry, you are not allowed to query this group.'
+
+    def _respond_group_members(self, owner: ID, group: ID, members: List[ID]) -> Content:
+        # facebook = self.facebook
+        # user = facebook.current_user
+        # assert user is not None, 'current user not set'
+        # if user.identifier == owner:
+        #     return GroupCommand.reset(group=group, members=members)
+        # else:
+        #     return GroupCommand.invite(group=group, members=members)
+        pass
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
@@ -69,10 +80,5 @@ class QueryCommandProcessor(GroupCommandProcessor):
                 text = self.STR_QUERY_NOT_ALLOWED
                 return self._respond_text(text=text, group=group)
         # 2. respond
-        user = facebook.current_user
-        # assert user is not None, 'current user not set'
-        if user.identifier == owner:
-            res = GroupCommand.reset(group=group, members=members)
-        else:
-            res = GroupCommand.invite(group=group, members=members)
-        return [res]
+        res = self._respond_group_members(owner=owner, group=group, members=members)
+        return [] if res is None else [res]

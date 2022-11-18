@@ -100,7 +100,7 @@ class AddressNameService:
         """ Get ID by short name """
         return self.__caches.get(name)
 
-    def names(self, identifier: ID) -> Optional[List[str]]:
+    def names(self, identifier: ID) -> List[str]:
         """ Get all short names with the same ID """
         array = []
         for (key, value) in self.__caches.items():

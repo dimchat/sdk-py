@@ -226,12 +226,12 @@ class Facebook(Barrack):
         """
         raise NotImplemented
 
-    @property
-    def current_user(self) -> Optional[User]:
-        """ Get current user (for signing and sending message) """
-        users = self.local_users
-        if users is not None and len(users) > 0:
-            return users[0]
+    # @property
+    # def current_user(self) -> Optional[User]:
+    #     """ Get current user (for signing and sending message) """
+    #     users = self.local_users
+    #     if users is not None and len(users) > 0:
+    #         return users[0]
 
     def select_user(self, receiver: ID) -> Optional[User]:
         """ Select local user for receiver """
