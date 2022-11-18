@@ -124,6 +124,10 @@ class ECCPrivateKey(Dictionary, PrivateKey):
             self.__key = None
             self.__data = None
 
+    @property  # Override
+    def algorithm(self) -> str:
+        return key_algorithm(key=self.dictionary)
+
     @property
     def curve(self):
         return ecdsa.SECP256k1

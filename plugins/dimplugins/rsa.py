@@ -118,6 +118,10 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
             self.__key = None
             self.__data = None
 
+    @property  # Override
+    def algorithm(self) -> str:
+        return key_algorithm(key=self.dictionary)
+
     @property  # private
     def rsa_key(self) -> RSA.RsaKey:
         if self.__key is None:
