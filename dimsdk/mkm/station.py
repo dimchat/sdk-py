@@ -39,7 +39,7 @@
 from typing import Optional, List
 
 from dimp import EntityType, ID, Meta, Document, Visa
-from dimp import ANYWHERE
+from dimp import ANYWHERE, EVERYWHERE
 from dimp import User, UserDataSource
 from dimp import BaseUser, BaseGroup
 
@@ -47,6 +47,7 @@ from dimp import BaseUser, BaseGroup
 class Station(User):
 
     ANY = ID.create(name='station', address=ANYWHERE)
+    EVERY = ID.create(name='stations', address=EVERYWHERE)
 
     def __init__(self, identifier: Optional[ID] = None,
                  host: Optional[str] = None, port: Optional[int] = 0):
