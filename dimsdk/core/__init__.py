@@ -28,6 +28,9 @@
 # SOFTWARE.
 # ==============================================================================
 
+from mkm.core import *
+from dkd.core import *
+from dimp.mkm import *
 from dimp.dkd import *
 from dimp import ContentType, Content, Command
 
@@ -44,6 +47,7 @@ from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProc
 
 def register_core_factories():
     # Register core factories
+    register_message_factories()
     register_content_factories()
     register_command_factories()
 
@@ -61,6 +65,44 @@ def register_core_factories():
 
 __all__ = [
 
+    #
+    #   MingKeMing
+    #
+    'BaseAddressFactory', 'BroadcastAddress',
+    'IdentifierFactory', 'Identifier',
+    'ANYWHERE', 'EVERYWHERE', 'ANYONE', 'EVERYONE', 'FOUNDER',
+    'BaseMeta',
+    'BaseDocument', 'BaseVisa', 'BaseBulletin',
+
+    'EntityDelegate',
+    'EntityDataSource', 'UserDataSource', 'GroupDataSource',
+    'Entity', 'User', 'Group',
+    'BaseEntity', 'BaseUser', 'BaseGroup',
+
+    #
+    #   DaoKeDao
+    #
+    'BaseContent',
+    'MessageEnvelope', 'MessageEnvelopeFactory',
+    'BaseMessage',
+    'PlainMessage', 'PlainMessageFactory',
+    'EncryptedMessage', 'EncryptedMessageFactory',
+    'NetworkMessage', 'NetworkMessageFactory',
+
+    'BaseTextContent', 'SecretContent', 'ListContent',
+    'BaseMoneyContent', 'TransferMoneyContent',
+    'BaseFileContent', 'ImageFileContent', 'AudioFileContent', 'VideoFileContent',
+    'WebPageContent', 'AppCustomizedContent',
+    'BaseCommand', 'BaseMetaCommand', 'BaseDocumentCommand',
+    'BaseHistoryCommand', 'BaseGroupCommand',
+    'InviteGroupCommand', 'ExpelGroupCommand', 'JoinGroupCommand',
+    'QuitGroupCommand', 'QueryGroupCommand', 'ResetGroupCommand',
+    'ContentFactoryBuilder', 'CommandFactoryBuilder',
+    'GeneralCommandFactory', 'HistoryCommandFactory', 'GroupCommandFactory',
+
+    #
+    #   Extends
+    #
     'AddressNameService',
     'CipherKeyDelegate',
     'TwinsHelper',
@@ -68,11 +110,5 @@ __all__ = [
     'MessagePacker', 'MessageProcessor',
     'ContentProcessor', 'ContentProcessorFactory', 'ContentProcessorCreator',
 
-    #
-    #   DaoKeDao
-    #
-    'ContentFactoryBuilder', 'CommandFactoryBuilder',
-    'GeneralCommandFactory', 'HistoryCommandFactory', 'GroupCommandFactory',
-    'register_content_factories', 'register_command_factories',
     'register_core_factories',
 ]

@@ -35,97 +35,64 @@
     A map for short name to ID, just like DNS
 """
 
+from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from dimp import ID, ANYONE, EVERYONE, FOUNDER
-
-#
-#   Reserved names
-#
-keywords = [
-    "all", "everyone", "anyone", "owner", "founder",
-    # --------------------------------
-    "dkd", "mkm", "dimp", "dim", "dimt",
-    "rsa", "ecc", "aes", "des", "btc", "eth",
-    # --------------------------------
-    "crypto", "key", "symmetric", "asymmetric",
-    "public", "private", "secret", "password",
-    "id", "address", "meta",
-    "tai", "document", "profile", "visa", "bulletin",
-    "entity", "user", "group", "contact",
-    # --------------------------------
-    "member", "admin", "administrator", "assistant",
-    "main", "polylogue", "chatroom",
-    "social", "organization",
-    "company", "school", "government", "department",
-    "provider", "station", "thing", "bot", "robot",
-    # --------------------------------
-    "message", "instant", "secure", "reliable",
-    "envelope", "sender", "receiver", "time",
-    "content", "forward", "command", "history",
-    "keys", "data", "signature",
-    # --------------------------------
-    "type", "serial", "sn",
-    "text", "file", "image", "audio", "video", "page",
-    "handshake", "receipt", "block", "mute",
-    "register", "suicide", "found", "abdicate",
-    "invite", "expel", "join", "quit", "reset", "query",
-    "hire", "fire", "resign",
-    # --------------------------------
-    "server", "client", "terminal", "local", "remote",
-    "barrack", "cache", "transceiver",
-    "ans", "facebook", "store", "messenger",
-    "root", "supervisor",
-]
+from dimp import ID
 
 
-class AddressNameService:
+class AddressNameService(ABC):
 
-    def __init__(self):
-        super().__init__()
-        # ANS records
-        self.__caches = {
-            'all': EVERYONE,
-            'everyone': EVERYONE,
-            'anyone': ANYONE,
-            'owner': ANYONE,
-            'founder': FOUNDER,
-        }
+    #
+    #   Reserved names
+    #
+    KEYWORDS = [
+        "all", "everyone", "anyone", "owner", "founder",
+        # --------------------------------
+        "dkd", "mkm", "dimp", "dim", "dimt",
+        "rsa", "ecc", "aes", "des", "btc", "eth",
+        # --------------------------------
+        "crypto", "key", "symmetric", "asymmetric",
+        "public", "private", "secret", "password",
+        "id", "address", "meta",
+        "tai", "document", "profile", "visa", "bulletin",
+        "entity", "user", "group", "contact",
+        # --------------------------------
+        "member", "admin", "administrator", "assistant",
+        "main", "polylogue", "chatroom",
+        "social", "organization",
+        "company", "school", "government", "department",
+        "provider", "station", "thing", "bot", "robot",
+        # --------------------------------
+        "message", "instant", "secure", "reliable",
+        "envelope", "sender", "receiver", "time",
+        "content", "forward", "command", "history",
+        "keys", "data", "signature",
+        # --------------------------------
+        "type", "serial", "sn",
+        "text", "file", "image", "audio", "video", "page",
+        "handshake", "receipt", "block", "mute",
+        "register", "suicide", "found", "abdicate",
+        "invite", "expel", "join", "quit", "reset", "query",
+        "hire", "fire", "resign",
+        # --------------------------------
+        "server", "client", "terminal", "local", "remote",
+        "barrack", "cache", "transceiver",
+        "ans", "facebook", "store", "messenger",
+        "root", "supervisor",
+    ]
 
-    @staticmethod
-    def is_reserved(name: str) -> bool:
-        return name in keywords
+    @abstractmethod
+    def is_reserved(self, name: str) -> bool:
+        # return name in self.KEYWORDS
+        raise NotImplemented
 
+    @abstractmethod
     def identifier(self, name: str) -> Optional[ID]:
         """ Get ID by short name """
-        return self.__caches.get(name)
+        raise NotImplemented
 
+    @abstractmethod
     def names(self, identifier: ID) -> List[str]:
-        """ Get all short names with the same ID """
-        array = []
-        for (key, value) in self.__caches.items():
-            if key == identifier:
-                array.append(value)
-        return array
-
-    def cache(self, name: str, identifier: ID = None) -> bool:
-        if self.is_reserved(name):
-            # this name is reserved, cannot register
-            return False
-        if identifier is None:
-            self.__caches.pop(name, None)
-        else:
-            self.__caches[name] = identifier
-        return True
-
-    def save(self, name: str, identifier: ID = None) -> bool:
-        """
-        Save ANS record
-
-        :param name:       username
-        :param identifier: user ID; if empty, means delete this name
-        :return: True on success
-        """
-        if self.cache(name=name, identifier=identifier):
-            # TODO: permanent storage?
-            return True
+        """ Get all short names mapping to the same ID """
+        raise NotImplemented

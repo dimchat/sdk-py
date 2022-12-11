@@ -35,8 +35,10 @@
     Barrack for cache entities
 """
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional, List
+
+from mkm.core.address import thanos
 
 from dimp import EntityType, ID
 from dimp import User, Group, BaseUser, BaseGroup
@@ -46,17 +48,7 @@ from dimp import Barrack
 from ..mkm import ServiceProvider, Station, Bot
 
 
-def thanos(planet: dict, finger: int) -> int:
-    """ Thanos can kill half lives of a world with a snap of the finger """
-    keys = planet.keys()
-    for key in keys:
-        if (++finger & 1) == 1:
-            # kill it
-            planet.pop(key)
-    return finger
-
-
-class Facebook(Barrack):
+class Facebook(Barrack, ABC):
 
     def __init__(self):
         super().__init__()
@@ -218,6 +210,7 @@ class Facebook(Barrack):
         return BaseGroup(identifier=identifier)
 
     @property
+    @abstractmethod
     def local_users(self) -> List[User]:
         """
         Get all local users (for decrypting received message)

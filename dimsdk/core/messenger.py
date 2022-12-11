@@ -35,6 +35,7 @@
     Transform and send message
 """
 
+from abc import ABC, abstractmethod
 from typing import Optional, List
 
 from mkm.crypto import SymmetricKey
@@ -48,19 +49,22 @@ from dimp import Transceiver, Packer, Processor
 from .delegate import CipherKeyDelegate
 
 
-class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor):
+class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, ABC):
 
     @property
+    @abstractmethod
     def key_cache(self) -> CipherKeyDelegate:
         """ Delegate for Cipher Key """
         raise NotImplemented
 
     @property
+    @abstractmethod
     def packer(self) -> Packer:
         """ Delegate for Packing Message """
         raise NotImplemented
 
     @property
+    @abstractmethod
     def processor(self) -> Processor:
         """ Delegate for Processing Message """
         raise NotImplemented

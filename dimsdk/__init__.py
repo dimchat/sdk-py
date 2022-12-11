@@ -28,6 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
+from mkm.types import *
 from mkm.crypto import *
 from mkm import *
 from dkd import *
@@ -44,6 +45,13 @@ __author__ = 'Albert Moky'
 
 
 __all__ = [
+
+    #
+    #   Types
+    #
+    'Wrapper', 'Stringer', 'Mapper',
+    'ConstantString',
+    'Dictionary',
 
     #
     #   Crypto
@@ -75,17 +83,23 @@ __all__ = [
     'Document', 'DocumentFactory',
     'Visa', 'Bulletin',
 
-    'ANYWHERE', 'EVERYWHERE', 'ANYONE', 'EVERYONE', 'FOUNDER',
+    # 'entity_is_user', 'entity_is_group', 'entity_is_broadcast',
+    # 'meta_has_seed', 'meta_type',
+    # 'document_type',
 
     'BaseAddressFactory', 'BroadcastAddress',
     'IdentifierFactory', 'Identifier',
+    'ANYWHERE', 'EVERYWHERE', 'ANYONE', 'EVERYONE', 'FOUNDER',
     'BaseMeta',
     'BaseDocument', 'BaseVisa', 'BaseBulletin',
+
+    # 'document_identifier',
 
     #
     #   DaoKeDao
     #
-    'ContentType', 'Content', 'ContentFactory',
+    'ContentType',  # 'content_type',
+    'Content', 'ContentFactory',
     'Envelope', 'EnvelopeFactory',
     'Message', 'InstantMessage', 'SecureMessage', 'ReliableMessage',
     'InstantMessageFactory', 'SecureMessageFactory', 'ReliableMessageFactory',
@@ -105,7 +119,7 @@ __all__ = [
     'MoneyContent', 'TransferContent',
     'FileContent', 'ImageContent', 'AudioContent', 'VideoContent',
     'PageContent', 'CustomizedContent',
-    'Command', 'CommandFactory',
+    'Command', 'CommandFactory',  # 'command_name',
     'MetaCommand', 'DocumentCommand',
     'HistoryCommand', 'GroupCommand',
     'InviteCommand', 'ExpelCommand', 'JoinCommand',
@@ -126,12 +140,11 @@ __all__ = [
     'QuitGroupCommand', 'QueryGroupCommand', 'ResetGroupCommand',
     # 'ContentFactoryBuilder', 'CommandFactoryBuilder',
     # 'GeneralCommandFactory', 'HistoryCommandFactory', 'GroupCommandFactory',
-    # # register_core_factories
-    # 'register_content_factories', 'register_command_factories',
+    # 'register_message_factories', 'register_content_factories', 'register_command_factories',
     'Barrack', 'Transceiver', 'Packer', 'Processor',
 
     #
-    #   Core
+    #   Extends
     #
     'ServiceProvider', 'Station', 'Bot',
 
@@ -139,9 +152,6 @@ __all__ = [
     'Facebook', 'Messenger', 'MessagePacker', 'MessageProcessor',
     'ContentProcessor', 'ContentProcessorFactory', 'ContentProcessorCreator',
 
-    'ContentFactoryBuilder', 'CommandFactoryBuilder',
-    'GeneralCommandFactory', 'HistoryCommandFactory', 'GroupCommandFactory',
-    'register_content_factories', 'register_command_factories',
     'register_core_factories',
 
     #
