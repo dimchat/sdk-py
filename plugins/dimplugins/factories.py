@@ -34,10 +34,10 @@ from mkm.crypto import SymmetricKey, SymmetricKeyFactory
 from mkm.protocol import meta_type
 from mkm.core.profile import document_identifier
 
-from dimp import ID, Address, BaseAddressFactory
-from dimp import MetaType, Meta, MetaFactory
-from dimp import Document, DocumentFactory
-from dimp import BaseDocument, BaseVisa, BaseBulletin
+from mkm import ID, ANYWHERE, EVERYWHERE, Address, BaseAddressFactory
+from mkm import MetaType, Meta, MetaFactory
+from mkm import Document, DocumentFactory
+from mkm import BaseDocument, BaseVisa, BaseBulletin
 
 from .rsa import RSAPublicKey, RSAPrivateKey
 from .ecc import ECCPublicKey, ECCPrivateKey
@@ -108,9 +108,15 @@ class GeneralAddressFactory(BaseAddressFactory):
 
     # Override
     def create_address(self, address: str) -> Optional[Address]:
-        if len(address) == 42:
+        size = len(address)
+        if size == 8 and address.lower() == 'anywhere':
+            return ANYWHERE
+        if size == 10 and address.lower() == 'everywhere':
+            return EVERYWHERE
+        if size == 42:
             return ETHAddress.from_str(address=address)
-        return BTCAddress.from_str(address=address)
+        if 26 <= size <= 34:
+            return BTCAddress.from_str(address=address)
 
 
 class GeneralMetaFactory(MetaFactory):

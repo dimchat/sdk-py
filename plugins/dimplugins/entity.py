@@ -30,32 +30,13 @@
 
 from typing import Optional
 
-from mkm.types import ConstantString
-from mkm import ID, IDFactory
+from mkm import Identifier, IdentifierFactory
 from mkm import Address
 
 from .network import network_to_type
 
 
-class EntityID(ConstantString, ID):
-
-    def __init__(self, identifier: str, name: Optional[str], address: Address, terminal: Optional[str]):
-        super().__init__(string=identifier)
-        self.__name = name
-        self.__address = address
-        self.__terminal = terminal
-
-    @property  # Override
-    def name(self) -> Optional[str]:
-        return self.__name
-
-    @property  # Override
-    def address(self) -> Address:
-        return self.__address
-
-    @property  # Override
-    def terminal(self) -> Optional[str]:
-        return self.__terminal
+class EntityID(Identifier):
 
     @property  # Override
     def type(self) -> int:
@@ -63,79 +44,9 @@ class EntityID(ConstantString, ID):
         # compatible with MKM 0.9.*
         return network_to_type(network=network)
 
-    @property  # Override
-    def is_broadcast(self) -> bool:
-        return self.address.is_broadcast
 
-    @property  # Override
-    def is_user(self) -> bool:
-        return self.address.is_user
-
-    @property  # Override
-    def is_group(self) -> bool:
-        return self.address.is_group
-
-
-class EntityIDFactory(IDFactory):
-
-    def __init__(self):
-        super().__init__()
-        self.__ids = {}
+class EntityIDFactory(IdentifierFactory):
 
     # Override
-    def generate_identifier(self, meta, network: int, terminal: Optional[str]) -> ID:
-        address = Address.generate(meta=meta, network=network)
-        assert address is not None, 'failed to generate ID with meta: %s' % meta
-        return ID.create(address=address, name=meta.seed, terminal=terminal)
-
-    # Override
-    def create_identifier(self, address: Address, name: Optional[str] = None, terminal: Optional[str] = None) -> ID:
-        identifier = concat(address=address, name=name, terminal=terminal)
-        cid = self.__ids.get(identifier)
-        if cid is None:
-            cid = EntityID(identifier=identifier, address=address, name=name, terminal=terminal)
-            self.__ids[identifier] = cid
-        return cid
-
-    # Override
-    def parse_identifier(self, identifier: str) -> Optional[ID]:
-        cid = self.__ids.get(identifier)
-        if cid is None:
-            cid = parse(string=identifier)
-            if cid is not None:
-                self.__ids[identifier] = cid
-        return cid
-
-
-def parse(string: str) -> Optional[ID]:
-    # split ID string
-    pair = string.split('/', 1)
-    # terminal
-    if len(pair) == 1:
-        # no terminal
-        terminal = None
-    else:
-        # got terminal
-        terminal = pair[1]
-    # name @ address
-    assert len(pair[0]) > 0, 'ID error: %s' % string
-    pair = pair[0].split('@', 1)
-    if len(pair) == 1:
-        # got address without name
-        name = None
-        address = Address.parse(address=pair[0])
-    else:
-        # got name & address
-        name = pair[0]
-        address = Address.parse(address=pair[1])
-    if address is not None:
-        return EntityID(identifier=string, address=address, name=name, terminal=terminal)
-
-
-def concat(address: Address, name: Optional[str] = None, terminal: Optional[str] = None) -> str:
-    string = str(address)
-    if name is not None and len(name) > 0:
-        string = name + '@' + string
-    if terminal is not None and len(terminal) > 0:
-        string = string + '/' + terminal
-    return string
+    def _new_id(self, identifier: str, name: Optional[str], address: Address, terminal: Optional[str]):
+        return EntityID(identifier=identifier, name=name, address=address, terminal=terminal)

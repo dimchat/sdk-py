@@ -29,7 +29,7 @@ from mkm.types import ConstantString
 from mkm.crypto import base58_encode, base58_decode, sha256, ripemd160
 from mkm.protocol import entity_is_user, entity_is_group
 
-from dimp import Address, EntityType
+from mkm import Address, EntityType
 
 from .network import NetworkType, network_to_type
 

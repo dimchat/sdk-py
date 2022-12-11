@@ -25,21 +25,20 @@
 
 from typing import Optional
 
-from mkm.types import Dictionary
-from mkm.crypto import SymmetricKey
-from mkm.crypto.cryptography import key_algorithm
+from .keys import BaseSymmetricKey
 
 
-class PlainKey(Dictionary, SymmetricKey):
+class PlainKey(BaseSymmetricKey):
     """
         Symmetric key for broadcast message,
         which will do nothing when en/decoding message data
     """
     PLAIN = 'PLAIN'
 
-    @property  # Override
-    def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
+    def __init__(self, key: Optional[dict] = None):
+        if key is None:
+            key = {'algorithm': self.PLAIN}
+        super().__init__(key=key)
 
     @property
     def size(self) -> int:

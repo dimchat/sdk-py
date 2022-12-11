@@ -30,23 +30,20 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
 from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
-from mkm.types import Dictionary
 from mkm.crypto import EncryptKey, DecryptKey
-from mkm.crypto import AsymmetricKey, PublicKey, PrivateKey
-from mkm.crypto.cryptography import key_algorithm
+from mkm.crypto import AsymmetricKey, PublicKey
+from mkm.crypto.cryptography import keys_match
+
+from .keys import BasePublicKey, BasePrivateKey
 
 
-class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
+class RSAPublicKey(BasePublicKey, EncryptKey):
     """ RSA Public Key """
 
     def __init__(self, key: dict):
-        super().__init__(key)
+        super().__init__(key=key)
         self.__key = None
         self.__data = None
-
-    @property  # Override
-    def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
 
     @property  # private
     def rsa_key(self) -> RSA.RsaKey:
@@ -94,21 +91,21 @@ class RSAPublicKey(Dictionary, PublicKey, EncryptKey):
             return False
 
 
-class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
+class RSAPrivateKey(BasePrivateKey, DecryptKey):
     """ RSA Private Key """
 
     def __init__(self, key: Optional[dict] = None):
         if key is None:
             key = {'algorithm': AsymmetricKey.RSA}
-        super().__init__(key)
+        super().__init__(key=key)
         # check key data
         pem: str = key.get('data')
         if pem is None or len(pem) == 0:
             # generate private key data
-            key, data = generate(bits=self.bits)
+            rsa_key, data = generate(bits=self.bits)
             # store private key in PKCS#1 format
             pem = data.decode('utf-8')
-            self.__key = key
+            self.__key = rsa_key
             self.__data = data
             self['data'] = pem
             self['mode'] = 'ECB'
@@ -117,10 +114,6 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
         else:
             self.__key = None
             self.__data = None
-
-    @property  # Override
-    def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
 
     @property  # private
     def rsa_key(self) -> RSA.RsaKey:
@@ -168,7 +161,7 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
             'padding': 'PKCS1',
             'digest': 'SHA256'
         }
-        return RSAPublicKey(info)
+        return RSAPublicKey(key=info)
 
     # Override
     # noinspection PyTypeChecker
@@ -181,6 +174,10 @@ class RSAPrivateKey(Dictionary, PrivateKey, DecryptKey):
         hash_obj = SHA256.SHA256Hash(data)
         signer = Signature_PKCS1_v1_5.new(self.rsa_key)
         return signer.sign(hash_obj)
+
+    # Override
+    def match(self, key: EncryptKey) -> bool:
+        return keys_match(encrypt_key=key, decrypt_key=self)
 
 
 def generate(bits: int) -> (RSA.RsaKey, bytes):

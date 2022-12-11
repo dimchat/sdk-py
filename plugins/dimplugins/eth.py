@@ -28,7 +28,7 @@ from typing import Optional
 from mkm.types import ConstantString
 from mkm.crypto import hex_encode, keccak256
 
-from dimp import Address, EntityType
+from mkm import Address, EntityType
 
 
 class ETHAddress(ConstantString, Address):

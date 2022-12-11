@@ -28,10 +28,10 @@ from typing import Optional
 
 from Crypto.Cipher import AES
 
-from mkm.types import Dictionary
 from mkm.crypto import SymmetricKey
 from mkm.crypto import base64_encode, base64_decode
-from mkm.crypto.cryptography import key_algorithm
+
+from .keys import BaseSymmetricKey
 
 
 def random_bytes(size: int) -> bytes:
@@ -40,13 +40,13 @@ def random_bytes(size: int) -> bytes:
     return bits.to_bytes(length=size, byteorder='little', signed=False)
 
 
-class AESKey(Dictionary, SymmetricKey):
+class AESKey(BaseSymmetricKey):
     """ AES Key """
 
     def __init__(self, key: Optional[dict] = None):
         if key is None:
             key = {'algorithm': SymmetricKey.AES}
-        super().__init__(dictionary=key)
+        super().__init__(key=key)
         # check key data
         base64 = self.get('data')
         if base64 is None or len(base64) == 0:
@@ -61,10 +61,6 @@ class AESKey(Dictionary, SymmetricKey):
         else:
             self.__data = None
             self.__iv = None
-
-    @property  # Override
-    def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
 
     @property  # Override
     def data(self) -> bytes:

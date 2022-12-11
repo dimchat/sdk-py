@@ -28,22 +28,18 @@ from typing import Union, Optional
 
 import ecdsa
 
-from mkm.types import Dictionary
-from mkm.crypto import AsymmetricKey, PublicKey, PrivateKey
-from mkm.crypto.cryptography import key_algorithm
+from mkm.crypto import AsymmetricKey, PublicKey
+
+from .keys import BasePublicKey, BasePrivateKey
 
 
-class ECCPublicKey(Dictionary, PublicKey):
+class ECCPublicKey(BasePublicKey):
     """ ECC Public Key """
 
     def __init__(self, key: dict):
-        super().__init__(key)
+        super().__init__(key=key)
         self.__key = None
         self.__data = None
-
-    @property  # Override
-    def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
 
     @property
     def curve(self):
@@ -100,22 +96,22 @@ class ECCPublicKey(Dictionary, PublicKey):
             return False
 
 
-class ECCPrivateKey(Dictionary, PrivateKey):
+class ECCPrivateKey(BasePrivateKey):
     """ ECC Private Key """
 
     def __init__(self, key: Optional[dict] = None):
         if key is None:
             key = {'algorithm': AsymmetricKey.ECC}
-        super().__init__(key)
+        super().__init__(key=key)
         # check key data
         pem: str = key.get('data')
         if pem is None or len(pem) == 0:
             # generate private key data
-            key, data = generate(curve=self.curve, hash_func=self.hash_func)
+            ecc_key, data = generate(curve=self.curve, hash_func=self.hash_func)
             # store private key in PKCS#8 format
-            pem = key.to_pem(format='pkcs8').decode('utf-8')
+            pem = ecc_key.to_pem(format='pkcs8').decode('utf-8')
             # pem = data.hex()
-            self.__key = key
+            self.__key = ecc_key
             self.__data = data
             self['data'] = pem
             self['curve'] = 'SECP256k1'
@@ -123,10 +119,6 @@ class ECCPrivateKey(Dictionary, PrivateKey):
         else:
             self.__key = None
             self.__data = None
-
-    @property  # Override
-    def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
 
     @property
     def curve(self):
@@ -185,7 +177,7 @@ class ECCPrivateKey(Dictionary, PrivateKey):
             'curve': 'SECP256k1',
             'digest': 'SHA256'
         }
-        return ECCPublicKey(info)
+        return ECCPublicKey(key=info)
 
     # Override
     def sign(self, data: bytes) -> bytes:

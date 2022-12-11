@@ -27,8 +27,8 @@ from typing import Union, Optional
 
 from mkm.crypto import VerifyKey
 
-from dimp import EntityType, Address
-from dimp import MetaType, BaseMeta
+from mkm import EntityType, Address
+from mkm import MetaType, BaseMeta
 
 from .btc import BTCAddress, NetworkType
 from .eth import ETHAddress
