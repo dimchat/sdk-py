@@ -68,11 +68,13 @@ class Facebook(Barrack, ABC):
         finger = thanos(self.__groups, finger)
         return finger >> 1
 
+    # private
     def cache_user(self, user: User):
         if user.data_source is None:
             user.data_source = self
         self.__users[user.identifier] = user
 
+    # private
     def cache_group(self, group: Group):
         if group.data_source is None:
             group.data_source = self
@@ -126,23 +128,11 @@ class Facebook(Barrack, ABC):
         identifier = document.identifier
         if identifier is None:
             return False
-        # NOTICE: if this is a group profile,
-        #             verify it with each member's meta.key
-        #         else (this is a user profile)
+        # NOTICE: if this is a bulletin document for group,
+        #             verify it with the group owner's meta.key
+        #         else (this is a visa document for user)
         #             verify it with the user's meta.key
         if identifier.is_group:
-            # check by each member
-            members = self.members(identifier=identifier)
-            if members is not None:
-                for item in members:
-                    meta = self.meta(identifier=item)
-                    if meta is None:
-                        # FIXME: meta not found for this member
-                        continue
-                    if document.verify(public_key=meta.key):
-                        return True
-            # DISCUSS: what to do about assistants?
-
             # check by owner
             owner = self.owner(identifier=identifier)
             if owner is None:
@@ -154,9 +144,6 @@ class Facebook(Barrack, ABC):
                 else:
                     # FIXME: owner not found for this group
                     return False
-            elif owner in members:
-                # already checked
-                return False
             else:
                 meta = self.meta(identifier=owner)
         else:
@@ -167,6 +154,7 @@ class Facebook(Barrack, ABC):
     # group membership
 
     def is_founder(self, member: ID, group: ID) -> bool:
+        # check member's public key with group's meta.key
         g_meta = self.meta(identifier=group)
         assert g_meta is not None, 'failed to get meta for group: %s' % group
         u_meta = self.meta(identifier=member)
@@ -175,6 +163,7 @@ class Facebook(Barrack, ABC):
 
     def is_owner(self, member: ID, group: ID) -> bool:
         if group.type == EntityType.GROUP:
+            # this is a polylogue
             return self.is_founder(member=member, group=group)
         raise AssertionError('only Polylogue so far')
 

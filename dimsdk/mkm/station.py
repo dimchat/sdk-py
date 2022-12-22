@@ -60,21 +60,35 @@ class Station(User):
         self.__host = host
         self.__port = port
 
-    def __eq__(self, other) -> bool:
-        if self is other:
-            return True
-        elif isinstance(other, ID):
-            return self.identifier == other
-        elif isinstance(other, User):
-            return self.identifier == other.identifier
-
+    # Override
     def __str__(self) -> str:
+        """ Return str(self). """
         clazz = self.__class__.__name__
         identifier = self.identifier
         network = identifier.address.type
-        host = self.host
-        port = self.port
-        return '<%s: %s(%d) host="%s" port=%d />' % (clazz, identifier, network, host, port)
+        return '<%s id="%s" network=%d host="%s" port=%d />' % (clazz, identifier, network, self.host, self.port)
+
+    # Override
+    def __eq__(self, other) -> bool:
+        """ Return self==value. """
+        if isinstance(other, Station):
+            if self is other:
+                # same object
+                return True
+            other = other.identifier
+        # check with inner user's ID
+        return self.__user.identifier.__eq__(other)
+
+    # Override
+    def __ne__(self, other) -> bool:
+        """ Return self!=value. """
+        if isinstance(other, Station):
+            if self is other:
+                # same object
+                return False
+            other = other.identifier
+        # check with inner user's ID
+        return self.__user.identifier.__ne__(other)
 
     #
     #   Entity
@@ -159,8 +173,6 @@ class Station(User):
                 value = doc.get_property('host')
                 if value is not None:
                     self.__host = str(value)
-            if self.__host is None:
-                self.__host = '0.0.0.0'
         return self.__host
 
     @property
@@ -171,8 +183,6 @@ class Station(User):
                 value = doc.get_property('port')
                 if value is not None:
                     self.__port = int(value)
-            if self.__port == 0:
-                self.__port = 9394
         return self.__port
 
 

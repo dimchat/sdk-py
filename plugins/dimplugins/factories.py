@@ -115,7 +115,7 @@ class GeneralAddressFactory(BaseAddressFactory):
             return EVERYWHERE
         if size == 42:
             return ETHAddress.from_str(address=address)
-        if 26 <= size <= 34:
+        if 26 <= size <= 35:
             return BTCAddress.from_str(address=address)
 
 

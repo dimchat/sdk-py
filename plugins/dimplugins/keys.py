@@ -49,11 +49,25 @@ class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
     def __init__(self, key: Dict[str, Any]):
         super().__init__(dictionary=key)
 
+    # Override
     def __eq__(self, other) -> bool:
-        if super().__eq__(other=other):
-            return True
-        elif isinstance(other, SymmetricKey):
+        if isinstance(other, SymmetricKey):
+            if super().__eq__(other):
+                # same dictionary
+                return True
+            # check by encryption
             return self.match(key=other)
+
+    # Override
+    def __ne__(self, other) -> bool:
+        if isinstance(other, SymmetricKey):
+            if super().__eq__(other):
+                # same dictionary
+                return False
+            # check by encryption
+            return not self.match(key=other)
+        else:
+            return True
 
     @property  # Override
     def algorithm(self) -> str:
@@ -93,13 +107,29 @@ class BasePrivateKey(Dictionary, PrivateKey, ABC):
     def __init__(self, key: Dict[str, Any]):
         super().__init__(dictionary=key)
 
+    # Override
     def __eq__(self, other) -> bool:
-        if super().__eq__(other=other):
-            return True
-        if isinstance(other, SignKey):
+        if isinstance(other, PrivateKey):
+            if super().__eq__(other):
+                # same dictionary
+                return True
+            # check by signature
             verify_key = self.public_key
-            if verify_key is not None:
-                return verify_key.match(key=other)
+            assert verify_key is not None, 'failed to get public key: %s' % self
+            return verify_key.match(key=other)
+
+    # Override
+    def __ne__(self, other) -> bool:
+        if isinstance(other, PrivateKey):
+            if super().__eq__(other):
+                # same dictionary
+                return False
+            # check by signature
+            verify_key = self.public_key
+            assert verify_key is not None, 'failed to get public key: %s' % self
+            return not verify_key.match(key=other)
+        else:
+            return True
 
     @property  # Override
     def algorithm(self) -> str:
