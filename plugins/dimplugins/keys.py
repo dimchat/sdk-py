@@ -30,8 +30,7 @@ from mkm.types import Dictionary
 from mkm.crypto import CryptographyKey, EncryptKey, SignKey
 from mkm.crypto import SymmetricKey, AsymmetricKey
 from mkm.crypto import PublicKey, PrivateKey
-from mkm.crypto.cryptography import key_algorithm, keys_match
-from mkm.crypto.asymmetric import asymmetric_keys_match
+from mkm.crypto.factory import FactoryManager
 
 
 class BaseKey(Dictionary, CryptographyKey, ABC):
@@ -41,7 +40,8 @@ class BaseKey(Dictionary, CryptographyKey, ABC):
 
     @property  # Override
     def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
+        gf = FactoryManager.general_factory
+        return gf.get_key_algorithm(key=self.dictionary)
 
 
 class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
@@ -71,11 +71,13 @@ class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
 
     @property  # Override
     def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
+        gf = FactoryManager.general_factory
+        return gf.get_key_algorithm(key=self.dictionary)
 
     # Override
     def match(self, key: EncryptKey) -> bool:
-        return keys_match(encrypt_key=key, decrypt_key=self)
+        gf = FactoryManager.general_factory
+        return gf.keys_match(encrypt_key=key, decrypt_key=self)
 
 
 class BaseAsymmetricKey(Dictionary, AsymmetricKey, ABC):
@@ -85,7 +87,8 @@ class BaseAsymmetricKey(Dictionary, AsymmetricKey, ABC):
 
     @property  # Override
     def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
+        gf = FactoryManager.general_factory
+        return gf.get_key_algorithm(key=self.dictionary)
 
 
 class BasePublicKey(Dictionary, PublicKey, ABC):
@@ -95,11 +98,13 @@ class BasePublicKey(Dictionary, PublicKey, ABC):
 
     @property  # Override
     def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
+        gf = FactoryManager.general_factory
+        return gf.get_key_algorithm(key=self.dictionary)
 
     # Override
     def match(self, key: SignKey) -> bool:
-        return asymmetric_keys_match(sign_key=key, verify_key=self)
+        gf = FactoryManager.general_factory
+        return gf.asymmetric_keys_match(sign_key=key, verify_key=self)
 
 
 class BasePrivateKey(Dictionary, PrivateKey, ABC):
@@ -133,4 +138,5 @@ class BasePrivateKey(Dictionary, PrivateKey, ABC):
 
     @property  # Override
     def algorithm(self) -> str:
-        return key_algorithm(key=self.dictionary)
+        gf = FactoryManager.general_factory
+        return gf.get_key_algorithm(key=self.dictionary)

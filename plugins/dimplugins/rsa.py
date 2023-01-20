@@ -32,7 +32,7 @@ from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
 from mkm.crypto import EncryptKey, DecryptKey
 from mkm.crypto import AsymmetricKey, PublicKey
-from mkm.crypto.cryptography import keys_match
+from mkm.crypto.factory import FactoryManager
 
 from .keys import BasePublicKey, BasePrivateKey
 
@@ -177,7 +177,8 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
 
     # Override
     def match(self, key: EncryptKey) -> bool:
-        return keys_match(encrypt_key=key, decrypt_key=self)
+        gf = FactoryManager.general_factory
+        return gf.keys_match(encrypt_key=key, decrypt_key=self)
 
 
 def generate(bits: int) -> (RSA.RsaKey, bytes):

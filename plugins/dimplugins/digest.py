@@ -30,9 +30,38 @@
     Keccak-256
 """
 
+import hashlib
+
 from Crypto.Hash import keccak
 
-from mkm.crypto import DataDigester, KECCAK256
+from mkm.crypto import DataDigester
+from mkm.crypto import MD5, SHA1, SHA256, KECCAK256, RIPEMD160
+
+
+class M5(DataDigester):
+
+    # Override
+    def digest(self, data: bytes) -> bytes:
+        """ MD5 digest """
+        hash_obj = hashlib.md5()
+        hash_obj.update(data)
+        return hash_obj.digest()
+
+
+class S1(DataDigester):
+
+    # Override
+    def digest(self, data: bytes) -> bytes:
+        """ SHA1 Digest """
+        return hashlib.sha1(data).digest()
+
+
+class S256(DataDigester):
+
+    # Override
+    def digest(self, data: bytes) -> bytes:
+        """ SHA-256 """
+        return hashlib.sha256(data).digest()
 
 
 class K(DataDigester):
@@ -45,4 +74,24 @@ class K(DataDigester):
         return hash_obj.digest()
 
 
-KECCAK256.digester = K()
+class R160(DataDigester):
+
+    # Override
+    def digest(self, data: bytes) -> bytes:
+        """ RIPEMD-160 """
+        hash_obj = hashlib.new('ripemd160')
+        hash_obj.update(data)
+        return hash_obj.digest()
+
+
+def register_data_digesters():
+    # MD5
+    MD5.digester = M5()
+    # SHA1
+    SHA1.digester = S1()
+    # SHA256
+    SHA256.digester = S256()
+    # KECCAK256
+    KECCAK256.digester = K()
+    # RIPEMD160
+    RIPEMD160.digester = R160()

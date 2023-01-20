@@ -30,16 +30,27 @@
     Base58
 """
 
-from typing import Optional
+import base64
+import json
+from typing import Optional, Any
 
 import base58
 
-from mkm.crypto import DataCoder, Base58
+from mkm.crypto import DataCoder, ObjectCoder, StringCoder
+from mkm.crypto import Base64, Base58, Hex, JSON, UTF8
 
 
-"""
-    Base58
-"""
+class B64(DataCoder):
+
+    # Override
+    def encode(self, data: bytes) -> str:
+        """ BASE-64 Encode """
+        return base64.b64encode(data).decode('utf-8')
+
+    # Override
+    def decode(self, string: str) -> Optional[bytes]:
+        """ BASE-64 Decode """
+        return base64.b64decode(string)
 
 
 class B58(DataCoder):
@@ -55,4 +66,55 @@ class B58(DataCoder):
         return base58.b58decode(string)
 
 
-Base58.coder = B58()
+class H(DataCoder):
+
+    # Override
+    def encode(self, data: bytes) -> str:
+        """ HEX Encode """
+        # return binascii.b2a_hex(data).decode('utf-8')
+        return data.hex()
+
+    # Override
+    def decode(self, string: str) -> Optional[bytes]:
+        """ HEX Decode """
+        # return binascii.a2b_hex(string)
+        return bytes.fromhex(string)
+
+
+class J(ObjectCoder):
+
+    # Override
+    def encode(self, obj: Any) -> str:
+        """ JsON encode """
+        return json.dumps(obj)
+
+    # Override
+    def decode(self, string: str) -> Optional[Any]:
+        """ JsON decode """
+        return json.loads(string)
+
+
+class U(StringCoder):
+
+    # Override
+    def encode(self, string: str) -> bytes:
+        """ UTF-8 encode """
+        return string.encode('utf-8')
+
+    # Override
+    def decode(self, data: bytes) -> Optional[str]:
+        """ UTF-8 decode """
+        return data.decode('utf-8')
+
+
+def register_data_coders():
+    # Base64 coding
+    Base64.coder = B64()
+    # Base58 coding
+    Base58.coder = B58()
+    # HEX coding
+    Hex.coder = H()
+    # JSON
+    JSON.coder = J()
+    # UTF8
+    UTF8.coder = U()

@@ -30,8 +30,10 @@
 
 from typing import Optional
 
-from mkm import Identifier, IdentifierFactory
+from mkm import ID, Identifier
+from mkm import ANYONE, EVERYONE, FOUNDER
 from mkm import Address
+from dimp import IdentifierFactory
 
 from .network import network_to_type
 
@@ -50,3 +52,14 @@ class EntityIDFactory(IdentifierFactory):
     # Override
     def _new_id(self, identifier: str, name: Optional[str], address: Address, terminal: Optional[str]):
         return EntityID(identifier=identifier, name=name, address=address, terminal=terminal)
+
+    # Override
+    def _parse(self, identifier: str) -> Optional[ID]:
+        size = len(identifier)
+        if size == 15 and identifier.lower() == 'anyone@anywhere':
+            return ANYONE
+        if size == 19 and identifier.lower() == 'everyone@everywhere':
+            return EVERYONE
+        if size == 13 and identifier.lower() == 'moky@anywhere':
+            return FOUNDER
+        return super()._parse(identifier=identifier)
