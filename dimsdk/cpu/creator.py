@@ -36,10 +36,10 @@
 
 from typing import Optional, Union
 
-from dimp import ContentType, Command, GroupCommand
+from dimp import ContentType, Command
 
-from ..core.helper import TwinsHelper
-from ..core import ContentProcessor, ContentProcessorCreator
+from ..helper import TwinsHelper
+from ..proc_content import ContentProcessor, ContentProcessorCreator
 
 # from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
@@ -49,14 +49,6 @@ from .array import ArrayContentProcessor
 
 from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor
-
-from .history import HistoryCommandProcessor, GroupCommandProcessor
-
-from .grp_invite import InviteCommandProcessor
-from .grp_expel import ExpelCommandProcessor
-from .grp_quit import QuitCommandProcessor
-from .grp_query import QueryCommandProcessor
-from .grp_reset import ResetCommandProcessor
 
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
@@ -77,30 +69,15 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         # group commands
         if msg_type == ContentType.COMMAND.value:
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif msg_type == ContentType.HISTORY.value:
-            return HistoryCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         # # default contents
         # if msg_type == 0:
         #     return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
     # Override
-    def create_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
+    def create_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
         # meta command
-        if cmd_name == Command.META:
+        if cmd == Command.META:
             return MetaCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         # document command
-        if cmd_name == Command.DOCUMENT:
+        if cmd == Command.DOCUMENT:
             return DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        # group commands
-        if cmd_name == 'group':
-            return GroupCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.INVITE:
-            return InviteCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.EXPEL:
-            return ExpelCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.QUIT:
-            return QuitCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.QUERY:
-            return QueryCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        elif cmd_name == GroupCommand.RESET:
-            return ResetCommandProcessor(facebook=self.facebook, messenger=self.messenger)

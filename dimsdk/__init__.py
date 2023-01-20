@@ -35,9 +35,21 @@ from dkd import *
 from dimp import *
 
 from .mkm import *
-from .core import *
 
-from .cpu import *
+from .ans import AddressNameService
+from .delegate import CipherKeyDelegate
+from .facebook import Facebook
+from .messenger import Messenger
+from .helper import TwinsHelper
+from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
+from .processor import MessageProcessor
+from .packer import MessagePacker
+
+from .factories import ContentFactoryBuilder, CommandFactoryBuilder
+from .factories import GeneralCommandFactory, HistoryCommandFactory, GroupCommandFactory
+from .factories import register_content_factories, register_command_factories
+from .factories import register_message_factories, register_all_factories
+
 
 name = 'DIM-SDK'
 
@@ -83,64 +95,69 @@ __all__ = [
     'Document', 'DocumentFactory',
     'Visa', 'Bulletin',
 
-    # 'entity_is_user', 'entity_is_group', 'entity_is_broadcast',
-    # 'meta_has_seed', 'meta_type',
-    # 'document_type',
-
-    'BaseAddressFactory', 'BroadcastAddress',
-    'IdentifierFactory', 'Identifier',
+    'BroadcastAddress', 'Identifier',
     'ANYWHERE', 'EVERYWHERE', 'ANYONE', 'EVERYONE', 'FOUNDER',
+
+    #
+    #   MingKeMing base extends
+    #
     'BaseMeta',
     'BaseDocument', 'BaseVisa', 'BaseBulletin',
-
-    # 'document_identifier',
-
-    #
-    #   DaoKeDao
-    #
-    'ContentType',  # 'content_type',
-    'Content', 'ContentFactory',
-    'Envelope', 'EnvelopeFactory',
-    'Message', 'InstantMessage', 'SecureMessage', 'ReliableMessage',
-    'InstantMessageFactory', 'SecureMessageFactory', 'ReliableMessageFactory',
-    'InstantMessageDelegate', 'SecureMessageDelegate', 'ReliableMessageDelegate',
-
-    'BaseContent',
-    'MessageEnvelope', 'MessageEnvelopeFactory',
-    'BaseMessage',
-    'PlainMessage', 'PlainMessageFactory',
-    'EncryptedMessage', 'EncryptedMessageFactory',
-    'NetworkMessage', 'NetworkMessageFactory',
-
-    #
-    #   DIMP
-    #
-    'TextContent', 'ForwardContent', 'ArrayContent',
-    'MoneyContent', 'TransferContent',
-    'FileContent', 'ImageContent', 'AudioContent', 'VideoContent',
-    'PageContent', 'CustomizedContent',
-    'Command', 'CommandFactory',  # 'command_name',
-    'MetaCommand', 'DocumentCommand',
-    'HistoryCommand', 'GroupCommand',
-    'InviteCommand', 'ExpelCommand', 'JoinCommand',
-    'QuitCommand', 'QueryCommand', 'ResetCommand',
+    'BaseDocumentFactory',
+    'BaseAddressFactory', 'IdentifierFactory',
 
     'EntityDelegate',
     'EntityDataSource', 'UserDataSource', 'GroupDataSource',
     'Entity', 'User', 'Group',
     'BaseEntity', 'BaseUser', 'BaseGroup',
 
+    #
+    #   DaoKeDao
+    #
+    'ContentType', 'Content', 'ContentFactory',
+    'Envelope', 'EnvelopeFactory',
+    'Message', 'InstantMessage', 'SecureMessage', 'ReliableMessage',
+    'InstantMessageFactory', 'SecureMessageFactory', 'ReliableMessageFactory',
+    'InstantMessageDelegate', 'SecureMessageDelegate', 'ReliableMessageDelegate',
+
+    #
+    #   DaoKeDao protocol extends
+    #
+    'TextContent', 'ForwardContent', 'ArrayContent',
+    'MoneyContent', 'TransferContent',
+    'FileContent', 'ImageContent', 'AudioContent', 'VideoContent',
+    'PageContent', 'CustomizedContent',
+
+    'Command', 'CommandFactory',
+    'MetaCommand', 'DocumentCommand',
+
+    'HistoryCommand', 'GroupCommand',
+    'InviteCommand', 'ExpelCommand', 'JoinCommand',
+    'QuitCommand', 'QueryCommand', 'ResetCommand',
+
+    #
+    #   DaoKeDao base extends
+    #
+    'BaseContent',
     'BaseTextContent', 'SecretContent', 'ListContent',
     'BaseMoneyContent', 'TransferMoneyContent',
     'BaseFileContent', 'ImageFileContent', 'AudioFileContent', 'VideoFileContent',
     'WebPageContent', 'AppCustomizedContent',
-    'BaseCommand', 'BaseMetaCommand', 'BaseDocumentCommand',
+    'BaseCommand',
+    'BaseMetaCommand', 'BaseDocumentCommand',
     'BaseHistoryCommand', 'BaseGroupCommand',
     'InviteGroupCommand', 'ExpelGroupCommand', 'JoinGroupCommand',
     'QuitGroupCommand', 'QueryGroupCommand', 'ResetGroupCommand',
-    # 'ContentFactoryBuilder', 'CommandFactoryBuilder',
-    # 'GeneralCommandFactory', 'HistoryCommandFactory', 'GroupCommandFactory',
-    # 'register_message_factories', 'register_content_factories', 'register_command_factories',
+
+    # 'MessageEnvelope', 'MessageEnvelopeFactory',
+    # 'BaseMessage',
+    # 'PlainMessage', 'PlainMessageFactory',
+    # 'EncryptedMessage', 'EncryptedMessageFactory',
+    # 'NetworkMessage', 'NetworkMessageFactory',
+
+    #
+    #   Core
+    #
     'Barrack', 'Transceiver', 'Packer', 'Processor',
 
     #
@@ -148,21 +165,16 @@ __all__ = [
     #
     'ServiceProvider', 'Station', 'Bot',
 
-    'AddressNameService', 'CipherKeyDelegate', 'TwinsHelper',
-    'Facebook', 'Messenger', 'MessagePacker', 'MessageProcessor',
+    'AddressNameService', 'CipherKeyDelegate',
+    'Facebook', 'Messenger',
+    'TwinsHelper',
     'ContentProcessor', 'ContentProcessorFactory', 'ContentProcessorCreator',
+    'MessageProcessor', 'MessagePacker',
 
-    'register_core_factories',
+    'ContentFactoryBuilder', 'CommandFactoryBuilder',
+    'GeneralCommandFactory', 'HistoryCommandFactory', 'GroupCommandFactory',
 
-    #
-    #   CPU
-    #
-    'BaseContentProcessorCreator', 'GeneralContentProcessorFactory',
-    'BaseContentProcessor', 'BaseCommandProcessor',
-    'ForwardContentProcessor', 'ArrayContentProcessor',
-    'CustomizedContentProcessor', 'CustomizedContentHandler',
-    'MetaCommandProcessor', 'DocumentCommandProcessor',
-    'HistoryCommandProcessor', 'GroupCommandProcessor',
-    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
-    'ResetCommandProcessor', 'QueryCommandProcessor',
+    'register_content_factories', 'register_command_factories',
+    'register_message_factories',
+    'register_all_factories',
 ]

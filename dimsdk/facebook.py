@@ -38,14 +38,13 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from mkm.core.address import thanos
-
+from dimp.mkm.address import thanos
 from dimp import EntityType, ID
 from dimp import User, Group, BaseUser, BaseGroup
 from dimp import Meta, Document
 from dimp import Barrack
 
-from ..mkm import ServiceProvider, Station, Bot
+from .mkm import ServiceProvider, Station, Bot
 
 
 class Facebook(Barrack, ABC):
@@ -159,7 +158,7 @@ class Facebook(Barrack, ABC):
         assert g_meta is not None, 'failed to get meta for group: %s' % group
         u_meta = self.meta(identifier=member)
         assert u_meta is not None, 'failed to get meta for member: %s' % member
-        return Meta.matches(meta=g_meta, key=u_meta.key)
+        return Meta.match_key(meta=g_meta, key=u_meta.key)
 
     def is_owner(self, member: ID, group: ID) -> bool:
         if group.type == EntityType.GROUP:

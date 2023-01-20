@@ -76,6 +76,8 @@ class Station(User):
                 # same object
                 return True
             other = other.identifier
+        elif isinstance(other, User):
+            other = other.identifier
         # check with inner user's ID
         return self.__user.identifier.__eq__(other)
 
@@ -86,6 +88,8 @@ class Station(User):
             if self is other:
                 # same object
                 return False
+            other = other.identifier
+        elif isinstance(other, User):
             other = other.identifier
         # check with inner user's ID
         return self.__user.identifier.__ne__(other)

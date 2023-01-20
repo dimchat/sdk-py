@@ -32,8 +32,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from mkm.crypto import SymmetricKey
-
-from dimp import ID
+from mkm import ID
 
 
 class CipherKeyDelegate(ABC):

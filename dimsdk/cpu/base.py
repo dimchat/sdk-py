@@ -40,8 +40,8 @@ from dimp import ID
 from dimp import ReliableMessage
 from dimp import Content, TextContent, Command
 
-from ..core.helper import TwinsHelper
-from ..core import ContentProcessor
+from ..helper import TwinsHelper
+from ..proc_content import ContentProcessor
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):
@@ -63,13 +63,6 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         if group is not None:
             res.group = group
         return [res]
-
-    # noinspection PyMethodMayBeStatic
-    def _respond_content(self, content: Optional[Content]) -> List[Content]:
-        if content is None:
-            return []
-        else:
-            return [content]
 
 
 class BaseCommandProcessor(BaseContentProcessor):

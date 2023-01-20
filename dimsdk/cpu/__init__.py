@@ -45,13 +45,6 @@ from .customized import CustomizedContentProcessor, CustomizedContentHandler
 from .meta import MetaCommandProcessor
 from .document import DocumentCommandProcessor
 
-from .history import HistoryCommandProcessor, GroupCommandProcessor
-from .grp_invite import InviteCommandProcessor
-from .grp_expel import ExpelCommandProcessor
-from .grp_quit import QuitCommandProcessor
-from .grp_reset import ResetCommandProcessor
-from .grp_query import QueryCommandProcessor
-
 
 __all__ = [
 
@@ -66,9 +59,4 @@ __all__ = [
     'CustomizedContentProcessor', 'CustomizedContentHandler',
     'MetaCommandProcessor',
     'DocumentCommandProcessor',
-
-    'HistoryCommandProcessor',
-    'GroupCommandProcessor',
-    'InviteCommandProcessor', 'ExpelCommandProcessor', 'QuitCommandProcessor',
-    'ResetCommandProcessor', 'QueryCommandProcessor',
 ]

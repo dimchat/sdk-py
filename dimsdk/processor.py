@@ -49,12 +49,12 @@ class MessageProcessor(TwinsHelper, Processor):
     # protected
     def _create_factory(self) -> ContentProcessorFactory:
         creator = self._create_creator()
-        from ..cpu import GeneralContentProcessorFactory
+        from .cpu import GeneralContentProcessorFactory
         return GeneralContentProcessorFactory(facebook=self.facebook, messenger=self.messenger, creator=creator)
 
     # protected
     def _create_creator(self) -> ContentProcessorCreator:
-        from ..cpu import BaseContentProcessorCreator
+        from .cpu import BaseContentProcessorCreator
         return BaseContentProcessorCreator(facebook=self.facebook, messenger=self.messenger)
 
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
@@ -63,8 +63,8 @@ class MessageProcessor(TwinsHelper, Processor):
     def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
         return self.__factory.get_content_processor(msg_type=msg_type)
 
-    def get_command_processor(self, cmd_name: str, msg_type: Union[int, ContentType] = 0) -> Optional[ContentProcessor]:
-        return self.__factory.get_command_processor(msg_type=msg_type, cmd_name=cmd_name)
+    def get_command_processor(self, cmd: str, msg_type: Union[int, ContentType] = 0) -> Optional[ContentProcessor]:
+        return self.__factory.get_command_processor(msg_type=msg_type, cmd=cmd)
 
     #
     #  Processing Message

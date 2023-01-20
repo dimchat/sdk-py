@@ -39,9 +39,10 @@ from typing import Dict, Optional, Union
 
 from dimp import ContentType, Content, Command, GroupCommand
 
-from ..core.helper import TwinsHelper
-from ..core import Facebook, Messenger
-from ..core import ContentProcessor, ContentProcessorFactory
+from ..helper import TwinsHelper
+from ..facebook import Facebook
+from ..messenger import Messenger
+from ..proc_content import ContentProcessor, ContentProcessorFactory
 
 from .creator import ContentProcessorCreator
 
@@ -71,12 +72,12 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
         self.__content_processors[msg_type] = cpu
 
     # protected
-    def _get_command_processor(self, cmd_name: str) -> Optional[ContentProcessor]:
-        return self.__command_processors.get(cmd_name)
+    def _get_command_processor(self, cmd: str) -> Optional[ContentProcessor]:
+        return self.__command_processors.get(cmd)
 
     # protected
-    def _put_command_processor(self, cmd_name: str, cpu: ContentProcessor):
-        self.__command_processors[cmd_name] = cpu
+    def _put_command_processor(self, cmd: str, cpu: ContentProcessor):
+        self.__command_processors[cmd] = cpu
 
     #
     #   ContentProcessorFactory
@@ -88,12 +89,12 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
         if isinstance(content, Command):
             name = content.cmd
             # command processor
-            cpu = self.get_command_processor(msg_type=msg_type, cmd_name=name)
+            cpu = self.get_command_processor(msg_type=msg_type, cmd=name)
             if cpu is not None:
                 return cpu
             elif isinstance(content, GroupCommand):
                 # group command processor
-                cpu = self.get_command_processor(msg_type=msg_type, cmd_name='group')
+                cpu = self.get_command_processor(msg_type=msg_type, cmd='group')
                 if cpu is not None:
                     return cpu
         # content processor
@@ -109,10 +110,10 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
         return cpu
 
     # Override
-    def get_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
-        cpu = self._get_command_processor(cmd_name=cmd_name)
+    def get_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
+        cpu = self._get_command_processor(cmd=cmd)
         if cpu is None:
-            cpu = self.creator.create_command_processor(msg_type=msg_type, cmd_name=cmd_name)
+            cpu = self.creator.create_command_processor(msg_type=msg_type, cmd=cmd)
             if cpu is not None:
-                self._put_command_processor(cmd_name=cmd_name, cpu=cpu)
+                self._put_command_processor(cmd=cmd, cpu=cpu)
         return cpu

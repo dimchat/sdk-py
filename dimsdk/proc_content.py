@@ -76,7 +76,7 @@ class ContentProcessorFactory(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def get_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
+    def get_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
         raise NotImplemented
 
 
@@ -99,12 +99,12 @@ class ContentProcessorCreator(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def create_command_processor(self, msg_type: Union[int, ContentType], cmd_name: str) -> Optional[ContentProcessor]:
+    def create_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
         """
         Create command processor with name
 
         :param msg_type: content type
-        :param cmd_name: command name
+        :param cmd:      command name
         :return CommandProcessor
         """
         raise NotImplemented
