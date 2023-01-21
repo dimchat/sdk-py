@@ -24,11 +24,11 @@
 # ==============================================================================
 
 import hashlib
-from typing import Union, Optional
+from typing import Union
 
 import ecdsa
 
-from mkm.crypto import AsymmetricKey, PublicKey
+from mkm.crypto import PublicKey
 
 from .keys import BasePublicKey, BasePrivateKey
 
@@ -99,9 +99,7 @@ class ECCPublicKey(BasePublicKey):
 class ECCPrivateKey(BasePrivateKey):
     """ ECC Private Key """
 
-    def __init__(self, key: Optional[dict] = None):
-        if key is None:
-            key = {'algorithm': AsymmetricKey.ECC}
+    def __init__(self, key: dict):
         super().__init__(key=key)
         # check key data
         pem: str = key.get('data')

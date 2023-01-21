@@ -26,11 +26,11 @@
 from typing import Optional, Union
 
 from mkm.crypto import utf8_encode
+from mkm.crypto import SymmetricKey, AsymmetricKey
 from mkm.crypto import SignKey, VerifyKey
-from mkm.crypto import PublicKey, PublicKeyFactory
-from mkm.crypto import PrivateKey, PrivateKeyFactory
-from mkm.crypto import SymmetricKey, SymmetricKeyFactory
-from mkm.core.factory import FactoryManager
+from mkm.crypto import PublicKey, PrivateKey
+from mkm.crypto import SymmetricKeyFactory, PublicKeyFactory, PrivateKeyFactory
+from mkm.factory import FactoryManager
 
 from mkm import ANYWHERE, EVERYWHERE, Address
 from mkm import MetaType, Meta, MetaFactory
@@ -64,7 +64,8 @@ class RSAPrivateKeyFactory(PrivateKeyFactory):
 
     # Override
     def generate_private_key(self) -> Optional[PrivateKey]:
-        return RSAPrivateKey()
+        key = {'algorithm': AsymmetricKey.RSA}
+        return RSAPrivateKey(key=key)
 
     # Override
     def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
@@ -75,7 +76,8 @@ class ECCPrivateKeyFactory(PrivateKeyFactory):
 
     # Override
     def generate_private_key(self) -> Optional[PrivateKey]:
-        return ECCPrivateKey()
+        key = {'algorithm': AsymmetricKey.ECC}
+        return ECCPrivateKey(key=key)
 
     # Override
     def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
@@ -86,7 +88,8 @@ class AESKeyFactory(SymmetricKeyFactory):
 
     # Override
     def generate_symmetric_key(self) -> Optional[SymmetricKey]:
-        return AESKey()
+        key = {'algorithm': SymmetricKey.AES}
+        return AESKey(key=key)
 
     # Override
     def parse_symmetric_key(self, key: dict) -> Optional[SymmetricKey]:

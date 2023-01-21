@@ -28,7 +28,6 @@ from typing import Optional
 
 from Crypto.Cipher import AES
 
-from mkm.crypto import SymmetricKey
 from mkm.crypto import base64_encode, base64_decode
 
 from .keys import BaseSymmetricKey
@@ -43,9 +42,7 @@ def random_bytes(size: int) -> bytes:
 class AESKey(BaseSymmetricKey):
     """ AES Key """
 
-    def __init__(self, key: Optional[dict] = None):
-        if key is None:
-            key = {'algorithm': SymmetricKey.AES}
+    def __init__(self, key: dict):
         super().__init__(key=key)
         # check key data
         base64 = self.get('data')

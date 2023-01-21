@@ -39,6 +39,9 @@ from mkm import ID, Address
 from mkm import MetaType, Meta, Document
 from dimp import BaseDocumentFactory
 
+from .keys import BaseKey, BaseSymmetricKey, BaseAsymmetricKey
+from .keys import BasePublicKey, BasePrivateKey
+
 from .plain import PlainKey
 from .aes import AESKey
 from .rsa import RSAPublicKey, RSAPrivateKey
@@ -53,8 +56,8 @@ from .factories import ECCPublicKeyFactory, ECCPrivateKeyFactory
 from .factories import AESKeyFactory, PlainKeyFactory
 from .factories import GeneralAddressFactory, GeneralMetaFactory
 
-# from .network import NetworkType
-# from .entity import EntityID
+from .network import NetworkType
+from .entity import EntityID
 from .entity import EntityIDFactory
 
 from .coder import register_data_coders
@@ -137,24 +140,24 @@ def register_plugins():
 
 __all__ = [
 
-    # 'BaseKey',
-    # 'BaseSymmetricKey', 'BaseAsymmetricKey',
-    # 'BasePublicKey', 'BasePrivateKey',
+    'BaseKey',
+    'BaseSymmetricKey', 'BaseAsymmetricKey',
+    'BasePublicKey', 'BasePrivateKey',
 
     'RSAPublicKey', 'RSAPrivateKey',
     'ECCPublicKey', 'ECCPrivateKey',
     'AESKey',
     'PlainKey',
 
-    # 'RSAPublicKeyFactory', 'RSAPrivateKeyFactory',
-    # 'ECCPublicKeyFactory', 'ECCPrivateKeyFactory',
-    # 'AESKeyFactory', 'PlainKeyFactory',
-    # 'GeneralAddressFactory',
-    # 'GeneralMetaFactory',
+    'RSAPublicKeyFactory', 'RSAPrivateKeyFactory',
+    'ECCPublicKeyFactory', 'ECCPrivateKeyFactory',
+    'AESKeyFactory', 'PlainKeyFactory',
+    'GeneralAddressFactory',
+    'GeneralMetaFactory',
 
-    # 'NetworkType',
-    # 'EntityID',
-    # 'EntityIDFactory',
+    'NetworkType',
+    'EntityID',
+    'EntityIDFactory',
 
     'BTCAddress', 'ETHAddress',
     'DefaultMeta', 'BTCMeta', 'ETHMeta',

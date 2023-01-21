@@ -11,9 +11,12 @@
 import unittest
 
 from dimsdk import *
-from plugins.dimplugins import ETHAddress, ETHMeta
+from plugins.dimplugins import *
 
 from tests.database import Database
+
+register_all_factories()
+register_plugins()
 
 g_facebook = Database()
 
@@ -210,7 +213,7 @@ class CryptoTestCase(unittest.TestCase):
 
         pub = Hex.encode(data=p_key.data)
         meta = ETHMeta({
-            'version': MetaType.ETH.value,
+            'type': MetaType.ETH.value,
             'key': {
                 'algorithm': 'ECC',
                 'data': pub

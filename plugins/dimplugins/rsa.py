@@ -31,7 +31,7 @@ from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
 from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
 from mkm.crypto import EncryptKey, DecryptKey
-from mkm.crypto import AsymmetricKey, PublicKey
+from mkm.crypto import PublicKey
 from mkm.crypto.factory import FactoryManager
 
 from .keys import BasePublicKey, BasePrivateKey
@@ -94,9 +94,7 @@ class RSAPublicKey(BasePublicKey, EncryptKey):
 class RSAPrivateKey(BasePrivateKey, DecryptKey):
     """ RSA Private Key """
 
-    def __init__(self, key: Optional[dict] = None):
-        if key is None:
-            key = {'algorithm': AsymmetricKey.RSA}
+    def __init__(self, key: dict):
         super().__init__(key=key)
         # check key data
         pem: str = key.get('data')

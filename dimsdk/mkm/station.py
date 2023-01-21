@@ -38,6 +38,8 @@
 
 from typing import Optional, List
 
+from mkm import Identifier
+
 from dimp import EntityType, ID, Meta, Document, Visa
 from dimp import ANYWHERE, EVERYWHERE
 from dimp import User, UserDataSource
@@ -46,8 +48,8 @@ from dimp import BaseUser, BaseGroup
 
 class Station(User):
 
-    ANY = ID.create(name='station', address=ANYWHERE)
-    EVERY = ID.create(name='stations', address=EVERYWHERE)
+    ANY = Identifier(identifier='station@anywhere', name='station', address=ANYWHERE)
+    EVERY = Identifier(identifier='stations@everywhere', name='stations', address=EVERYWHERE)
 
     def __init__(self, identifier: Optional[ID] = None,
                  host: Optional[str] = None, port: Optional[int] = 0):

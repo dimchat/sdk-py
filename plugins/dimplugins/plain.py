@@ -35,9 +35,8 @@ class PlainKey(BaseSymmetricKey):
     """
     PLAIN = 'PLAIN'
 
-    def __init__(self, key: Optional[dict] = None):
-        if key is None:
-            key = {'algorithm': self.PLAIN}
+    def __init__(self):
+        key = {'algorithm': self.PLAIN}
         super().__init__(key=key)
 
     @property
