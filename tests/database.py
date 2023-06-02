@@ -21,9 +21,6 @@ class Database(Facebook):
     def save_document(self, document: Document) -> bool:
         pass
 
-    def save_members(self, members: List[ID], identifier: ID) -> bool:
-        pass
-
     #
     #   EntityDataSource
     #

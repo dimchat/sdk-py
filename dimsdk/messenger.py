@@ -98,12 +98,12 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, ABC):
         return delegate.encrypt_message(msg=msg)
 
     # Override
-    def sign_message(self, msg: SecureMessage) -> ReliableMessage:
+    def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
         delegate = self.packer
         return delegate.sign_message(msg=msg)
 
     # Override
-    def serialize_message(self, msg: ReliableMessage) -> bytes:
+    def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
         delegate = self.packer
         return delegate.serialize_message(msg=msg)
 

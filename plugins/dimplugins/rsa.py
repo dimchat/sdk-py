@@ -32,7 +32,7 @@ from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
 from mkm.crypto import EncryptKey, DecryptKey
 from mkm.crypto import PublicKey
-from mkm.crypto.factory import FactoryManager
+from mkm.crypto.factory import CryptographyKeyFactoryManager
 
 from .keys import BasePublicKey, BasePrivateKey
 
@@ -81,9 +81,9 @@ class RSAPublicKey(BasePublicKey, EncryptKey):
 
     # Override
     def verify(self, data: bytes, signature: bytes) -> bool:
-        hash_obj = SHA256.SHA256Hash(data)
-        verifier = Signature_PKCS1_v1_5.new(self.rsa_key)
         try:
+            hash_obj = SHA256.SHA256Hash(data)
+            verifier = Signature_PKCS1_v1_5.new(self.rsa_key)
             verifier.verify(hash_obj, signature)
             return True
         except ValueError:
@@ -164,8 +164,11 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
     # Override
     # noinspection PyTypeChecker
     def decrypt(self, data: bytes) -> Optional[bytes]:
-        cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)
-        return cipher.decrypt(data, None)
+        try:
+            cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)
+            return cipher.decrypt(data, None)
+        except ValueError:
+            return None
 
     # Override
     def sign(self, data: bytes) -> bytes:
@@ -175,7 +178,7 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
 
     # Override
     def match(self, key: EncryptKey) -> bool:
-        gf = FactoryManager.general_factory
+        gf = CryptographyKeyFactoryManager.general_factory
         return gf.keys_match(encrypt_key=key, decrypt_key=self)
 
 

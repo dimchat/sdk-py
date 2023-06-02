@@ -191,6 +191,12 @@ class Station(User):
                     self.__port = int(value)
         return self.__port
 
+    @property
+    def provider(self) -> Optional[ID]:
+        doc = self.document(doc_type='*')
+        if doc is not None:
+            return ID.parse(identifier=doc.get_property(key='ISP'))
+
 
 class ServiceProvider(BaseGroup):
 

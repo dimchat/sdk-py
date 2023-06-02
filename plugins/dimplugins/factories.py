@@ -30,7 +30,7 @@ from mkm.crypto import SymmetricKey, AsymmetricKey
 from mkm.crypto import SignKey, VerifyKey
 from mkm.crypto import PublicKey, PrivateKey
 from mkm.crypto import SymmetricKeyFactory, PublicKeyFactory, PrivateKeyFactory
-from mkm.factory import FactoryManager
+from mkm.factory import AccountFactoryManager
 
 from mkm import ANYWHERE, EVERYWHERE, Address
 from mkm import MetaType, Meta, MetaFactory
@@ -161,7 +161,7 @@ class GeneralMetaFactory(MetaFactory):
 
     # Override
     def parse_meta(self, meta: dict) -> Optional[Meta]:
-        gf = FactoryManager.general_factory
+        gf = AccountFactoryManager.general_factory
         version = gf.get_meta_type(meta=meta)
         if version == MetaType.MKM:
             # MKM

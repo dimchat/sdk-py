@@ -97,7 +97,7 @@ class MessageProcessor(TwinsHelper, Processor):
         # 1. verify message
         s_msg = messenger.verify_message(msg=msg)
         if s_msg is None:
-            # waiting for sender's meta if not exists
+            # TODO: suspend and waiting for sender's meta if not exists
             return []
         # 2. process message
         responses = messenger.process_secure_message(msg=s_msg, r_msg=msg)
@@ -110,7 +110,6 @@ class MessageProcessor(TwinsHelper, Processor):
             if signed is not None:
                 messages.append(signed)
         return messages
-        # TODO: override to deliver to the receiver when catch exception "receiver error ..."
 
     # Override
     def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:

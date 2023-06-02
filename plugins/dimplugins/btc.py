@@ -27,7 +27,6 @@ from typing import Optional, Union
 
 from mkm.types import ConstantString
 from mkm.crypto import base58_encode, base58_decode, sha256, ripemd160
-from mkm.protocol import entity_is_user, entity_is_group
 
 from mkm import Address, EntityType
 
@@ -71,12 +70,12 @@ class BTCAddress(ConstantString, Address):
     @property  # Override
     def is_user(self) -> bool:
         network = network_to_type(network=self.type)
-        return entity_is_user(network=network)
+        return EntityType.is_user(network=network)
 
     @property  # Override
     def is_group(self) -> bool:
         network = network_to_type(network=self.type)
-        return entity_is_group(network=network)
+        return EntityType.is_group(network=network)
 
     #
     #   Factory methods
@@ -94,10 +93,10 @@ class BTCAddress(ConstantString, Address):
             network = network.value
         elif isinstance(network, NetworkType):
             network = network.value
-        prefix = chr(network).encode('latin1')
-        digest = ripemd160(sha256(fingerprint))
-        code = check_code(prefix + digest)
-        address = base58_encode(prefix + digest + code)
+        head = chr(network).encode('latin1')
+        body = ripemd160(sha256(fingerprint))
+        tail = check_code(head + body)
+        address = base58_encode(head + body + tail)
         return cls(address=address, network=network)
 
     @classmethod
@@ -108,16 +107,18 @@ class BTCAddress(ConstantString, Address):
         :param address: address string
         :return: Address object
         """
-        prefix_digest_code = base58_decode(address)
-        if len(prefix_digest_code) == 25:
-            # split them
-            prefix = prefix_digest_code[:1]
-            digest = prefix_digest_code[1:-4]
-            code = prefix_digest_code[-4:]
-            # check them
-            if check_code(prefix + digest) == code:
-                network = ord(prefix)
-                return cls(address=address, network=network)
+        if len(address) < 26 or len(address) > 35:
+            return None
+        # decode
+        data = base58_decode(address)
+        if data is None or len(data) != 25:
+            return None
+        # check code
+        prefix = data[:21]
+        suffix = data[21:]
+        if check_code(prefix) == suffix:
+            network = ord(data[:1])
+            return cls(address=address, network=network)
 
 
 def check_code(data: bytes) -> bytes:

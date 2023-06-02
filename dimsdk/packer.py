@@ -45,14 +45,16 @@ class MessagePacker(TwinsHelper, Packer):
     # Override
     def overt_group(self, content: Content) -> Optional[ID]:
         group = content.group
-        if group is not None:
-            if group.is_broadcast:
-                # broadcast message is always overt
-                return group
-            if isinstance(content, Command):
-                # group command should be sent to each member directly, so
-                # don't expose group ID
-                return None
+        if group is None:
+            return None
+        elif group.is_broadcast:
+            # broadcast message is always overt
+            return group
+        elif isinstance(content, Command):
+            # group command should be sent to each member directly, so
+            # don't expose group ID
+            return None
+        else:
             return group
 
     #
@@ -61,6 +63,10 @@ class MessagePacker(TwinsHelper, Packer):
 
     # Override
     def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
+        # TODO: check receiver before calling this, make sure the visa.key exists;
+        #       otherwise, suspend this message for waiting receiver's visa/meta;
+        #       if receiver is a group, query all members' visa too!
+
         messenger = self.messenger
         # check message delegate
         if msg.delegate is None:
@@ -100,15 +106,19 @@ class MessagePacker(TwinsHelper, Packer):
             # group message
             facebook = self.facebook
             grp = facebook.group(identifier=receiver)
-            if grp is None:
-                # group not ready
-                # TODO: suspend this message for waiting group's meta
-                return None
+            # a station will never send group message, so here must be a client;
+            # and the client messenger should check the group's meta & members
+            # before encrypting message, so we can trust that the group can be
+            # created and its members MUST exist here.
+            assert grp is not None, 'group not ready: %s' % receiver
+            # if grp is None:
+            #     # TODO: suspend this message for waiting group's meta
+            #     return None
             members = grp.members
-            if members is None or len(members) == 0:
-                # group members not found
-                # TODO: suspend this message for waiting group's membership
-                return None
+            assert len(members) > 0, 'group members not found: %s' % receiver
+            # if members is None or len(members) == 0:
+            #     # TODO: suspend this message for waiting group's membership
+            #     return None
             s_msg = msg.encrypt(password=password, members=grp.members)
         else:
             # personal message (or split group message)
@@ -119,7 +129,7 @@ class MessagePacker(TwinsHelper, Packer):
             return None
 
         # overt group ID
-        if group is not None and receiver != group:
+        if group is not None and group != receiver:
             # NOTICE: this help the receiver knows the group ID
             #         when the group message separated to multi-messages,
             #         if don't want the others know you are the group members,
@@ -151,6 +161,7 @@ class MessagePacker(TwinsHelper, Packer):
 
     def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
         js = utf8_decode(data=data)
+        assert js is not None, 'message data error: %d' % len(data)
         dictionary = json_decode(string=js)
         # TODO: translate short keys
         #       'S' -> 'sender'
@@ -164,10 +175,11 @@ class MessagePacker(TwinsHelper, Packer):
         #       'K' -> 'key'
         #       ------------------
         #       'M' -> 'meta'
+        #       'P' -> 'visa'
         return ReliableMessage.parse(msg=dictionary)
 
     def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        # TODO: make sure meta exists before verifying message
+        # TODO: make sure sender's meta exists before verifying message
         facebook = self.facebook
         sender = msg.sender
         # [Meta Protocol]
@@ -182,21 +194,23 @@ class MessagePacker(TwinsHelper, Packer):
         if msg.delegate is None:
             msg.delegate = self.messenger
         #
-        # TODO: check [Meta Protocol]
-        #       make sure the sender's meta exists
-        #       (do in by application)
+        # NOTICE: check [Visa Protocol] before calling this
+        #       make sure the sender's meta(visa) exists
+        #       (do it by application)
         #
         assert msg.signature is not None, 'message signature cannot be empty: %s' % msg
         # verify 'data' with 'signature'
         return msg.verify()
 
     def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
-        # TODO: make sure private key (decrypt key) exists before decrypting message
+        # TODO: check receiver before calling this, make sure you are the receiver,
+        #       or you are a member of the group when this is a group message,
+        #       so that you will have a private key (decrypt key) to decrypt it.
         facebook = self.facebook
         receiver = msg.receiver
         user = facebook.select_user(receiver=receiver)
         if user is None:
-            # current users not match
+            # local users not match
             trimmed = None
         elif receiver.is_group:
             # trim group message

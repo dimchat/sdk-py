@@ -98,9 +98,12 @@ class AESKey(BaseSymmetricKey):
 
     # Override
     def decrypt(self, data: bytes) -> Optional[bytes]:
-        key = AES.new(self.data, AES.MODE_CBC, self.iv)
-        plaintext = key.decrypt(data)
-        return pkcs7_unpad(data=plaintext)
+        try:
+            key = AES.new(self.data, AES.MODE_CBC, self.iv)
+            plaintext = key.decrypt(data)
+            return pkcs7_unpad(data=plaintext)
+        except ValueError:
+            return None
 
 
 def generate(key_size: int, block_size: int) -> (bytes, bytes):

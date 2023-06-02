@@ -30,7 +30,7 @@
 
 from typing import Optional, Any, Dict
 
-from dimp.dkd.factory import FactoryManager
+from dimp.dkd.factory import CommandFactoryManager
 from dimp.msg import MessageEnvelopeFactory, PlainMessageFactory, EncryptedMessageFactory, NetworkMessageFactory
 from dimp import Envelope, InstantMessage, SecureMessage, ReliableMessage
 
@@ -84,13 +84,13 @@ class GeneralCommandFactory(ContentFactory, CommandFactory):
 
     # Override
     def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
-        gf = FactoryManager.general_factory
+        gf = CommandFactoryManager.general_factory
         name = gf.get_cmd(content=content)
         # get factory by command name
-        factory = gf.get_command_factory(cmd=name)
+        factory = None if name is None else gf.get_command_factory(cmd=name)
         if factory is None:
             # check for group command
-            if 'group' in content:
+            if 'group' in content and name != 'group':
                 factory = gf.get_command_factory(cmd='group')
             if factory is None:
                 factory = self
@@ -112,10 +112,10 @@ class GroupCommandFactory(HistoryCommandFactory):
 
     # Override
     def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
-        gf = FactoryManager.general_factory
+        gf = CommandFactoryManager.general_factory
         name = gf.get_cmd(content=content)
         # get factory by command name
-        factory = gf.get_command_factory(cmd=name)
+        factory = None if name is None else gf.get_command_factory(cmd=name)
         if factory is None:
             factory = self
         return factory.parse_command(content=content)

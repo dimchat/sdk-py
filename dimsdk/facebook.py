@@ -101,20 +101,6 @@ class Facebook(Barrack, ABC):
         raise NotImplemented
 
     #
-    #   Group Members
-    #
-    @abstractmethod
-    def save_members(self, members: List[ID], identifier: ID) -> bool:
-        """
-        Save members of group
-
-        :param members:    member ID list
-        :param identifier: group ID
-        :return: True on success
-        """
-        raise NotImplemented
-
-    #
     #   Document checking
     #
     def check_document(self, document: Document) -> bool:
@@ -125,76 +111,51 @@ class Facebook(Barrack, ABC):
         :return: True on accepted
         """
         identifier = document.identifier
-        if identifier is None:
-            return False
         # NOTICE: if this is a bulletin document for group,
         #             verify it with the group owner's meta.key
         #         else (this is a visa document for user)
         #             verify it with the user's meta.key
         if identifier.is_group:
-            # check by owner
+            # check by group owner's meta.key
             owner = self.owner(identifier=identifier)
-            if owner is None:
-                if identifier.type == EntityType.GROUP:
-                    # NOTICE: if this is a polylogue profile
-                    #             verify it with the founder's meta.key
-                    #             (which equals to the group's meta.key)
-                    meta = self.meta(identifier=identifier)
-                else:
-                    # FIXME: owner not found for this group
-                    return False
-            else:
+            if owner is not None:
                 meta = self.meta(identifier=owner)
+            elif identifier.type == EntityType.GROUP:
+                # NOTICE: if this is a polylogue profile
+                #             verify it with the founder's meta.key
+                #             (which equals to the group's meta.key)
+                meta = self.meta(identifier=identifier)
+            else:
+                # FIXME: owner not found for this group
+                return False
         else:
+            # check by user's meta.key
             meta = self.meta(identifier=identifier)
         if meta is not None:
             return document.verify(public_key=meta.key)
 
-    # group membership
-
-    def is_founder(self, member: ID, group: ID) -> bool:
-        # check member's public key with group's meta.key
-        g_meta = self.meta(identifier=group)
-        assert g_meta is not None, 'failed to get meta for group: %s' % group
-        u_meta = self.meta(identifier=member)
-        assert u_meta is not None, 'failed to get meta for member: %s' % member
-        return Meta.match_key(meta=g_meta, key=u_meta.key)
-
-    def is_owner(self, member: ID, group: ID) -> bool:
-        if group.type == EntityType.GROUP:
-            # this is a polylogue
-            return self.is_founder(member=member, group=group)
-        raise AssertionError('only Polylogue so far')
-
+    # protected
     def create_user(self, identifier: ID) -> Optional[User]:
-        if identifier.is_broadcast:
-            # create user 'anyone@anywhere'
-            return BaseUser(identifier=identifier)
-        # make sure meta exists
-        assert self.meta(identifier) is not None, 'failed to get meta for user: %s' % identifier
         # TODO: make sure visa key exists before calling this
-        u_type = identifier.type
+        network = identifier.type
         # check user type
-        if u_type == EntityType.STATION:
-            # TODO: get station address before create it
+        if network == EntityType.STATION:
+            # TODO: get station ip,port before create it
             # return Station(identifier=identifier, host='0.0.0.0', port=0)
             return Station(identifier=identifier)
-        elif u_type == EntityType.BOT:
+        elif network == EntityType.BOT:
             return Bot(identifier=identifier)
-        # raise TypeError('unsupported user type: %s' % u_type)
+        # general user, or 'anyone@anywhere'
         return BaseUser(identifier=identifier)
 
+    # protected
     def create_group(self, identifier: ID) -> Optional[Group]:
-        if identifier.is_broadcast:
-            # create group 'everyone@everywhere'
-            return BaseGroup(identifier=identifier)
-        # make sure meta exists
-        assert self.meta(identifier) is not None, 'failed to get meta for group: %s' % identifier
-        g_type = identifier.type
+        # TODO: make group meta exists before calling this
+        network = identifier.type
         # check group type
-        if g_type == EntityType.ISP:
+        if network == EntityType.ISP:
             return ServiceProvider(identifier=identifier)
-        # raise TypeError('unsupported group type: %s' % g_type)
+        # general group, or 'everyone@everywhere'
         return BaseGroup(identifier=identifier)
 
     @property
@@ -217,28 +178,37 @@ class Facebook(Barrack, ABC):
     def select_user(self, receiver: ID) -> Optional[User]:
         """ Select local user for receiver """
         users = self.local_users
-        assert users is not None and len(users) > 0, 'local users should not be empty'
-        if receiver.is_broadcast:
+        if users is None or len(users) == 0:
+            assert False, 'local users should not be empty'
+            # return None
+        elif receiver.is_broadcast:
+            # broadcast message can decrypt by anyone, so just return current user
             return users[0]
-        if receiver.is_group:
-            # group message (recipient not designated)
-            members = self.members(identifier=receiver)
-            if members is None or len(members) == 0:
-                # TODO: group not ready, waiting for group info
-                return None
-            for item in users:
-                assert isinstance(item, User), 'local user error: %s' % item
-                if item.identifier in members:
-                    # DISCUSS: set this item to be current user?
-                    return item
-        else:
+        elif receiver.is_user:
             # 1. personal message
             # 2. split group message
             for item in users:
-                assert isinstance(item, User), 'local user error: %s' % item
                 if item.identifier == receiver:
                     # DISCUSS: set this item to be current user?
                     return item
+            # not mine?
+            return None
+        # group message (recipient not designated)
+        assert receiver.is_group, 'receiver error: %s' % receiver
+        # the messenger will check group info before decrypting message,
+        # so we can trust that the group's meta & members MUST exist here.
+        grp = self.group(identifier=receiver)
+        assert grp is not None, 'group not ready: %s' % receiver
+        # if grp is None:
+        #     return None
+        members = grp.members
+        assert len(members) > 0, 'members not found: %s' % receiver
+        # if members is None or len(members) == 0:
+        #     return None
+        for item in users:
+            if item.identifier in members:
+                # DISCUSS: set this item to be current user?
+                return item
 
     #
     #   Entity Delegate
