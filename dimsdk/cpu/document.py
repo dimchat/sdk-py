@@ -48,7 +48,8 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 
     STR_DOC_CMD_ERROR = 'Document command error'
     FMT_DOC_NOT_FOUND = 'Sorry, document not found for ID: %s'
-    FMT_DOC_NOT_ACCEPTED = 'Document not accept: %s'
+    FMT_DOC_NOT_ACCEPTED = 'Document not accepted: %s'
+    FMT_DOC_NOT_CHANGED = 'Document not changed: %s'
     FMT_DOC_ACCEPTED = 'Document received: %s'
 
     def __get_doc(self, identifier: ID, doc_type: str = '*') -> List[Content]:
@@ -64,17 +65,25 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 
     def __put_doc(self, identifier: ID, meta: Optional[Meta], document: Document) -> List[Content]:
         facebook = self.facebook
-        if meta is not None:
+        if meta is None:
+            meta = facebook.meta(identifier=identifier)
+            if meta is None:
+                text = self.FMT_META_NOT_FOUND % identifier
+                return self._respond_text(text=text)
+        else:
             # received a meta for ID
             if not facebook.save_meta(meta=meta, identifier=identifier):
                 text = self.FMT_META_NOT_ACCEPTED % identifier
                 return self._respond_text(text=text)
         # received a new document for ID
-        if not facebook.save_document(document=document):
+        if not (document.valid or document.verify(public_key=meta.key)):
             text = self.FMT_DOC_NOT_ACCEPTED % identifier
             return self._respond_text(text=text)
-        else:
+        elif facebook.save_document(document=document):
             text = self.FMT_DOC_ACCEPTED % identifier
+            return self._respond_text(text=text)
+        else:
+            text = self.FMT_DOC_NOT_CHANGED % identifier
             return self._respond_text(text=text)
 
     # Override
