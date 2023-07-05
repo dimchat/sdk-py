@@ -135,6 +135,7 @@ class Facebook(Barrack, ABC):
             return document.verify(public_key=meta.key)
 
     # protected
+    # noinspection PyMethodMayBeStatic
     def create_user(self, identifier: ID) -> Optional[User]:
         # TODO: make sure visa key exists before calling this
         network = identifier.type
@@ -149,6 +150,7 @@ class Facebook(Barrack, ABC):
         return BaseUser(identifier=identifier)
 
     # protected
+    # noinspection PyMethodMayBeStatic
     def create_group(self, identifier: ID) -> Optional[Group]:
         # TODO: make group meta exists before calling this
         network = identifier.type
@@ -168,17 +170,10 @@ class Facebook(Barrack, ABC):
         """
         raise NotImplemented
 
-    # @property
-    # def current_user(self) -> Optional[User]:
-    #     """ Get current user (for signing and sending message) """
-    #     users = self.local_users
-    #     if users is not None and len(users) > 0:
-    #         return users[0]
-
     def select_user(self, receiver: ID) -> Optional[User]:
         """ Select local user for receiver """
         users = self.local_users
-        if users is None or len(users) == 0:
+        if len(users) == 0:
             assert False, 'local users should not be empty'
             # return None
         elif receiver.is_broadcast:
@@ -198,13 +193,13 @@ class Facebook(Barrack, ABC):
         # the messenger will check group info before decrypting message,
         # so we can trust that the group's meta & members MUST exist here.
         grp = self.group(identifier=receiver)
-        assert grp is not None, 'group not ready: %s' % receiver
-        # if grp is None:
-        #     return None
+        if grp is None:
+            assert False, 'group not ready: %s' % receiver
+            # return None
         members = grp.members
-        assert len(members) > 0, 'members not found: %s' % receiver
-        # if members is None or len(members) == 0:
-        #     return None
+        if members is None or len(members) == 0:
+            assert False, 'members not found: %s' % receiver
+            # return None
         for item in users:
             if item.identifier in members:
                 # DISCUSS: set this item to be current user?

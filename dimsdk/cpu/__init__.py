@@ -34,19 +34,36 @@
 
 """
 
+from .base import TwinsHelper
+
+from .base import ContentProcessor
+from .base import ContentProcessorCreator
+from .base import ContentProcessorFactory
+
 from .creator import BaseContentProcessorCreator
 from .factory import GeneralContentProcessorFactory
 
-from .base import BaseContentProcessor, BaseCommandProcessor
+from .base import BaseContentProcessor
+from .base import BaseCommandProcessor
 
-from .forward import ForwardContentProcessor
-from .array import ArrayContentProcessor
-from .customized import CustomizedContentProcessor, CustomizedContentHandler
-from .meta import MetaCommandProcessor
-from .document import DocumentCommandProcessor
+from .contents import ForwardContentProcessor
+from .contents import ArrayContentProcessor
+
+from .commands import MetaCommandProcessor
+from .commands import DocumentCommandProcessor
+from .commands import ReceiptCommandProcessor
+
+from .customized import CustomizedContentProcessor
+from .customized import CustomizedContentHandler
 
 
 __all__ = [
+
+    'TwinsHelper',
+
+    'ContentProcessor',
+    'ContentProcessorCreator',
+    'ContentProcessorFactory',
 
     'BaseContentProcessorCreator',
     'GeneralContentProcessorFactory',
@@ -56,7 +73,11 @@ __all__ = [
 
     'ForwardContentProcessor',
     'ArrayContentProcessor',
-    'CustomizedContentProcessor', 'CustomizedContentHandler',
+
     'MetaCommandProcessor',
     'DocumentCommandProcessor',
+    'ReceiptCommandProcessor',
+
+    'CustomizedContentProcessor',
+    'CustomizedContentHandler',
 ]

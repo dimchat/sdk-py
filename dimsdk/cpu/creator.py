@@ -38,17 +38,18 @@ from typing import Optional, Union
 
 from dimp import ContentType, Command
 
-from ..helper import TwinsHelper
-from ..proc_content import ContentProcessor, ContentProcessorCreator
+from .base import TwinsHelper
+from .base import ContentProcessor, ContentProcessorCreator
 
 # from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
-from .forward import ForwardContentProcessor
-from .array import ArrayContentProcessor
+from .contents import ForwardContentProcessor
+from .contents import ArrayContentProcessor
 # from .customized import CustomizedContentProcessor
 
-from .meta import MetaCommandProcessor
-from .document import DocumentCommandProcessor
+from .commands import MetaCommandProcessor
+from .commands import DocumentCommandProcessor
+from .commands import ReceiptCommandProcessor
 
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
@@ -61,14 +62,17 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         # array content
         if msg_type == ContentType.ARRAY.value:
             return ArrayContentProcessor(facebook=self.facebook, messenger=self.messenger)
+
         # # application customized
         # if msg_type == ContentType.APPLICATION.value:
         #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # elif msg_type == ContentType.CUSTOMIZED.value:
         #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
+
         # group commands
         if msg_type == ContentType.COMMAND.value:
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
+
         # # default contents
         # if msg_type == 0:
         #     return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
@@ -81,3 +85,7 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         # document command
         if cmd == Command.DOCUMENT:
             return DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
+
+        # receipt command
+        if cmd == Command.RECEIPT:
+            return ReceiptCommandProcessor(facebook=self.facebook, messenger=self.messenger)

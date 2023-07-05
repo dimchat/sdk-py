@@ -63,8 +63,6 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         Customized Content Processing Unit
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     """
-    FMT_APP_NOT_SUPPORT = 'Customized Content (app: %s) not support yet!'
-    FMT_ACT_NOT_SUPPORT = 'Customized Content (app: %s, mod: %s, act: %s) not support yet!'
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
@@ -73,7 +71,7 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         app = content.application
         responses = self._filter(app=app, content=content, msg=msg)
         if responses is not None:
-            # application ID not found
+            # app id not found
             return responses
         # 2. get handler with module name
         mod = content.module
@@ -86,9 +84,9 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         sender = msg.sender
         return handler.handle_action(act=act, sender=sender, content=content, msg=msg)
 
-    # protected
     # noinspection PyUnusedLocal
     def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[List[Content]]:
+        # Override for your application
         """
         Check for application
 
@@ -97,11 +95,13 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         :param msg:     received message
         :return: None on app ID matched
         """
-        # Override for your application
-        text = self.FMT_APP_NOT_SUPPORT % app
-        return self._respond_text(text=text)
+        return self._respond_text(text='Content not support.', group=content.group, extra={
+            'template': 'Customized content (app: ${app}) not support yet!',
+            'replacements': {
+                'app': app,
+            }
+        })
 
-    # protected
     # noinspection PyUnusedLocal
     def _fetch(self, mod: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[CustomizedContentHandler]:
         """ Override for you module """
@@ -114,5 +114,11 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         """ Override for customized actions """
         app = content.application
         mod = content.module
-        text = self.FMT_ACT_NOT_SUPPORT % (app, mod, act)
-        return self._respond_text(text=text)
+        return self._respond_text(text='Content not support.', group=content.group, extra={
+            'template': 'Customized content (app: ${app}, mod: ${mod}, act: ${act}) not support yet!',
+            'replacements': {
+                'app': app,
+                'mod': mod,
+                'act': act,
+            }
+        })

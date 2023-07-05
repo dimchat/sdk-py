@@ -44,6 +44,7 @@ from dimp import BaseFileContent, ImageFileContent, AudioFileContent, VideoFileC
 from dimp import WebPageContent, AppCustomizedContent
 from dimp import BaseCommand
 from dimp import BaseMetaCommand, BaseDocumentCommand
+from dimp import BaseReceiptCommand
 from dimp import BaseHistoryCommand, BaseGroupCommand
 from dimp import InviteGroupCommand, ExpelGroupCommand, JoinGroupCommand
 from dimp import QuitGroupCommand, QueryGroupCommand, ResetGroupCommand
@@ -176,6 +177,9 @@ def register_command_factories():
 
     # Document Command
     Command.register(cmd=Command.DOCUMENT, factory=CommandFactoryBuilder(command_class=BaseDocumentCommand))
+
+    # Receipt Command
+    Command.register(cmd=Command.RECEIPT, factory=CommandFactoryBuilder(command_class=BaseReceiptCommand))
 
     # Group Commands
     Command.register(cmd='group', factory=GroupCommandFactory())

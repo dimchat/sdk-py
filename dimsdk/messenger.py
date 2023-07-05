@@ -160,7 +160,7 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, ABC):
                         msg: SecureMessage) -> Optional[SymmetricKey]:
         if data is None:
             # get key from cache
-            return self.cipher_key(sender=sender, receiver=receiver)
+            return self.cipher_key(sender=sender, receiver=receiver, generate=False)
         else:
             return super().deserialize_key(data=data, sender=sender, receiver=receiver, msg=msg)
 
@@ -168,7 +168,7 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, ABC):
     def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
         content = super().deserialize_content(data=data, key=key, msg=msg)
         assert content is not None, 'content error: %d' % len(data)
-        if not is_broadcast(msg=msg):
+        if not is_broadcast(msg=msg) and content is not None:
             # check and cache key for reuse
             group = self.overt_group(content=content)
             if group is None:

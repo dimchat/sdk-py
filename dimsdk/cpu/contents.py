@@ -2,12 +2,12 @@
 #
 #   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
-#                                Written in 2022 by Moky <albert.moky@gmail.com>
+#                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2022 Albert Moky
+# Copyright (c) 2019 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,28 +28,63 @@
 # SOFTWARE.
 # ==============================================================================
 
+
 from typing import List
 
 from dimp import ReliableMessage
-from dimp import Content, ArrayContent
+from dimp import Content, ForwardContent, ArrayContent
 
 from .base import BaseContentProcessor
 
 
+def get_messenger(cpu: BaseContentProcessor):  # -> Messenger:
+    messenger = cpu.messenger
+    from ..messenger import Messenger
+    assert isinstance(messenger, Messenger), 'messenger error: %s' % messenger
+    return messenger
+
+
+class ForwardContentProcessor(BaseContentProcessor):
+    """
+        Forward Content Processor
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    """
+
+    # Override
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        assert isinstance(content, ForwardContent), 'forward content error: %s' % content
+        # call messenger to process it
+        messenger = get_messenger(cpu=self)
+        secrets = content.secrets
+        responses = []
+        for item in secrets:
+            results = messenger.process_reliable_message(msg=item)
+            if len(results) == 1:
+                res = ForwardContent.create(message=results[0])
+            else:
+                res = ForwardContent.create(messages=results)
+            responses.append(res)
+        return responses
+
+
 class ArrayContentProcessor(BaseContentProcessor):
+    """
+        Array Content Processor
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+    """
 
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ArrayContent), 'forward content error: %s' % content
         # call messenger to process it
-        messenger = self.messenger
+        messenger = get_messenger(cpu=self)
         contents = content.contents
         responses = []
         for item in contents:
             results = messenger.process_content(content=item, r_msg=msg)
-            if results is None:
-                res = ArrayContent.create(contents=[])
-            elif len(results) == 1:
+            if len(results) == 1:
                 res = results[0]
             else:
                 res = ArrayContent.create(contents=results)

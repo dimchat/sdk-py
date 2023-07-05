@@ -34,13 +34,22 @@ from dimp import ContentType, Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Processor
 
+from .cpu import TwinsHelper
+from .cpu import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
+
 from .facebook import Facebook
 from .messenger import Messenger
-from .helper import TwinsHelper
-from .proc_content import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
 
 
 class MessageProcessor(TwinsHelper, Processor):
+
+    @property
+    def facebook(self) -> Facebook:
+        return super().facebook
+
+    @property
+    def messenger(self) -> Messenger:
+        return super().messenger
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)

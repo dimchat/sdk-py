@@ -34,14 +34,116 @@
 
 """
 
-from typing import Optional, List
+import weakref
+from abc import ABC, abstractmethod
+from typing import Optional, Union, List, Dict
 
 from dimp import ID
 from dimp import ReliableMessage
-from dimp import Content, TextContent, Command
+from dimp import ContentType, Content, Command
+from dimp import TextReceiptCommand
 
-from ..helper import TwinsHelper
-from ..proc_content import ContentProcessor
+
+class ContentProcessor(ABC):
+    """
+        CPU: Content Processing Unit
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """
+
+    @abstractmethod
+    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+        """
+        Process message content
+
+        :param content: content received
+        :param msg:     reliable message
+        :return: responses to sender
+        """
+        raise NotImplemented
+
+
+class ContentProcessorCreator(ABC):
+    """
+        CPU Creator
+        ~~~~~~~~~~~
+
+        Delegate for CPU Factory
+    """
+
+    @abstractmethod
+    def create_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+        """
+        Create content processor with type
+
+        :param msg_type: content type
+        :return ContentProcessor
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    def create_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
+        """
+        Create command processor with name
+
+        :param msg_type: content type
+        :param cmd:      command name
+        :return CommandProcessor
+        """
+        raise NotImplemented
+
+
+class ContentProcessorFactory(ABC):
+    """
+        CPU Factory
+        ~~~~~~~~~~~
+
+        Delegate for Message Processor
+    """
+
+    @abstractmethod
+    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
+        """
+        Get content/command processor
+
+        :param content: Content/Command
+        :return: ContentProcessor
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+        raise NotImplemented
+
+    @abstractmethod
+    def get_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
+        raise NotImplemented
+
+
+class TwinsHelper:
+    """
+        Messenger Shadow
+        ~~~~~~~~~~~~~~~~
+
+        Delegate for Messenger
+    """
+
+    def __init__(self, facebook, messenger):
+        super().__init__()
+        self.__facebook = weakref.ref(facebook)
+        self.__messenger = weakref.ref(messenger)
+
+    @property
+    def messenger(self):  # -> Messenger:
+        return self.__messenger()
+
+    @property
+    def facebook(self):  # -> Facebook:
+        return self.__facebook()
+
+
+#
+#   Implementations
+#
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):
@@ -50,18 +152,24 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         ~~~~~~~~~~~~~~~~~~~~~~~
     """
 
-    FMT_CONTENT_NOT_SUPPORT = 'Content (type: %s) not support yet!'
-
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
-        text = self.FMT_CONTENT_NOT_SUPPORT % content.type
-        return self._respond_text(text=text, group=content.group)
+        # override to process this content
+        return self._respond_text(text='Content not support.', group=content.group, extra={
+            'template': 'Content (type: ${type}) not support yet!',
+            'replacements': {
+                'type': content.type,
+            }
+        })
 
     # noinspection PyMethodMayBeStatic
-    def _respond_text(self, text: str, group: Optional[ID] = None) -> List[Content]:
-        res = TextContent.create(text=text)
+    def _respond_text(self, text: str, group: Optional[ID] = None, extra: Dict = None) -> List[Content]:
+        res = TextReceiptCommand.from_text(text=text)
         if group is not None:
             res.group = group
+        if extra is not None:
+            for key in extra:
+                res[key] = extra[key]
         return [res]
 
 
@@ -71,10 +179,12 @@ class BaseCommandProcessor(BaseContentProcessor):
         ~~~~~~~~~~~~~~~~~~~~~~~
     """
 
-    FMT_CMD_NOT_SUPPORT = 'Command (name: %s) not support yet!'
-
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
-        text = self.FMT_CMD_NOT_SUPPORT % content.cmd
-        return self._respond_text(text=text, group=content.group)
+        return self._respond_text(text='Command not support.', group=content.group, extra={
+            'template': 'Command (name: ${command}) not support yet!',
+            'replacements': {
+                'command': content.cmd,
+            }
+        })

@@ -41,7 +41,7 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=0.12.8',
+        'dimp>=0.12.9',
         'dkd>=0.12.7',
         'mkm>=0.12.7',
     ]

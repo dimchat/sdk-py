@@ -37,10 +37,21 @@ from dimp import Content, Command
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Packer
 
-from .helper import TwinsHelper
+from .cpu import TwinsHelper
+
+from .facebook import Facebook
+from .messenger import Messenger
 
 
 class MessagePacker(TwinsHelper, Packer):
+
+    @property
+    def facebook(self) -> Facebook:
+        return super().facebook
+
+    @property
+    def messenger(self) -> Messenger:
+        return super().messenger
 
     # Override
     def overt_group(self, content: Content) -> Optional[ID]:

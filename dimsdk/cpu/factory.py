@@ -39,17 +39,15 @@ from typing import Dict, Optional, Union
 
 from dimp import ContentType, Content, Command, GroupCommand
 
-from ..helper import TwinsHelper
-from ..facebook import Facebook
-from ..messenger import Messenger
-from ..proc_content import ContentProcessor, ContentProcessorFactory
+from .base import TwinsHelper
+from .base import ContentProcessor, ContentProcessorFactory
 
 from .creator import ContentProcessorCreator
 
 
 class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
 
-    def __init__(self, facebook: Facebook, messenger: Messenger, creator: ContentProcessorCreator):
+    def __init__(self, facebook, messenger, creator: ContentProcessorCreator):
         super().__init__(facebook=facebook, messenger=messenger)
         self.__creator = creator
         self.__content_processors: Dict[int, ContentProcessor] = {}
