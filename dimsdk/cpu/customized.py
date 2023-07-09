@@ -95,7 +95,7 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         :param msg:     received message
         :return: None on app ID matched
         """
-        return self._respond_text(text='Content not support.', group=content.group, extra={
+        return self._respond_receipt(text='Content not support.', msg=msg, group=content.group, extra={
             'template': 'Customized content (app: ${app}) not support yet!',
             'replacements': {
                 'app': app,
@@ -114,7 +114,7 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         """ Override for customized actions """
         app = content.application
         mod = content.module
-        return self._respond_text(text='Content not support.', group=content.group, extra={
+        return self._respond_receipt(text='Content not support.', msg=msg, group=content.group, extra={
             'template': 'Customized content (app: ${app}, mod: ${mod}, act: ${act}) not support yet!',
             'replacements': {
                 'app': app,

@@ -60,16 +60,16 @@ class MetaCommandProcessor(BaseCommandProcessor):
         meta = content.meta
         if meta is None:
             # query meta for ID
-            return self._get_meta(identifier=identifier)
+            return self._get_meta(identifier=identifier, msg=msg)
         else:
             # received a meta for ID
-            return self._put_meta(identifier=identifier, meta=meta)
+            return self._put_meta(identifier=identifier, meta=meta, msg=msg)
 
-    def _get_meta(self, identifier: ID) -> List[Content]:
+    def _get_meta(self, identifier: ID, msg: ReliableMessage) -> List[Content]:
         facebook = get_facebook(cpu=self)
         meta = facebook.meta(identifier=identifier)
         if meta is None:
-            return self._respond_text(text='Meta not found.', extra={
+            return self._respond_receipt(text='Meta not found.', msg=msg, extra={
                 'template': 'Meta not found: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -79,17 +79,17 @@ class MetaCommandProcessor(BaseCommandProcessor):
             res = MetaCommand.response(identifier=identifier, meta=meta)
             return [res]
 
-    def _put_meta(self, identifier: ID, meta: Meta) -> List[Content]:
+    def _put_meta(self, identifier: ID, meta: Meta, msg: ReliableMessage) -> List[Content]:
         facebook = get_facebook(cpu=self)
         if facebook.save_meta(meta=meta, identifier=identifier):
-            return self._respond_text(text='Meta received.', extra={
+            return self._respond_receipt(text='Meta received.', msg=msg, extra={
                 'template': 'Meta received: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
                 }
             })
         else:
-            return self._respond_text(text='Meta not accepted.', extra={
+            return self._respond_receipt(text='Meta not accepted.', msg=msg, extra={
                 'template': 'Meta not accepted: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -112,16 +112,16 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         if doc is None:
             # query entity document for ID
             doc_type = content.get_str(key='doc_type', default='*')
-            return self._get_doc(identifier=identifier, doc_type=doc_type)
+            return self._get_doc(identifier=identifier, doc_type=doc_type, msg=msg)
         else:
             # received a new document for ID
-            return self._put_doc(identifier=identifier, meta=content.meta, document=doc)
+            return self._put_doc(identifier=identifier, meta=content.meta, document=doc, msg=msg)
 
-    def _get_doc(self, identifier: ID, doc_type: str = '*') -> List[Content]:
+    def _get_doc(self, identifier: ID, doc_type: str, msg: ReliableMessage) -> List[Content]:
         facebook = get_facebook(cpu=self)
         doc = facebook.document(identifier=identifier, doc_type=doc_type)
         if doc is None:
-            return self._respond_text(text='Document not found.', extra={
+            return self._respond_receipt(text='Document not found.', msg=msg, extra={
                 'template': 'Document not found: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -132,20 +132,20 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             res = DocumentCommand.response(document=doc, meta=meta, identifier=identifier)
             return [res]
 
-    def _put_doc(self, identifier: ID, meta: Optional[Meta], document: Document) -> List[Content]:
+    def _put_doc(self, identifier: ID, meta: Optional[Meta], document: Document, msg: ReliableMessage) -> List[Content]:
         facebook = get_facebook(cpu=self)
         # check meta
         if meta is None:
             meta = facebook.meta(identifier=identifier)
             if meta is None:
-                return self._respond_text(text='Meta not found.', extra={
+                return self._respond_receipt(text='Meta not found.', msg=msg, extra={
                     'template': 'Meta not found: ${ID}.',
                     'replacements': {
                         'ID': str(identifier),
                     }
                 })
         elif not facebook.save_meta(meta=meta, identifier=identifier):
-            return self._respond_text(text='Meta not accepted.', extra={
+            return self._respond_receipt(text='Meta not accepted.', msg=msg, extra={
                 'template': 'Meta not accepted: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -156,7 +156,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         # TODO: check for group document
         if not valid:
             # document error
-            return self._respond_text(text='Document not accepted.', extra={
+            return self._respond_receipt(text='Document not accepted.', msg=msg, extra={
                 'template': 'Document not accepted: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -164,14 +164,14 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             })
         elif facebook.save_document(document=document):
             # document saved
-            return self._respond_text(text='Document received.', extra={
+            return self._respond_receipt(text='Document received.', msg=msg, extra={
                 'template': 'Document received: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
                 }
             })
         # document expired
-        return self._respond_text(text='Document not changed.', extra={
+        return self._respond_receipt(text='Document not changed.', msg=msg, extra={
             'template': 'Document not changed: ${ID}.',
             'replacements': {
                 'ID': str(identifier),

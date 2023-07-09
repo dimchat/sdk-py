@@ -41,7 +41,7 @@ from typing import Optional, Union, List, Dict
 from dimp import ID
 from dimp import ReliableMessage
 from dimp import ContentType, Content, Command
-from dimp import TextReceiptCommand
+from dimp import ReceiptCommand
 
 
 class ContentProcessor(ABC):
@@ -155,7 +155,7 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         # override to process this content
-        return self._respond_text(text='Content not support.', group=content.group, extra={
+        return self._respond_receipt(text='Content not support.', msg=msg, group=content.group, extra={
             'template': 'Content (type: ${type}) not support yet!',
             'replacements': {
                 'type': content.type,
@@ -163,8 +163,9 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         })
 
     # noinspection PyMethodMayBeStatic
-    def _respond_text(self, text: str, group: Optional[ID] = None, extra: Dict = None) -> List[Content]:
-        res = TextReceiptCommand.from_text(text=text)
+    def _respond_receipt(self, text: str, msg: ReliableMessage = None,
+                         group: Optional[ID] = None, extra: Dict = None) -> List[Content]:
+        res = ReceiptCommand.create(text=text, msg=msg)
         if group is not None:
             res.group = group
         if extra is not None:
@@ -182,7 +183,7 @@ class BaseCommandProcessor(BaseContentProcessor):
     # Override
     def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
-        return self._respond_text(text='Command not support.', group=content.group, extra={
+        return self._respond_receipt(text='Command not support.', msg=msg, group=content.group, extra={
             'template': 'Command (name: ${command}) not support yet!',
             'replacements': {
                 'command': content.cmd,
