@@ -24,7 +24,7 @@
 # ==============================================================================
 
 import random
-from typing import Optional
+from typing import Optional, Any, Dict
 
 from Crypto.Cipher import AES
 
@@ -42,7 +42,7 @@ def random_bytes(size: int) -> bytes:
 class AESKey(BaseSymmetricKey):
     """ AES Key """
 
-    def __init__(self, key: dict):
+    def __init__(self, key: Dict[str, Any]):
         super().__init__(key=key)
         # check key data
         base64 = self.get('data')

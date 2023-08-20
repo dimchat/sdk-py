@@ -89,7 +89,8 @@ class MessageProcessor(TwinsHelper, Processor):
             return []
         # 2. process message
         responses = messenger.process_reliable_message(msg=msg)
-        if responses is None or len(responses) == 0:
+        if len(responses) == 0:
+            # nothing to respond
             return []
         # 3. serialize messages
         packages = []
@@ -110,7 +111,8 @@ class MessageProcessor(TwinsHelper, Processor):
             return []
         # 2. process message
         responses = messenger.process_secure_message(msg=s_msg, r_msg=msg)
-        if responses is None or len(responses) == 0:
+        if len(responses) == 0:
+            # nothing to respond
             return []
         # 3. sign message
         messages = []
@@ -131,7 +133,8 @@ class MessageProcessor(TwinsHelper, Processor):
             return []
         # 2. process message
         responses = messenger.process_instant_message(msg=i_msg, r_msg=r_msg)
-        if responses is None or len(responses) == 0:
+        if len(responses) == 0:
+            # nothing to respond
             return []
         # 3. encrypt messages
         messages = []
@@ -146,7 +149,7 @@ class MessageProcessor(TwinsHelper, Processor):
         messenger = self.messenger
         # 1. process content from sender
         responses = messenger.process_content(content=msg.content, r_msg=r_msg)
-        if responses is None or len(responses) == 0:
+        if len(responses) == 0:
             # nothing to respond
             return []
         # 2. select a local user to build message
@@ -154,19 +157,17 @@ class MessageProcessor(TwinsHelper, Processor):
         receiver = msg.receiver
         facebook = self.facebook
         user = facebook.select_user(receiver=receiver)
-        assert user is not None, 'receiver error: %s' % receiver
+        if user is None:
+            # assert False, 'receiver error: %s' % receiver
+            return []
         me = user.identifier
         # 3. package messages
         messages = []
         for res in responses:
-            if res is None:
-                # should not happen
-                continue
+            assert res is not None, 'should not happen'
             env = Envelope.create(sender=me, receiver=sender)
             msg = InstantMessage.create(head=env, body=res)
-            if msg is None:
-                # should not happen
-                continue
+            assert msg is not None, 'should not happen'
             messages.append(msg)
         return messages
 
@@ -178,5 +179,5 @@ class MessageProcessor(TwinsHelper, Processor):
             # default content processor
             cpu = self.get_content_processor(msg_type=0)
             assert cpu is not None, 'default CPU not defined'
-        return cpu.process(content=content, msg=r_msg)
+        return cpu.process_content(content=content, r_msg=r_msg)
         # TODO: override to filter the response

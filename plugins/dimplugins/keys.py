@@ -33,6 +33,7 @@ from mkm.crypto import PublicKey, PrivateKey
 from mkm.crypto.factory import CryptographyKeyFactoryManager
 
 
+# noinspection PyAbstractClass
 class BaseKey(Dictionary, CryptographyKey, ABC):
 
     def __init__(self, key: Dict[str, Any]):
@@ -41,9 +42,11 @@ class BaseKey(Dictionary, CryptographyKey, ABC):
     @property  # Override
     def algorithm(self) -> str:
         gf = CryptographyKeyFactoryManager.general_factory
-        return gf.get_key_algorithm(key=self.dictionary)
+        algor = gf.get_key_algorithm(key=self.dictionary)
+        return '' if algor is None else algor
 
 
+# noinspection PyAbstractClass
 class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
 
     def __init__(self, key: Dict[str, Any]):
@@ -52,7 +55,7 @@ class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
     # Override
     def __eq__(self, other) -> bool:
         if isinstance(other, SymmetricKey):
-            if super().__eq__(other):
+            if self is other:
                 # same dictionary
                 return True
             # check by encryption
@@ -61,7 +64,7 @@ class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
     # Override
     def __ne__(self, other) -> bool:
         if isinstance(other, SymmetricKey):
-            if super().__eq__(other):
+            if self is other:
                 # same dictionary
                 return False
             # check by encryption
@@ -72,7 +75,8 @@ class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
     @property  # Override
     def algorithm(self) -> str:
         gf = CryptographyKeyFactoryManager.general_factory
-        return gf.get_key_algorithm(key=self.dictionary)
+        algor = gf.get_key_algorithm(key=self.dictionary)
+        return '' if algor is None else algor
 
     # Override
     def match(self, key: EncryptKey) -> bool:
@@ -80,6 +84,7 @@ class BaseSymmetricKey(Dictionary, SymmetricKey, ABC):
         return gf.keys_match(encrypt_key=key, decrypt_key=self)
 
 
+# noinspection PyAbstractClass
 class BaseAsymmetricKey(Dictionary, AsymmetricKey, ABC):
 
     def __init__(self, key: Dict[str, Any]):
@@ -88,9 +93,11 @@ class BaseAsymmetricKey(Dictionary, AsymmetricKey, ABC):
     @property  # Override
     def algorithm(self) -> str:
         gf = CryptographyKeyFactoryManager.general_factory
-        return gf.get_key_algorithm(key=self.dictionary)
+        algor = gf.get_key_algorithm(key=self.dictionary)
+        return '' if algor is None else algor
 
 
+# noinspection PyAbstractClass
 class BasePublicKey(Dictionary, PublicKey, ABC):
 
     def __init__(self, key: Dict[str, Any]):
@@ -99,7 +106,8 @@ class BasePublicKey(Dictionary, PublicKey, ABC):
     @property  # Override
     def algorithm(self) -> str:
         gf = CryptographyKeyFactoryManager.general_factory
-        return gf.get_key_algorithm(key=self.dictionary)
+        algor = gf.get_key_algorithm(key=self.dictionary)
+        return '' if algor is None else algor
 
     # Override
     def match(self, key: SignKey) -> bool:
@@ -107,6 +115,7 @@ class BasePublicKey(Dictionary, PublicKey, ABC):
         return gf.asymmetric_keys_match(sign_key=key, verify_key=self)
 
 
+# noinspection PyAbstractClass
 class BasePrivateKey(Dictionary, PrivateKey, ABC):
 
     def __init__(self, key: Dict[str, Any]):
@@ -115,7 +124,7 @@ class BasePrivateKey(Dictionary, PrivateKey, ABC):
     # Override
     def __eq__(self, other) -> bool:
         if isinstance(other, PrivateKey):
-            if super().__eq__(other):
+            if self is other:
                 # same dictionary
                 return True
             # check by signature
@@ -126,7 +135,7 @@ class BasePrivateKey(Dictionary, PrivateKey, ABC):
     # Override
     def __ne__(self, other) -> bool:
         if isinstance(other, PrivateKey):
-            if super().__eq__(other):
+            if self is other:
                 # same dictionary
                 return False
             # check by signature
@@ -139,4 +148,5 @@ class BasePrivateKey(Dictionary, PrivateKey, ABC):
     @property  # Override
     def algorithm(self) -> str:
         gf = CryptographyKeyFactoryManager.general_factory
-        return gf.get_key_algorithm(key=self.dictionary)
+        algor = gf.get_key_algorithm(key=self.dictionary)
+        return '' if algor is None else algor

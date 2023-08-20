@@ -51,12 +51,12 @@ class ContentProcessor(ABC):
     """
 
     @abstractmethod
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         """
         Process message content
 
         :param content: content received
-        :param msg:     reliable message
+        :param r_msg:   reliable message
         :return: responses to sender
         """
         raise NotImplemented
@@ -153,9 +153,9 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     """
 
     # Override
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # override to process this content
-        return self._respond_receipt(text='Content not support.', msg=msg, group=content.group, extra={
+        return self._respond_receipt(text='Content not support.', msg=r_msg, group=content.group, extra={
             'template': 'Content (type: ${type}) not support yet!',
             'replacements': {
                 'type': content.type,
@@ -181,9 +181,9 @@ class BaseCommandProcessor(BaseContentProcessor):
     """
 
     # Override
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
-        return self._respond_receipt(text='Command not support.', msg=msg, group=content.group, extra={
+        return self._respond_receipt(text='Command not support.', msg=r_msg, group=content.group, extra={
             'template': 'Command (name: ${command}) not support yet!',
             'replacements': {
                 'command': content.cmd,

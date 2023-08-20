@@ -23,7 +23,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Union, Optional
+from typing import Union, Optional, Any, Dict
 
 from mkm.crypto import VerifyKey
 
@@ -52,8 +52,8 @@ from .eth import ETHAddress
 
 class DefaultMeta(BaseMeta):
 
-    def __init__(self, meta: Optional[dict] = None,
-                 version: Union[MetaType, int] = 0, key: Optional[VerifyKey] = None,
+    def __init__(self, meta: Dict[str, Any] = None,
+                 version: Union[MetaType, int] = None, key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Union[bytes, str, None] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches
@@ -94,8 +94,8 @@ class DefaultMeta(BaseMeta):
 
 class BTCMeta(BaseMeta):
 
-    def __init__(self, meta: Optional[dict] = None,
-                 version: Union[MetaType, int] = 0, key: Optional[VerifyKey] = None,
+    def __init__(self, meta: Dict[str, Any] = None,
+                 version: Union[MetaType, int] = None, key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Union[bytes, str, None] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches
@@ -129,8 +129,8 @@ class BTCMeta(BaseMeta):
 
 class ETHMeta(BaseMeta):
 
-    def __init__(self, meta: Optional[dict] = None,
-                 version: Union[MetaType, int] = 0, key: Optional[VerifyKey] = None,
+    def __init__(self, meta: Dict[str, Any] = None,
+                 version: Union[MetaType, int] = None, key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Union[bytes, str, None] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches

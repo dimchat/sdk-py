@@ -197,9 +197,7 @@ class Facebook(Barrack, ABC):
             assert False, 'group not ready: %s' % receiver
             # return None
         members = grp.members
-        if members is None or len(members) == 0:
-            assert False, 'members not found: %s' % receiver
-            # return None
+        assert len(members) > 0, 'members not found: %s' % receiver
         for item in users:
             if item.identifier in members:
                 # DISCUSS: set this item to be current user?

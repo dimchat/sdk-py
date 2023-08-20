@@ -54,16 +54,16 @@ class MetaCommandProcessor(BaseCommandProcessor):
     """
 
     # Override
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, MetaCommand), 'meta command error: %s' % content
         identifier = content.identifier
         meta = content.meta
         if meta is None:
             # query meta for ID
-            return self._get_meta(identifier=identifier, msg=msg)
+            return self._get_meta(identifier=identifier, msg=r_msg)
         else:
             # received a meta for ID
-            return self._put_meta(identifier=identifier, meta=meta, msg=msg)
+            return self._put_meta(identifier=identifier, meta=meta, msg=r_msg)
 
     def _get_meta(self, identifier: ID, msg: ReliableMessage) -> List[Content]:
         facebook = get_facebook(cpu=self)
@@ -105,17 +105,17 @@ class DocumentCommandProcessor(MetaCommandProcessor):
     """
 
     # Override
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, DocumentCommand), 'document command error: %s' % content
         identifier = content.identifier
         doc = content.document
         if doc is None:
             # query entity document for ID
             doc_type = content.get_str(key='doc_type', default='*')
-            return self._get_doc(identifier=identifier, doc_type=doc_type, msg=msg)
+            return self._get_doc(identifier=identifier, doc_type=doc_type, msg=r_msg)
         else:
             # received a new document for ID
-            return self._put_doc(identifier=identifier, meta=content.meta, document=doc, msg=msg)
+            return self._put_doc(identifier=identifier, meta=content.meta, document=doc, msg=r_msg)
 
     def _get_doc(self, identifier: ID, doc_type: str, msg: ReliableMessage) -> List[Content]:
         facebook = get_facebook(cpu=self)
@@ -182,7 +182,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 class ReceiptCommandProcessor(BaseCommandProcessor):
 
     # Override
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ReceiptCommand), 'receipt command error: %s' % content
         # no need to response login command
         return []

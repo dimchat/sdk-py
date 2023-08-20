@@ -65,24 +65,24 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
     """
 
     # Override
-    def process(self, content: Content, msg: ReliableMessage) -> List[Content]:
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, CustomizedContent), 'customized content error: %s' % content
         # 1. check app id
         app = content.application
-        responses = self._filter(app=app, content=content, msg=msg)
+        responses = self._filter(app=app, content=content, msg=r_msg)
         if responses is not None:
             # app id not found
             return responses
         # 2. get handler with module name
         mod = content.module
-        handler = self._fetch(mod=mod, content=content, msg=msg)
+        handler = self._fetch(mod=mod, content=content, msg=r_msg)
         if handler is None:
             # module not support
             return []
         # 3. do the job
         act = content.action
-        sender = msg.sender
-        return handler.handle_action(act=act, sender=sender, content=content, msg=msg)
+        sender = r_msg.sender
+        return handler.handle_action(act=act, sender=sender, content=content, msg=r_msg)
 
     # noinspection PyUnusedLocal
     def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[List[Content]]:

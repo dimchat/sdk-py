@@ -51,8 +51,7 @@ class Station(User):
     ANY = Identifier(identifier='station@anywhere', name='station', address=ANYWHERE)
     EVERY = Identifier(identifier='stations@everywhere', name='stations', address=EVERYWHERE)
 
-    def __init__(self, identifier: Optional[ID] = None,
-                 host: Optional[str] = None, port: Optional[int] = 0):
+    def __init__(self, identifier: ID = None, host: str = None, port: int = 0):
         super().__init__()
         if identifier is None:
             identifier = self.ANY
@@ -74,27 +73,19 @@ class Station(User):
     def __eq__(self, other) -> bool:
         """ Return self==value. """
         if isinstance(other, Station):
-            if self is other:
-                # same object
-                return True
-            other = other.identifier
-        elif isinstance(other, User):
-            other = other.identifier
+            # check ID, host & port
+            return same_station(self, other)
         # check with inner user's ID
-        return self.__user.identifier.__eq__(other)
+        return self.__user == other
 
     # Override
     def __ne__(self, other) -> bool:
         """ Return self!=value. """
         if isinstance(other, Station):
-            if self is other:
-                # same object
-                return False
-            other = other.identifier
-        elif isinstance(other, User):
-            other = other.identifier
+            # check ID, host & port
+            return not same_station(self, other)
         # check with inner user's ID
-        return self.__user.identifier.__ne__(other)
+        return self.__user != other
 
     #
     #   Entity
@@ -106,9 +97,8 @@ class Station(User):
 
     @identifier.setter
     def identifier(self, sid: ID):
-        delegate = self.data_source
         user = BaseUser(identifier=sid)
-        user.data_source = delegate
+        user.data_source = self.data_source
         self.__user = user
 
     @property  # Override
@@ -128,7 +118,7 @@ class Station(User):
         return self.__user.meta
 
     # Override
-    def document(self, doc_type: Optional[str] = '*') -> Optional[Document]:
+    def document(self, doc_type: str = '*') -> Optional[Document]:
         return self.__user.document(doc_type=doc_type)
 
     #
@@ -207,3 +197,41 @@ class ServiceProvider(BaseGroup):
     @property
     def stations(self):
         return self.members
+
+
+#
+#   Comparison
+#
+
+
+def check_hosts(left: Optional[str], right: Optional[str]) -> bool:
+    if left is None or right is None:
+        return True
+    return left == right
+
+
+def check_ports(left: Optional[int], right: Optional[int]) -> bool:
+    if left is None or right is None:
+        return True
+    elif left == 0 or right == 0:
+        return True
+    return left == right
+
+
+def check_identifiers(left: ID, right: ID) -> bool:
+    if left is right:
+        # same object
+        return True
+    elif left.is_broadcast or right.is_broadcast:
+        return True
+    return left == right
+
+
+def same_station(left: Station, right: Station) -> bool:
+    if left is right:
+        # same object
+        return True
+    else:
+        return check_identifiers(left.identifier, right.identifier) and \
+               check_hosts(left.host, right.host) and \
+               check_ports(left.port, right.port)
