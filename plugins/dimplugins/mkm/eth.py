@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+#
+#   Ming-Ke-Ming : Decentralized User Identity Authentication
+#
+#                                Written in 2020 by Moky <albert.moky@gmail.com>
+#
 # ==============================================================================
 # MIT License
 #
@@ -26,8 +31,8 @@
 from typing import Optional
 
 from mkm.types import ConstantString
-from mkm.crypto import hex_encode, keccak256
-
+from mkm.crypto import keccak256
+from mkm.format import hex_encode
 from mkm import Address, EntityType
 
 
@@ -67,11 +72,13 @@ class ETHAddress(ConstantString, Address):
     def validate_address(cls, address: str) -> Optional[str]:
         if is_eth(address=address):
             lower = address[2:].lower()
-            return '0x' + eip55(address=lower)
+            return '0x%s' % eip55(address=lower)
+        # not an ETH address
 
     @classmethod
     def is_validate(cls, address: str) -> bool:
-        return cls.validate_address(address=address) == address
+        validate = cls.validate_address(address=address)
+        return validate is not None and validate == address
 
     #
     #   Factory methods
@@ -85,6 +92,7 @@ class ETHAddress(ConstantString, Address):
         :return: Address object
         """
         if len(fingerprint) == 65:
+            # skip first char
             fingerprint = fingerprint[1:]
         assert len(fingerprint) == 64, 'key data length error: %d' % len(fingerprint)
         # 1. digest = keccak256(fingerprint)

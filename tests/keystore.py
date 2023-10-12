@@ -12,7 +12,7 @@ from typing import Optional
 
 from dimsdk import User
 
-from keycache import KeyCache
+from .keycache import KeyCache
 
 
 class KeyStore(KeyCache):

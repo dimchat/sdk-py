@@ -30,11 +30,11 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
 from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
-from mkm.crypto import EncryptKey, DecryptKey
-from mkm.crypto import PublicKey
-from mkm.crypto.factory import CryptographyKeyFactoryManager
+from mkm.crypto import AsymmetricKey, EncryptKey, DecryptKey
+from mkm.crypto import PublicKey, PublicKeyFactory
+from mkm.crypto import PrivateKey, PrivateKeyFactory
 
-from .keys import BasePublicKey, BasePrivateKey
+from dimp.crypto import BaseKey, BasePublicKey, BasePrivateKey
 
 
 class RSAPublicKey(BasePublicKey, EncryptKey):
@@ -75,7 +75,7 @@ class RSAPublicKey(BasePublicKey, EncryptKey):
             return int(bits)
 
     # Override
-    def encrypt(self, data: bytes) -> bytes:
+    def encrypt(self, data: bytes, extra: Optional[Dict]) -> bytes:
         cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)
         return cipher.encrypt(data)
 
@@ -162,11 +162,11 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
         return RSAPublicKey(key=info)
 
     # Override
-    # noinspection PyTypeChecker
-    def decrypt(self, data: bytes) -> Optional[bytes]:
+    def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
+        sentinel: Optional[bytes] = None
         try:
             cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)
-            return cipher.decrypt(data, None)
+            return cipher.decrypt(data, sentinel)
         except ValueError:
             return None
 
@@ -177,11 +177,35 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
         return signer.sign(hash_obj)
 
     # Override
-    def match(self, key: EncryptKey) -> bool:
-        gf = CryptographyKeyFactoryManager.general_factory
-        return gf.keys_match(encrypt_key=key, decrypt_key=self)
+    def match_encrypt_key(self, key: EncryptKey) -> bool:
+        return BaseKey.keys_match(encrypt_key=key, decrypt_key=self)
 
 
 def generate(bits: int) -> (RSA.RsaKey, bytes):
     key = RSA.generate(bits=bits)
     return key, key.exportKey()
+
+
+"""
+    Key Factories
+    ~~~~~~~~~~~~~
+"""
+
+
+class RSAPublicKeyFactory(PublicKeyFactory):
+
+    # Override
+    def parse_public_key(self, key: dict) -> Optional[PublicKey]:
+        return RSAPublicKey(key=key)
+
+
+class RSAPrivateKeyFactory(PrivateKeyFactory):
+
+    # Override
+    def generate_private_key(self) -> Optional[PrivateKey]:
+        key = {'algorithm': AsymmetricKey.RSA}
+        return RSAPrivateKey(key=key)
+
+    # Override
+    def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
+        return RSAPrivateKey(key=key)

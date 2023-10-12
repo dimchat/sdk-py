@@ -23,9 +23,11 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional
+from typing import Optional, Dict
 
-from .keys import BaseSymmetricKey
+from mkm.crypto import SymmetricKey, SymmetricKeyFactory
+
+from dimp.crypto import BaseSymmetricKey
 
 
 class PlainKey(BaseSymmetricKey):
@@ -48,9 +50,30 @@ class PlainKey(BaseSymmetricKey):
         return b''
 
     # Override
-    def encrypt(self, data: bytes) -> bytes:
+    def encrypt(self, data: bytes, extra: Optional[Dict]) -> bytes:
         return data
 
     # Override
-    def decrypt(self, data: bytes) -> Optional[bytes]:
+    def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
         return data
+
+
+"""
+    Key Factory
+    ~~~~~~~~~~~
+"""
+
+
+class PlainKeyFactory(SymmetricKeyFactory):
+
+    def __init__(self):
+        super().__init__()
+        self.__plain_key = PlainKey()
+
+    # Override
+    def generate_symmetric_key(self) -> Optional[SymmetricKey]:
+        return self.__plain_key
+
+    # Override
+    def parse_symmetric_key(self, key: dict) -> Optional[SymmetricKey]:
+        return self.__plain_key

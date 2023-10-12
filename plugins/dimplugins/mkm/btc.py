@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+#
+#   Ming-Ke-Ming : Decentralized User Identity Authentication
+#
+#                                Written in 2020 by Moky <albert.moky@gmail.com>
+#
 # ==============================================================================
 # MIT License
 #
@@ -23,14 +28,12 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Union
+from typing import Optional
 
 from mkm.types import ConstantString
-from mkm.crypto import base58_encode, base58_decode, sha256, ripemd160
-
+from mkm.crypto import sha256, ripemd160
+from mkm.format import base58_encode, base58_decode
 from mkm import Address, EntityType
-
-from .network import NetworkType, network_to_type
 
 
 class BTCAddress(ConstantString, Address):
@@ -50,14 +53,9 @@ class BTCAddress(ConstantString, Address):
             address     = base58_encode(network + digest + code);
     """
 
-    def __init__(self, address: str, network: Union[EntityType, NetworkType, int]):
+    def __init__(self, address: str, network: int):
         super().__init__(string=address)
-        if isinstance(network, EntityType):
-            self.__network = network.value
-        elif isinstance(network, NetworkType):
-            self.__network = network.value
-        else:
-            self.__network = network
+        self.__network = network
 
     @property  # Override
     def type(self) -> int:
@@ -69,19 +67,17 @@ class BTCAddress(ConstantString, Address):
 
     @property  # Override
     def is_user(self) -> bool:
-        network = network_to_type(network=self.type)
-        return EntityType.is_user(network=network)
+        return EntityType.is_user(network=self.type)
 
     @property  # Override
     def is_group(self) -> bool:
-        network = network_to_type(network=self.type)
-        return EntityType.is_group(network=network)
+        return EntityType.is_group(network=self.type)
 
     #
     #   Factory methods
     #
     @classmethod
-    def from_data(cls, fingerprint: bytes, network: Union[EntityType, NetworkType, int]) -> Address:
+    def from_data(cls, fingerprint: bytes, network: int) -> Address:
         """
         Generate address with fingerprint and network ID
 
@@ -89,10 +85,6 @@ class BTCAddress(ConstantString, Address):
         :param network:     address type
         :return: Address object
         """
-        if isinstance(network, EntityType):
-            network = network.value
-        elif isinstance(network, NetworkType):
-            network = network.value
         head = chr(network).encode('latin1')
         body = ripemd160(sha256(fingerprint))
         tail = check_code(head + body)

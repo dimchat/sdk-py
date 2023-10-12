@@ -2,12 +2,12 @@
 #
 #   Ming-Ke-Ming : Decentralized User Identity Authentication
 #
-#                                Written in 2022 by Moky <albert.moky@gmail.com>
+#                                Written in 2023 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2022 Albert Moky
+# Copyright (c) 2023 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,38 +28,34 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional
+from .btc import BTCAddress
+from .eth import ETHAddress
 
-from mkm import ID, Identifier
-from mkm import ANYONE, EVERYONE, FOUNDER
-from mkm import Address
-from dimp import IdentifierFactory
+from .address import BaseAddressFactory, GeneralAddressFactory
+from .identifier import GeneralIdentifierFactory
 
-from .network import network_to_type
+from .meta import DefaultMeta, BTCMeta, ETHMeta, GeneralMetaFactory
+from .docs import GeneralDocumentFactory
 
-
-class EntityID(Identifier):
-
-    @property  # Override
-    def type(self) -> int:
-        network = self.address.type
-        # compatible with MKM 0.9.*
-        return network_to_type(network=network)
+from .address import register_address_factory
+from .identifier import register_identifier_factory
+from .meta import register_meta_factories
+from .docs import register_document_factories
 
 
-class EntityIDFactory(IdentifierFactory):
+__all__ = [
 
-    # Override
-    def _new_id(self, identifier: str, name: Optional[str], address: Address, terminal: Optional[str]):
-        return EntityID(identifier=identifier, name=name, address=address, terminal=terminal)
+    'BTCAddress', 'ETHAddress',
+    'DefaultMeta', 'BTCMeta', 'ETHMeta',
 
-    # Override
-    def _parse(self, identifier: str) -> Optional[ID]:
-        size = len(identifier)
-        if size == 15 and identifier.lower() == 'anyone@anywhere':
-            return ANYONE
-        if size == 19 and identifier.lower() == 'everyone@everywhere':
-            return EVERYONE
-        if size == 13 and identifier.lower() == 'moky@anywhere':
-            return FOUNDER
-        return super()._parse(identifier=identifier)
+    'BaseAddressFactory', 'GeneralAddressFactory',
+    'GeneralIdentifierFactory',
+    'GeneralMetaFactory',
+    'GeneralDocumentFactory',
+
+    'register_address_factory',
+    'register_identifier_factory',
+    'register_meta_factories',
+    'register_document_factories',
+
+]

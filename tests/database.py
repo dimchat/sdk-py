@@ -12,8 +12,8 @@ class Database(Facebook):
         super().__init__()
 
     @property
-    def local_users(self) -> Optional[List[User]]:
-        return None
+    def local_users(self) -> List[User]:
+        return []
 
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
         pass
@@ -27,17 +27,17 @@ class Database(Facebook):
     def meta(self, identifier: ID) -> Optional[Meta]:
         pass
 
-    def document(self, identifier: ID, doc_type: Optional[str] = '*') -> Optional[Document]:
+    def document(self, identifier: ID, doc_type: str = '*') -> Optional[Document]:
         pass
 
     #
     #   UserDataSource
     #
-    def contacts(self, identifier: ID) -> Optional[List[ID]]:
-        pass
+    def contacts(self, identifier: ID) -> List[ID]:
+        return []
 
-    def private_keys_for_decryption(self, identifier: ID) -> Optional[List[DecryptKey]]:
-        pass
+    def private_keys_for_decryption(self, identifier: ID) -> List[DecryptKey]:
+        return []
 
     def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
         pass
@@ -48,5 +48,5 @@ class Database(Facebook):
     #
     #   GroupDataSource
     #
-    def assistants(self, identifier: ID) -> Optional[List[ID]]:
-        pass
+    def assistants(self, identifier: ID) -> List[ID]:
+        return []

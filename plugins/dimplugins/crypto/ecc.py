@@ -24,13 +24,15 @@
 # ==============================================================================
 
 import hashlib
-from typing import Union, Any, Dict
+from typing import Optional, Union, Any, Dict
 
 import ecdsa
 
-from mkm.crypto import PublicKey
+from mkm.crypto import AsymmetricKey
+from mkm.crypto import PublicKey, PublicKeyFactory
+from mkm.crypto import PrivateKey, PrivateKeyFactory
 
-from .keys import BasePublicKey, BasePrivateKey
+from dimp.crypto import BasePublicKey, BasePrivateKey
 
 
 class ECCPublicKey(BasePublicKey):
@@ -186,3 +188,28 @@ class ECCPrivateKey(BasePrivateKey):
 def generate(curve, hash_func) -> (ecdsa.SigningKey, bytes):
     key = ecdsa.SigningKey.generate(curve=curve, hashfunc=hash_func)
     return key, key.to_string()
+
+
+"""
+    Key Factories
+    ~~~~~~~~~~~~~
+"""
+
+
+class ECCPublicKeyFactory(PublicKeyFactory):
+
+    # Override
+    def parse_public_key(self, key: dict) -> Optional[PublicKey]:
+        return ECCPublicKey(key=key)
+
+
+class ECCPrivateKeyFactory(PrivateKeyFactory):
+
+    # Override
+    def generate_private_key(self) -> Optional[PrivateKey]:
+        key = {'algorithm': AsymmetricKey.ECC}
+        return ECCPrivateKey(key=key)
+
+    # Override
+    def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
+        return ECCPrivateKey(key=key)

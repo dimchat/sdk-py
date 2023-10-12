@@ -267,14 +267,70 @@ dTGP+WYLof56xNhMyOgZO8ltxem9izK/V9N9cnc5UQ==\n\
 
     def test3_aes(self):
         print('\n---------------- %s' % self)
+        extra = {}
         key = SymmetricKey.parse(key={
             'algorithm': SymmetricKey.AES,
         })
         data = 'moky'.encode('utf-8')
-        ciphertext = key.encrypt(data=data)
-        plaintext = key.decrypt(data=ciphertext)
+        ciphertext = key.encrypt(data=data, extra=extra)
+        plaintext = key.decrypt(data=ciphertext, params=extra)
         print('AES decrypt: %s' % plaintext)
         self.assertEqual(data, plaintext, 'AES error')
+
+    def test8_rsa(self):
+        print('\n---------------- %s' % self)
+        data = 'moky'.encode('utf-8')
+        extra = {}
+        # public key
+        pem = '{"algorithm":"RSA","data":"-----BEGIN RSA PUBLIC KEY-----\\r\\n' \
+              'MIGJAoGBAL3T0ETpSg4gT394+0JLtDhjpA869fiRkBBiXriX30KEjIzPs41YIwZz' \
+              'sV9jP0Pdc/7vjxy8jwhD0Gd3481/BTCKgVS6KPJhxxedWB6G3owqdPE05RLZ8ci2' \
+              'gz7kBuDNGsIWnkrs9MjqM5U7cwSgEAtfZiwJfPx67QdEYiOlFDFvAgMBAAE=\\r\\n' \
+              '-----END RSA PUBLIC KEY-----"}'
+        info = JSON.decode(string=pem)
+        key = PublicKey.parse(key=info)
+        ciphertext = key.encrypt(data=data, extra=extra)
+        b64 = Base64.encode(data=ciphertext)
+        print('RSA encrypt: %s' % b64)
+        # private key
+        pem = '{"algorithm": "RSA", "data": "-----BEGIN RSA PRIVATE KEY-----\\r\\n' \
+              'MIICXAIBAAKBgQC909BE6UoOIE9/ePtCS7Q4Y6QPOvX4kZAQYl64l99ChIyMz7ON' \
+              'WCMGc7FfYz9D3XP+748cvI8IQ9Bnd+PNfwUwioFUuijyYccXnVgeht6MKnTxNOUS' \
+              '2fHItoM+5AbgzRrCFp5K7PTI6jOVO3MEoBALX2YsCXz8eu0HRGIjpRQxbwIDAQAB' \
+              'AoGACP5dEra+1HaBbbesp9JwYm+OGU6g0rsKyUvv0u0XHc6r3gwFJMA1QJwAnlVU' \
+              'bQGz+jMdY64nVKvp1s0eVOEcvMAdVuvhvX1JyY7BiavHXBybtA+RoMO2QmCF6kQe' \
+              'qspJNsCDSANQNEr9mtlMXFZ9MFWlWHw+9JmsbJLvfFiwKLkCQQDjCggtlnoi2IO/' \
+              'KFafXMdeiS5vmSU+t4MqU9lZ+yita7MjC4TNnW9M4scFsFAp1Y00vjTgTZ0DkL+U' \
+              '0VfEOH0tAkEA1gqhSXzWey2pq/fYnXdjrQSv8z7fuiS+2JcM/NGEw0J4wRzUlY2i' \
+              'EeeyrjMHVYkplsV4jhCM19J9VF+iZJFiiwJAP09V1niGmF7t5gk2lnvFsIvqYf4/' \
+              'j4yWy9/T1S6fOjS1IEme/8Mt/S+jtedjgzbkiFed4QpjhVIAylvR8IqcBQJBAK77' \
+              'B7n1Jb6TqPceambo+IK0p0cbanlZmu+kJQj2HCwoxmFROXV90TYEDe4dZ2yE8owA' \
+              'qbqySwIRYUY93JuMw1sCQCGzkuu0LDfiCtSBdQhly5xci85sm/LnGbn4JRXHlDhF' \
+              'd6VX8pmjQoHvHNFgPuzF4vu+0vZdirJNi4PQzSQeFmc=\\r\\n' \
+              '-----END RSA PRIVATE KEY-----"}'
+        info = JSON.decode(string=pem)
+        key = PrivateKey.parse(key=info)
+        assert isinstance(key, DecryptKey), 'RSA key error: %s' % key
+        plaintext = key.decrypt(data=ciphertext, params=extra)
+        name = UTF8.decode(data=plaintext)
+        print('RSA decrypt: %s' % name)
+        self.assertEqual(data, plaintext, 'RSA error')
+        # dart
+        drt = 'Jtp47h1gHGqJrgpTYn6xa+yj4QvLoOIlUhRXCpKKgqXDZU+ELyTlbCeihHjlPm4p' \
+              'ZY2nnEk81BbgMM5ANO/Sr+/7FxAHgNVQP8MEYKJuPJ/4vcQid0Sc/r25L4Q/DXgP' \
+              'RL1byk0X4oc4OPlM0+NtJXOZ/jf3IPjjaYMs7zZB1fE='
+        ciphertext = Base64.decode(string=drt)
+        plaintext = key.decrypt(data=ciphertext, params=extra)
+        name = UTF8.decode(data=plaintext)
+        print('RSA decrypt: %s' % name)
+        # # AES
+        # drt = 'HP4uOKPVHpf3y1VNwqUR7ymerRzq6HvzPk6H0WNIbv4928ix+fpTKvvwBBxAaGmZ' \
+        #       'ge45W1GeewXX4vzxrDBz6OP7tYskW62QzfLUE19/d3oVVK5pkM6q9gbJ1flPyWJN' \
+        #       'aXXYqsng9qdovamYc/YtOdqgR7cFY5DtucnibrgSiTk='
+        # ciphertext = Base64.decode(string=drt)
+        # plaintext = key.decrypt(data=ciphertext, params=extra)
+        # aes = UTF8.decode(data=plaintext)
+        # print('RSA decrypt: %s' % aes)
 
 
 if __name__ == '__main__':
