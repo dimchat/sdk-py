@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#   DIMP : Decentralized Instant Messaging Protocol
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -28,25 +28,17 @@
 # SOFTWARE.
 # ==============================================================================
 
-"""
-    Bot User
-    ~~~~~~~~
-"""
-
-from typing import Optional
-
-from dimp import ID, EntityType
-from dimp import BaseUser
+from .instant import InstantMessagePacker
+from .secure import SecureMessagePacker
+from .reliable import ReliableMessagePacker
+from .factory import MessageFactory
 
 
-class Bot(BaseUser):
+__all__ = [
 
-    def __init__(self, identifier: ID):
-        super().__init__(identifier=identifier)
-        assert identifier.type == EntityType.BOT, 'Bot ID type error: %s' % identifier
+    'InstantMessagePacker',
+    'SecureMessagePacker',
+    'ReliableMessagePacker',
+    'MessageFactory',
 
-    @property
-    def provider(self) -> Optional[ID]:
-        doc = self.document(doc_type='*')
-        if doc is not None:
-            return ID.parse(identifier=doc.get_property(key='ICP'))
+]

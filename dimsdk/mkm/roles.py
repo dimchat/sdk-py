@@ -88,14 +88,14 @@ from enum import IntEnum
 
 class MemberType(IntEnum):
     """ Roles for Chatroom """
-    FOUNDER = 0x20  # 0010 0000
-    OWNER = 0x3F  # 0011 1111
-    ADMIN = 0x0F  # 0000 1111
-    MEMBER = 0x07  # 0000 0111
-    OTHER = 0x00  # 0000 0000
+    FOUNDER = 0x20   # 0010 0000
+    OWNER = 0x3F     # 0011 1111
+    ADMIN = 0x0F     # 0000 1111
+    MEMBER = 0x07    # 0000 0111
+    OTHER = 0x00     # 0000 0000
 
     FREEZING = 0x80  # 1000 0000
-    WAITING = 0x40  # 0100 0000
+    WAITING = 0x40   # 0100 0000
 
     OWNER_WAITING = OWNER | WAITING
     OWNER_FREEZING = OWNER | FREEZING

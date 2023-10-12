@@ -29,23 +29,97 @@
 # ==============================================================================
 
 """
-    Processor Factory
+    Content Processor
     ~~~~~~~~~~~~~~~~~
 
-    produce content/command processors
 """
 
-from typing import Dict, Optional, Union
+from abc import ABC, abstractmethod
+from typing import Optional, List, Dict
 
-from dimp import ContentType, Content, Command, GroupCommand
+from dimp import ReliableMessage
+from dimp import Content, Command, GroupCommand
 
-from .base import TwinsHelper
-from .base import ContentProcessor, ContentProcessorFactory
+from .twins import TwinsHelper
 
-from .creator import ContentProcessorCreator
+
+class ContentProcessor(ABC):
+    """
+        CPU: Content Processing Unit
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """
+
+    @abstractmethod
+    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+        """
+        Process message content
+
+        :param content: content received
+        :param r_msg:   reliable message
+        :return: responses to sender
+        """
+        raise NotImplemented
+
+
+class ContentProcessorCreator(ABC):
+    """
+        CPU Creator
+        ~~~~~~~~~~~
+
+        Delegate for CPU Factory
+    """
+
+    @abstractmethod
+    def create_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
+        """
+        Create content processor with type
+
+        :param msg_type: content type
+        :return ContentProcessor
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    def create_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
+        """
+        Create command processor with name
+
+        :param msg_type: content type
+        :param cmd:      command name
+        :return CommandProcessor
+        """
+        raise NotImplemented
+
+
+class ContentProcessorFactory(ABC):
+    """
+        CPU Factory
+        ~~~~~~~~~~~
+
+        Delegate for Message Processor
+    """
+
+    @abstractmethod
+    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
+        """
+        Get content/command processor
+
+        :param content: Content/Command
+        :return: ContentProcessor
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    def get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
+        raise NotImplemented
+
+    @abstractmethod
+    def get_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
+        raise NotImplemented
 
 
 class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
+    """ General ContentProcessor Factory """
 
     def __init__(self, facebook, messenger, creator: ContentProcessorCreator):
         super().__init__(facebook=facebook, messenger=messenger)
@@ -58,15 +132,11 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
         return self.__creator
 
     # protected
-    def _get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
-        if isinstance(msg_type, ContentType):
-            msg_type = msg_type.value
+    def _get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
         return self.__content_processors.get(msg_type)
 
     # protected
-    def _put_content_processor(self, msg_type: Union[int, ContentType], cpu: ContentProcessor):
-        if isinstance(msg_type, ContentType):
-            msg_type = msg_type.value
+    def _put_content_processor(self, msg_type: int, cpu: ContentProcessor):
         self.__content_processors[msg_type] = cpu
 
     # protected
@@ -87,31 +157,31 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
         if isinstance(content, Command):
             name = content.cmd
             # command processor
-            cpu = self.get_command_processor(msg_type=msg_type, cmd=name)
+            cpu = self.get_command_processor(msg_type, cmd=name)
             if cpu is not None:
                 return cpu
             elif isinstance(content, GroupCommand):
                 # group command processor
-                cpu = self.get_command_processor(msg_type=msg_type, cmd='group')
+                cpu = self.get_command_processor(msg_type, cmd='group')
                 if cpu is not None:
                     return cpu
         # content processor
-        return self.get_content_processor(msg_type=msg_type)
+        return self.get_content_processor(msg_type)
 
     # Override
-    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
-        cpu = self._get_content_processor(msg_type=msg_type)
+    def get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
+        cpu = self._get_content_processor(msg_type)
         if cpu is None:
-            cpu = self.creator.create_content_processor(msg_type=msg_type)
+            cpu = self.creator.create_content_processor(msg_type)
             if cpu is not None:
-                self._put_content_processor(msg_type=msg_type, cpu=cpu)
+                self._put_content_processor(msg_type, cpu=cpu)
         return cpu
 
     # Override
-    def get_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
+    def get_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
         cpu = self._get_command_processor(cmd=cmd)
         if cpu is None:
-            cpu = self.creator.create_command_processor(msg_type=msg_type, cmd=cmd)
+            cpu = self.creator.create_command_processor(msg_type, cmd=cmd)
             if cpu is not None:
                 self._put_command_processor(cmd=cmd, cpu=cpu)
         return cpu

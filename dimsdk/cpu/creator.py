@@ -29,33 +29,34 @@
 # ==============================================================================
 
 """
-    Content Processor
+    Processor Factory
     ~~~~~~~~~~~~~~~~~
 
+    produce content/command processors
 """
 
-from typing import Optional, Union
+from typing import Optional
 
 from dimp import ContentType, Command
 
-from .base import TwinsHelper
-from .base import ContentProcessor, ContentProcessorCreator
+from ..core import TwinsHelper
+from ..core import ContentProcessor, ContentProcessorCreator
 
 # from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
+
 from .contents import ForwardContentProcessor
 from .contents import ArrayContentProcessor
 # from .customized import CustomizedContentProcessor
-
 from .commands import MetaCommandProcessor
 from .commands import DocumentCommandProcessor
-from .commands import ReceiptCommandProcessor
 
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
+    """ Base ContentProcessor Creator """
 
     # Override
-    def create_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
+    def create_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
         # forward content
         if msg_type == ContentType.FORWARD.value:
             return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
@@ -78,14 +79,10 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         #     return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
     # Override
-    def create_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
+    def create_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
         # meta command
         if cmd == Command.META:
             return MetaCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         # document command
         if cmd == Command.DOCUMENT:
             return DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-
-        # receipt command
-        if cmd == Command.RECEIPT:
-            return ReceiptCommandProcessor(facebook=self.facebook, messenger=self.messenger)

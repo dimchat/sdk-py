@@ -30,24 +30,27 @@
 
 from typing import Optional, Any, Dict
 
-from dimp.dkd.factory import CommandFactoryManager
-from dimp.msg import MessageEnvelopeFactory, PlainMessageFactory, EncryptedMessageFactory, NetworkMessageFactory
 from dimp import Envelope, InstantMessage, SecureMessage, ReliableMessage
+from dimp import ContentType, Content
+from dimp import Command, GroupCommand
+from dimp.protocol import CommandFactory
+from dimp.dkd import ContentFactory
+from dimp.dkd import CommandFactoryManager
+from dimp.dkd import BaseContent
+from dimp.dkd import BaseTextContent, ListContent, SecretContent
+from dimp.dkd import WebPageContent, NameCardContent
+from dimp.dkd import BaseFileContent, ImageFileContent, AudioFileContent, VideoFileContent
+from dimp.dkd import BaseMoneyContent, TransferMoneyContent
+from dimp.dkd import AppCustomizedContent
+from dimp.dkd import BaseCommand
+from dimp.dkd import BaseMetaCommand, BaseDocumentCommand
+from dimp.dkd import BaseReceiptCommand
+from dimp.dkd import BaseHistoryCommand, BaseGroupCommand
+from dimp.dkd import InviteGroupCommand, ExpelGroupCommand, JoinGroupCommand
+from dimp.dkd import QuitGroupCommand, QueryGroupCommand, ResetGroupCommand
+from dimp.dkd import HireGroupCommand, FireGroupCommand, ResignGroupCommand
 
-from dimp import ContentType, Content, ContentFactory
-from dimp import Command, CommandFactory, GroupCommand
-
-from dimp import BaseContent
-from dimp import BaseTextContent, SecretContent, ListContent
-from dimp import BaseMoneyContent, TransferMoneyContent
-from dimp import BaseFileContent, ImageFileContent, AudioFileContent, VideoFileContent
-from dimp import WebPageContent, AppCustomizedContent
-from dimp import BaseCommand
-from dimp import BaseMetaCommand, BaseDocumentCommand
-from dimp import BaseReceiptCommand
-from dimp import BaseHistoryCommand, BaseGroupCommand
-from dimp import InviteGroupCommand, ExpelGroupCommand, JoinGroupCommand
-from dimp import QuitGroupCommand, QueryGroupCommand, ResetGroupCommand
+from ..msg import MessageFactory
 
 
 class ContentFactoryBuilder(ContentFactory):
@@ -86,12 +89,12 @@ class GeneralCommandFactory(ContentFactory, CommandFactory):
     # Override
     def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
         gf = CommandFactoryManager.general_factory
-        name = gf.get_cmd(content=content)
         # get factory by command name
-        factory = None if name is None else gf.get_command_factory(cmd=name)
+        name = gf.get_cmd(content=content, default='*')
+        factory = gf.get_command_factory(cmd=name)
         if factory is None:
             # check for group command
-            if 'group' in content and name != 'group':
+            if 'group' in content:  # and name != 'group':
                 factory = gf.get_command_factory(cmd='group')
             if factory is None:
                 factory = self
@@ -114,9 +117,9 @@ class GroupCommandFactory(HistoryCommandFactory):
     # Override
     def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
         gf = CommandFactoryManager.general_factory
-        name = gf.get_cmd(content=content)
         # get factory by command name
-        factory = None if name is None else gf.get_command_factory(cmd=name)
+        name = gf.get_cmd(content=content, default='*')
+        factory = gf.get_command_factory(cmd=name)
         if factory is None:
             factory = self
         return factory.parse_command(content=content)
@@ -124,6 +127,17 @@ class GroupCommandFactory(HistoryCommandFactory):
     # Override
     def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
         return BaseGroupCommand(content=content)
+
+
+def register_message_factories():
+    """ Register core message factories """
+    factory = MessageFactory()
+    # Envelope factory
+    Envelope.register(factory=factory)
+    # Message factories
+    InstantMessage.register(factory=factory)
+    SecureMessage.register(factory=factory)
+    ReliableMessage.register(factory=factory)
 
 
 def register_content_factories():
@@ -143,6 +157,9 @@ def register_content_factories():
     # Web Page
     Content.register(msg_type=ContentType.PAGE, factory=ContentFactoryBuilder(content_class=WebPageContent))
 
+    # Name Card
+    Content.register(msg_type=ContentType.NAME_CARD, factory=ContentFactoryBuilder(content_class=NameCardContent))
+
     # Money
     Content.register(msg_type=ContentType.MONEY, factory=ContentFactoryBuilder(content_class=BaseMoneyContent))
     Content.register(msg_type=ContentType.TRANSFER, factory=ContentFactoryBuilder(content_class=TransferMoneyContent))
@@ -154,14 +171,14 @@ def register_content_factories():
     # History Command
     Content.register(msg_type=ContentType.HISTORY, factory=HistoryCommandFactory())
 
-    # Content Array
-    Content.register(msg_type=ContentType.ARRAY, factory=ContentFactoryBuilder(content_class=ListContent))
-
     # # Application Customized
     # Content.register(msg_type=ContentType.APPLICATION,
     #                  factory=ContentFactoryBuilder(content_class=AppCustomizedContent))
     # Content.register(msg_type=ContentType.CUSTOMIZED,
     #                  factory=ContentFactoryBuilder(content_class=AppCustomizedContent))
+
+    # Content Array
+    Content.register(msg_type=ContentType.ARRAY, factory=ContentFactoryBuilder(content_class=ListContent))
 
     # Top-Secret
     Content.register(msg_type=ContentType.FORWARD, factory=ContentFactoryBuilder(content_class=SecretContent))
@@ -184,18 +201,16 @@ def register_command_factories():
     # Group Commands
     Command.register(cmd='group', factory=GroupCommandFactory())
     Command.register(cmd=GroupCommand.INVITE, factory=CommandFactoryBuilder(command_class=InviteGroupCommand))
+    # 'expel' is deprecated (use 'reset' instead)
     Command.register(cmd=GroupCommand.EXPEL, factory=CommandFactoryBuilder(command_class=ExpelGroupCommand))
     Command.register(cmd=GroupCommand.JOIN, factory=CommandFactoryBuilder(command_class=JoinGroupCommand))
     Command.register(cmd=GroupCommand.QUIT, factory=CommandFactoryBuilder(command_class=QuitGroupCommand))
     Command.register(cmd=GroupCommand.QUERY, factory=CommandFactoryBuilder(command_class=QueryGroupCommand))
     Command.register(cmd=GroupCommand.RESET, factory=CommandFactoryBuilder(command_class=ResetGroupCommand))
-
-
-def register_message_factories():
-    Envelope.register(factory=MessageEnvelopeFactory())
-    InstantMessage.register(factory=PlainMessageFactory())
-    SecureMessage.register(factory=EncryptedMessageFactory())
-    ReliableMessage.register(factory=NetworkMessageFactory())
+    # Group Admin Commands
+    Command.register(cmd=GroupCommand.HIRE, factory=CommandFactoryBuilder(command_class=HireGroupCommand))
+    Command.register(cmd=GroupCommand.FIRE, factory=CommandFactoryBuilder(command_class=FireGroupCommand))
+    Command.register(cmd=GroupCommand.RESIGN, factory=CommandFactoryBuilder(command_class=ResignGroupCommand))
 
 
 def register_all_factories():

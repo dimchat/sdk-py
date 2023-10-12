@@ -34,116 +34,16 @@
 
 """
 
-import weakref
-from abc import ABC, abstractmethod
-from typing import Optional, Union, List, Dict
+from typing import List
 
-from dimp import ID
 from dimp import ReliableMessage
-from dimp import ContentType, Content, Command
-from dimp import ReceiptCommand
+from dimp import Content, Command
 
+from ..core import TwinsHelper
+from ..core import ContentProcessor
 
-class ContentProcessor(ABC):
-    """
-        CPU: Content Processing Unit
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    """
-
-    @abstractmethod
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        """
-        Process message content
-
-        :param content: content received
-        :param r_msg:   reliable message
-        :return: responses to sender
-        """
-        raise NotImplemented
-
-
-class ContentProcessorCreator(ABC):
-    """
-        CPU Creator
-        ~~~~~~~~~~~
-
-        Delegate for CPU Factory
-    """
-
-    @abstractmethod
-    def create_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
-        """
-        Create content processor with type
-
-        :param msg_type: content type
-        :return ContentProcessor
-        """
-        raise NotImplemented
-
-    @abstractmethod
-    def create_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
-        """
-        Create command processor with name
-
-        :param msg_type: content type
-        :param cmd:      command name
-        :return CommandProcessor
-        """
-        raise NotImplemented
-
-
-class ContentProcessorFactory(ABC):
-    """
-        CPU Factory
-        ~~~~~~~~~~~
-
-        Delegate for Message Processor
-    """
-
-    @abstractmethod
-    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
-        """
-        Get content/command processor
-
-        :param content: Content/Command
-        :return: ContentProcessor
-        """
-        raise NotImplemented
-
-    @abstractmethod
-    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
-        raise NotImplemented
-
-    @abstractmethod
-    def get_command_processor(self, msg_type: Union[int, ContentType], cmd: str) -> Optional[ContentProcessor]:
-        raise NotImplemented
-
-
-class TwinsHelper:
-    """
-        Messenger Shadow
-        ~~~~~~~~~~~~~~~~
-
-        Delegate for Messenger
-    """
-
-    def __init__(self, facebook, messenger):
-        super().__init__()
-        self.__facebook = weakref.ref(facebook)
-        self.__messenger = weakref.ref(messenger)
-
-    @property
-    def messenger(self):  # -> Messenger:
-        return self.__messenger()
-
-    @property
-    def facebook(self):  # -> Facebook:
-        return self.__facebook()
-
-
-#
-#   Implementations
-#
+from ..facebook import Facebook
+from ..messenger import Messenger
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):
@@ -152,26 +52,28 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         ~~~~~~~~~~~~~~~~~~~~~~~
     """
 
+    @property
+    def facebook(self) -> Facebook:
+        barrack = super().facebook
+        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
+        return barrack
+
+    @property
+    def messenger(self) -> Messenger:
+        transceiver = super().messenger
+        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
+        return transceiver
+
     # Override
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # override to process this content
-        return self._respond_receipt(text='Content not support.', msg=r_msg, group=content.group, extra={
+        text = 'Content not support.'
+        return self.respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
             'template': 'Content (type: ${type}) not support yet!',
             'replacements': {
                 'type': content.type,
             }
         })
-
-    # noinspection PyMethodMayBeStatic
-    def _respond_receipt(self, text: str, msg: ReliableMessage = None,
-                         group: Optional[ID] = None, extra: Dict = None) -> List[Content]:
-        res = ReceiptCommand.create(text=text, msg=msg)
-        if group is not None:
-            res.group = group
-        if extra is not None:
-            for key in extra:
-                res[key] = extra[key]
-        return [res]
 
 
 class BaseCommandProcessor(BaseContentProcessor):
@@ -183,7 +85,8 @@ class BaseCommandProcessor(BaseContentProcessor):
     # Override
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
-        return self._respond_receipt(text='Command not support.', msg=r_msg, group=content.group, extra={
+        text = 'Command not support.'
+        return self.respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
             'template': 'Command (name: ${command}) not support yet!',
             'replacements': {
                 'command': content.cmd,

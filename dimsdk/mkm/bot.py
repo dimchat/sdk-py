@@ -28,13 +28,25 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .station import ServiceProvider, Station
-from .bot import Bot
+"""
+    Bot User
+    ~~~~~~~~
+"""
 
-__all__ = [
+from typing import Optional
 
-    'ServiceProvider',
-    'Station',
-    'Bot',
+from dimp import ID, EntityType
+from dimp.mkm import BaseUser
 
-]
+
+class Bot(BaseUser):
+
+    def __init__(self, identifier: ID):
+        super().__init__(identifier=identifier)
+        assert identifier.type == EntityType.BOT, 'Bot ID type error: %s' % identifier
+
+    @property
+    def provider(self) -> Optional[ID]:
+        doc = self.document()
+        if doc is not None:
+            return ID.parse(identifier=doc.get_property(key='ICP'))

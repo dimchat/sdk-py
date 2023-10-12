@@ -38,46 +38,16 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from dimp.mkm.address import thanos
 from dimp import EntityType, ID
-from dimp import User, Group, BaseUser, BaseGroup
+from dimp import User, Group
 from dimp import Meta, Document
 from dimp import Barrack
+from dimp.mkm import BaseUser, BaseGroup
 
 from .mkm import ServiceProvider, Station, Bot
 
 
 class Facebook(Barrack, ABC):
-
-    def __init__(self):
-        super().__init__()
-        # memory caches
-        self.__users = {}   # ID -> User
-        self.__groups = {}  # ID -> Group
-
-    def reduce_memory(self) -> int:
-        """
-        Call it when received 'UIApplicationDidReceiveMemoryWarningNotification',
-        this will remove 50% of cached objects
-
-        :return: number of survivors
-        """
-        finger = 0
-        finger = thanos(self.__users, finger)
-        finger = thanos(self.__groups, finger)
-        return finger >> 1
-
-    # private
-    def cache_user(self, user: User):
-        if user.data_source is None:
-            user.data_source = self
-        self.__users[user.identifier] = user
-
-    # private
-    def cache_group(self, group: Group):
-        if group.data_source is None:
-            group.data_source = self
-        self.__groups[group.identifier] = group
 
     @abstractmethod
     def save_meta(self, meta: Meta, identifier: ID) -> bool:
@@ -100,59 +70,34 @@ class Facebook(Barrack, ABC):
         """
         raise NotImplemented
 
-    #
-    #   Document checking
-    #
-    def check_document(self, document: Document) -> bool:
-        """
-        Checking document
-
-        :param document: entity document
-        :return: True on accepted
-        """
-        identifier = document.identifier
-        # NOTICE: if this is a bulletin document for group,
-        #             verify it with the group owner's meta.key
-        #         else (this is a visa document for user)
-        #             verify it with the user's meta.key
-        if identifier.is_group:
-            # check by group owner's meta.key
-            owner = self.owner(identifier=identifier)
-            if owner is not None:
-                meta = self.meta(identifier=owner)
-            elif identifier.type == EntityType.GROUP:
-                # NOTICE: if this is a polylogue profile
-                #             verify it with the founder's meta.key
-                #             (which equals to the group's meta.key)
-                meta = self.meta(identifier=identifier)
-            else:
-                # FIXME: owner not found for this group
-                return False
-        else:
-            # check by user's meta.key
-            meta = self.meta(identifier=identifier)
-        if meta is not None:
-            return document.verify(public_key=meta.key)
-
-    # protected
-    # noinspection PyMethodMayBeStatic
+    # Override
     def create_user(self, identifier: ID) -> Optional[User]:
-        # TODO: make sure visa key exists before calling this
+        assert identifier.is_user, 'user ID error: %s' % identifier
+        # check visa key
+        if not identifier.is_broadcast:
+            if self.public_key_for_encryption(identifier=identifier) is None:
+                # assert False, 'visa.key not found: %s' % identifier
+                return None
+            # NOTICE: if visa.key exists, then visa & meta must exist too.
         network = identifier.type
         # check user type
         if network == EntityType.STATION:
-            # TODO: get station ip,port before create it
-            # return Station(identifier=identifier, host='0.0.0.0', port=0)
             return Station(identifier=identifier)
         elif network == EntityType.BOT:
             return Bot(identifier=identifier)
         # general user, or 'anyone@anywhere'
         return BaseUser(identifier=identifier)
 
-    # protected
-    # noinspection PyMethodMayBeStatic
+    # Override
     def create_group(self, identifier: ID) -> Optional[Group]:
-        # TODO: make group meta exists before calling this
+        assert identifier.is_group, 'group ID error: %s' % identifier
+        if not identifier.is_broadcast:
+            members = self.members(identifier=identifier)
+            if len(members) == 0:
+                # assert False, 'group members not found: %s' % identifier
+                return None
+            # NOTICE: if members exist, then owner (founder) must exist,
+            #         and bulletin & meta must exist too.
         network = identifier.type
         # check group type
         if network == EntityType.ISP:
@@ -186,45 +131,15 @@ class Facebook(Barrack, ABC):
                 if item.identifier == receiver:
                     # DISCUSS: set this item to be current user?
                     return item
-            # not mine?
+            # not me?
             return None
         # group message (recipient not designated)
         assert receiver.is_group, 'receiver error: %s' % receiver
         # the messenger will check group info before decrypting message,
         # so we can trust that the group's meta & members MUST exist here.
-        grp = self.group(identifier=receiver)
-        if grp is None:
-            assert False, 'group not ready: %s' % receiver
-            # return None
-        members = grp.members
+        members = self.members(identifier=receiver)
         assert len(members) > 0, 'members not found: %s' % receiver
         for item in users:
             if item.identifier in members:
                 # DISCUSS: set this item to be current user?
                 return item
-
-    #
-    #   Entity Delegate
-    #
-
-    # Override
-    def user(self, identifier: ID) -> Optional[User]:
-        # 1. get from user cache
-        usr = self.__users.get(identifier)
-        if usr is None:
-            # 2. create and cache it
-            usr = self.create_user(identifier=identifier)
-            if usr is not None:
-                self.cache_user(user=usr)
-        return usr
-
-    # Override
-    def group(self, identifier: ID) -> Optional[Group]:
-        # 1. get from group cache
-        grp = self.__groups.get(identifier)
-        if grp is None:
-            # 2. create and cache it
-            grp = self.create_group(identifier=identifier)
-            if grp is not None:
-                self.cache_group(group=grp)
-        return grp

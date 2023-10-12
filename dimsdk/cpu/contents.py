@@ -37,13 +37,6 @@ from dimp import Content, ForwardContent, ArrayContent
 from .base import BaseContentProcessor
 
 
-def get_messenger(cpu: BaseContentProcessor):  # -> Messenger:
-    messenger = cpu.messenger
-    from ..messenger import Messenger
-    assert isinstance(messenger, Messenger), 'messenger error: %s' % messenger
-    return messenger
-
-
 class ForwardContentProcessor(BaseContentProcessor):
     """
         Forward Content Processor
@@ -55,7 +48,7 @@ class ForwardContentProcessor(BaseContentProcessor):
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
-        messenger = get_messenger(cpu=self)
+        messenger = self.messenger
         secrets = content.secrets
         responses = []
         for item in secrets:
@@ -79,7 +72,7 @@ class ArrayContentProcessor(BaseContentProcessor):
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ArrayContent), 'forward content error: %s' % content
         # call messenger to process it
-        messenger = get_messenger(cpu=self)
+        messenger = self.messenger
         contents = content.contents
         responses = []
         for item in contents:

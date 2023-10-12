@@ -28,14 +28,15 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import List, Union, Optional
+from typing import List, Optional
 
-from dimp import ContentType, Content, Envelope
+from dimp import Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Processor
 
-from .cpu import TwinsHelper
-from .cpu import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
+from .core import TwinsHelper
+from .core import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
+from .core import GeneralContentProcessorFactory
 
 from .facebook import Facebook
 from .messenger import Messenger
@@ -43,37 +44,42 @@ from .messenger import Messenger
 
 class MessageProcessor(TwinsHelper, Processor):
 
-    @property
-    def facebook(self) -> Facebook:
-        return super().facebook
-
-    @property
-    def messenger(self) -> Messenger:
-        return super().messenger
-
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)
         self.__factory = self._create_factory()
 
+    @property
+    def facebook(self) -> Facebook:
+        barrack = super().facebook
+        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
+        return barrack
+
+    @property
+    def messenger(self) -> Messenger:
+        transceiver = super().messenger
+        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
+        return transceiver
+
     # protected
     def _create_factory(self) -> ContentProcessorFactory:
+        facebook = self.facebook
+        messenger = self.messenger
         creator = self._create_creator()
-        from .cpu import GeneralContentProcessorFactory
-        return GeneralContentProcessorFactory(facebook=self.facebook, messenger=self.messenger, creator=creator)
+        return GeneralContentProcessorFactory(facebook=facebook, messenger=messenger, creator=creator)
 
     # protected
     def _create_creator(self) -> ContentProcessorCreator:
-        from .cpu import BaseContentProcessorCreator
-        return BaseContentProcessorCreator(facebook=self.facebook, messenger=self.messenger)
+        """ Override for creating customized CPUs """
+        raise NotImplemented
 
     def get_processor(self, content: Content) -> Optional[ContentProcessor]:
         return self.__factory.get_processor(content=content)
 
-    def get_content_processor(self, msg_type: Union[int, ContentType]) -> Optional[ContentProcessor]:
-        return self.__factory.get_content_processor(msg_type=msg_type)
+    def get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
+        return self.__factory.get_content_processor(msg_type)
 
-    def get_command_processor(self, cmd: str, msg_type: Union[int, ContentType] = 0) -> Optional[ContentProcessor]:
-        return self.__factory.get_command_processor(msg_type=msg_type, cmd=cmd)
+    def get_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
+        return self.__factory.get_command_processor(msg_type, cmd=cmd)
 
     #
     #  Processing Message
@@ -121,6 +127,7 @@ class MessageProcessor(TwinsHelper, Processor):
             if signed is not None:
                 messages.append(signed)
         return messages
+        # TODO: override to deliver to the receiver when catch exception "receiver error ..."
 
     # Override
     def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
@@ -177,7 +184,7 @@ class MessageProcessor(TwinsHelper, Processor):
         cpu = self.get_processor(content=content)
         if cpu is None:
             # default content processor
-            cpu = self.get_content_processor(msg_type=0)
+            cpu = self.get_content_processor(0)
             assert cpu is not None, 'default CPU not defined'
         return cpu.process_content(content=content, r_msg=r_msg)
         # TODO: override to filter the response

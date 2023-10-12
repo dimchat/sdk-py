@@ -30,14 +30,12 @@
 
 from typing import Optional
 
-from mkm.crypto import json_encode, json_decode, utf8_encode, utf8_decode
-
-from dimp import ID
-from dimp import Content, Command
+from mkm.format import utf8_encode, utf8_decode, json_encode, json_decode
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Packer
 
-from .cpu import TwinsHelper
+from .core import TwinsHelper
+from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
 
 from .facebook import Facebook
 from .messenger import Messenger
@@ -45,28 +43,35 @@ from .messenger import Messenger
 
 class MessagePacker(TwinsHelper, Packer):
 
+    def __init__(self, facebook: Facebook, messenger: Messenger):
+        super().__init__(facebook=facebook, messenger=messenger)
+        self.__instant_packer = InstantMessagePacker(messenger=messenger)
+        self.__secure_packer = SecureMessagePacker(messenger=messenger)
+        self.__reliablePacker = ReliableMessagePacker(messenger=messenger)
+
     @property
     def facebook(self) -> Facebook:
-        return super().facebook
+        barrack = super().facebook
+        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
+        return barrack
 
     @property
     def messenger(self) -> Messenger:
-        return super().messenger
+        transceiver = super().messenger
+        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
+        return transceiver
 
-    # Override
-    def overt_group(self, content: Content) -> Optional[ID]:
-        group = content.group
-        if group is None:
-            return None
-        elif group.is_broadcast:
-            # broadcast message is always overt
-            return group
-        elif isinstance(content, Command):
-            # group command should be sent to each member directly, so
-            # don't expose group ID
-            return None
-        else:
-            return group
+    @property
+    def instant_packer(self) -> InstantMessagePacker:
+        return self.__instant_packer
+
+    @property
+    def secure_packer(self) -> SecureMessagePacker:
+        return self.__secure_packer
+
+    @property
+    def reliable_packer(self) -> ReliableMessagePacker:
+        return self.__reliablePacker
 
     #
     #   InstantMessage -> SecureMessage -> ReliableMessage -> Data
@@ -78,74 +83,44 @@ class MessagePacker(TwinsHelper, Packer):
         #       otherwise, suspend this message for waiting receiver's visa/meta;
         #       if receiver is a group, query all members' visa too!
 
-        messenger = self.messenger
-        # check message delegate
-        if msg.delegate is None:
-            msg.delegate = messenger
-
-        sender = msg.sender
+        # NOTICE: before sending group message, you can decide whether expose the group ID
+        #       (A) if you don't want to expose the group ID,
+        #           you can split it to multi-messages before encrypting,
+        #           replace the 'receiver' to each member and keep the group hidden in the content;
+        #           in this situation, the packer will use the personal message key (user to user);
+        #       (B) if the group ID is overt, no need to worry about the exposing,
+        #           you can keep the 'receiver' being the group ID, or set the group ID as 'group'
+        #           when splitting to multi-messages to let the remote packer knows it;
+        #           in these situations, the local packer will use the group msg key (user to group)
+        #           to encrypt the message, and the remote packer can get the overt group ID before
+        #           decrypting to take the right message key.
         receiver = msg.receiver
-        # if 'group' exists and the 'receiver' is a group ID,
-        # they must be equal
 
-        # NOTICE: while sending group message, don't split it before encrypting.
-        #         this means you could set group ID into message content, but
-        #         keep the "receiver" to be the group ID;
-        #         after encrypted (and signed), you could split the message
-        #         with group members before sending out, or just send it directly
-        #         to the group assistant to let it split messages for you!
-        #    BUT,
-        #         if you don't want to share the symmetric key with other members,
-        #         you could split it (set group ID into message content and
-        #         set contact ID to the "receiver") before encrypting, this usually
-        #         for sending group command to assistant bot, which should not
-        #         share the symmetric key (group msg key) with other members.
+        #
+        #   1. get message key with direction (sender -> receiver) or (sender -> group)
+        #
+        password = self.messenger.get_encrypt_key(msg=msg)
+        assert password is not None, 'failed to get msg key: %s => %s, %s' % (msg.sender, receiver, msg.get('group'))
 
-        # 1. get symmetric key
-        group = messenger.overt_group(content=msg.content)
-        if group is None:
-            # personal message or (group) command
-            password = messenger.cipher_key(sender=sender, receiver=receiver, generate=True)
-            assert password is not None, 'failed to get msg key: %s -> %s' % (sender, receiver)
-        else:
-            # group message (excludes group command)
-            password = messenger.cipher_key(sender=sender, receiver=group, generate=True)
-            assert password is not None, 'failed to get group msg key: %s -> %s' % (sender, group)
-
-        # 2. encrypt 'content' to 'data' for receiver/group members
+        #
+        #   2. encrypt 'content' to 'data' for receiver/group members
+        #
         if receiver.is_group:
             # group message
-            facebook = self.facebook
-            grp = facebook.group(identifier=receiver)
+            members = self.facebook.members(identifier=receiver)
+            assert len(members) > 0, 'group not ready: %s' % receiver
             # a station will never send group message, so here must be a client;
-            # and the client messenger should check the group's meta & members
-            # before encrypting message, so we can trust that the group can be
-            # created and its members MUST exist here.
-            assert grp is not None, 'group not ready: %s' % receiver
-            # if grp is None:
-            #     # TODO: suspend this message for waiting group's meta
-            #     return None
-            members = grp.members
-            assert len(members) > 0, 'group members not found: %s' % receiver
-            # if members is None or len(members) == 0:
-            #     # TODO: suspend this message for waiting group's membership
-            #     return None
-            s_msg = msg.encrypt(password=password, members=grp.members)
+            # the client messenger should check the group's meta & members before encrypting,
+            # so we can trust that the group members MUST exist here.
+            s_msg = self.instant_packer.encrypt_message(msg=msg, password=password, members=members)
         else:
             # personal message (or split group message)
-            s_msg = msg.encrypt(password=password)
+            s_msg = self.instant_packer.encrypt_message(msg=msg, password=password)
         if s_msg is None:
             # public key for encryption not found
             # TODO: suspend this message for waiting receiver's meta
+            # assert False, 'failed to encrypt message: %s' % msg
             return None
-
-        # overt group ID
-        if group is not None and group != receiver:
-            # NOTICE: this help the receiver knows the group ID
-            #         when the group message separated to multi-messages,
-            #         if don't want the others know you are the group members,
-            #         remove it.
-            s_msg.envelope.group = group
 
         # NOTICE: copy content type to envelope
         #         this help the intermediate nodes to recognize message type
@@ -154,14 +129,13 @@ class MessagePacker(TwinsHelper, Packer):
         # OK
         return s_msg
 
+    # Override
     def sign_message(self, msg: SecureMessage) -> ReliableMessage:
-        # check message delegate
-        if msg.delegate is None:
-            msg.delegate = self.messenger
-        assert msg.data is not None, 'message data cannot be empty: %s' % msg
+        assert len(msg.data) > 0, 'message data cannot be empty: %s' % msg
         # sign 'data' by sender
-        return msg.sign()
+        return self.secure_packer.sign_message(msg=msg)
 
+    # Override
     def serialize_message(self, msg: ReliableMessage) -> bytes:
         js = json_encode(obj=msg.dictionary)
         return utf8_encode(string=js)
@@ -172,7 +146,9 @@ class MessagePacker(TwinsHelper, Packer):
 
     def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
         js = utf8_decode(data=data)
-        assert js is not None, 'message data error: %d' % len(data)
+        if js is None:
+            # assert False, 'message data error: %d' % len(data)
+            return None
         dictionary = json_decode(string=js)
         # TODO: translate short keys
         #       'S' -> 'sender'
@@ -201,17 +177,14 @@ class MessagePacker(TwinsHelper, Packer):
         visa = msg.visa
         if visa is not None:
             facebook.save_document(document=visa)
-        # check message delegate
-        if msg.delegate is None:
-            msg.delegate = self.messenger
         #
         # NOTICE: check [Visa Protocol] before calling this
         #       make sure the sender's meta(visa) exists
         #       (do it by application)
         #
-        assert msg.signature is not None, 'message signature cannot be empty: %s' % msg
+        assert len(msg.signature) > 0, 'message signature cannot be empty: %s' % msg
         # verify 'data' with 'signature'
-        return msg.verify()
+        return self.reliable_packer.verify_message(msg=msg)
 
     def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
         # TODO: check receiver before calling this, make sure you are the receiver,
@@ -221,26 +194,10 @@ class MessagePacker(TwinsHelper, Packer):
         receiver = msg.receiver
         user = facebook.select_user(receiver=receiver)
         if user is None:
-            # local users not match
-            trimmed = None
-        elif receiver.is_group:
-            # trim group message
-            trimmed = msg.trim(member=user.identifier)
-        else:
-            trimmed = msg
-        if trimmed is None:
             # not for you?
-            raise LookupError('receiver error: %s' % msg)
-        # check message delegate
-        if msg.delegate is None:
-            msg.delegate = self.messenger
-        #
-        # NOTICE: make sure the receiver is YOU!
-        #         which means the receiver's private key exists;
-        #         if the receiver is a group ID, split it first
-        #
-        assert msg.data is not None, 'message data cannot be empty: %s' % msg
+            raise LookupError('receiver error: %s, from %s, %s' % (receiver, msg.sender, msg.group))
+        assert len(msg.data) > 0, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
         # decrypt 'data' to 'content'
-        return msg.decrypt()
+        return self.secure_packer.decrypt_message(msg=msg, receiver=user.identifier)
         # TODO: check top-secret message
         #       (do it by application)

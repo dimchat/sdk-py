@@ -38,12 +38,12 @@
 
 from typing import Optional, List
 
-from mkm import Identifier
+from mkm.types import Converter
 
 from dimp import EntityType, ID, Meta, Document, Visa
 from dimp import ANYWHERE, EVERYWHERE
 from dimp import User, UserDataSource
-from dimp import BaseUser, BaseGroup
+from dimp.mkm import Identifier, BaseUser, BaseGroup
 
 
 class Station(User):
@@ -60,6 +60,7 @@ class Station(User):
         self.__user = BaseUser(identifier=identifier)
         self.__host = host
         self.__port = port
+        self.__isp: Optional[ID] = None
 
     # Override
     def __str__(self) -> str:
@@ -74,7 +75,7 @@ class Station(User):
         """ Return self==value. """
         if isinstance(other, Station):
             # check ID, host & port
-            return same_station(self, other)
+            return same_stations(self, other)
         # check with inner user's ID
         return self.__user == other
 
@@ -83,9 +84,45 @@ class Station(User):
         """ Return self!=value. """
         if isinstance(other, Station):
             # check ID, host & port
-            return not same_station(self, other)
+            return not same_stations(self, other)
         # check with inner user's ID
         return self.__user != other
+
+    def reload(self):
+        """ Reload station info: host & port, SP ID """
+        doc = self.document()
+        if doc is not None:
+            host = doc.get_property(key='host')
+            if host is not None:
+                self.__host = Converter.get_str(value=host, default=None)
+            port = doc.get_property(key='port')
+            if port is not None:
+                self.__port = Converter.get_int(value=port, default=0)
+            isp = doc.get_property(key='ISP')
+            if isp is not None:
+                self.__isp = ID.parse(identifier=isp)
+
+    #
+    #   Server
+    #
+
+    @property
+    def host(self) -> str:
+        if self.__host is None:
+            self.reload()
+        return self.__host
+
+    @property
+    def port(self) -> int:
+        if self.__port == 0:
+            self.reload()
+        return self.__port
+
+    @property
+    def provider(self) -> Optional[ID]:
+        if self.__isp is None:
+            self.reload()
+        return self.__isp
 
     #
     #   Entity
@@ -157,36 +194,6 @@ class Station(User):
     def verify_visa(self, visa: Visa) -> bool:
         return self.__user.verify_visa(visa=visa)
 
-    #
-    #   Server
-    #
-
-    @property
-    def host(self) -> str:
-        if self.__host is None:
-            doc = self.document(doc_type='*')
-            if doc is not None:
-                value = doc.get_property('host')
-                if value is not None:
-                    self.__host = str(value)
-        return self.__host
-
-    @property
-    def port(self) -> int:
-        if self.__port == 0:
-            doc = self.document(doc_type='*')
-            if doc is not None:
-                value = doc.get_property('port')
-                if value is not None:
-                    self.__port = int(value)
-        return self.__port
-
-    @property
-    def provider(self) -> Optional[ID]:
-        doc = self.document(doc_type='*')
-        if doc is not None:
-            return ID.parse(identifier=doc.get_property(key='ISP'))
-
 
 class ServiceProvider(BaseGroup):
 
@@ -195,43 +202,53 @@ class ServiceProvider(BaseGroup):
         assert identifier.type == EntityType.ISP, 'Service Provider ID type error: %s' % identifier
 
     @property
-    def stations(self):
-        return self.members
-
+    def stations(self) -> List:
+        doc = self.document()
+        if doc is not None:
+            array = doc.get_property(key='stations')
+            if array is not None:
+                return array
+        # TODO: load from local storage
+        return []
 
 #
 #   Comparison
 #
 
 
-def check_hosts(left: Optional[str], right: Optional[str]) -> bool:
-    if left is None or right is None:
-        return True
-    return left == right
-
-
-def check_ports(left: Optional[int], right: Optional[int]) -> bool:
-    if left is None or right is None:
-        return True
-    elif left == 0 or right == 0:
-        return True
-    return left == right
-
-
-def check_identifiers(left: ID, right: ID) -> bool:
-    if left is right:
-        # same object
-        return True
-    elif left.is_broadcast or right.is_broadcast:
-        return True
-    return left == right
-
-
-def same_station(left: Station, right: Station) -> bool:
-    if left is right:
+def same_stations(a: Station, b: Station) -> bool:
+    if a is b:
         # same object
         return True
     else:
-        return check_identifiers(left.identifier, right.identifier) and \
-               check_hosts(left.host, right.host) and \
-               check_ports(left.port, right.port)
+        return check_identifiers(a.identifier, b.identifier) and \
+               check_hosts(a.host, b.host) and \
+               check_ports(a.port, b.port)
+
+
+def check_identifiers(a: ID, b: ID) -> bool:
+    if a is b:
+        # same object
+        return True
+    elif a.is_broadcast or b.is_broadcast:
+        return True
+    else:
+        return a == b
+
+
+def check_hosts(a: Optional[str], b: Optional[str]) -> bool:
+    if a is None or b is None:
+        return True
+    elif len(a) == 0 or len(b) == 0:
+        return True
+    else:
+        return a == b
+
+
+def check_ports(a: Optional[int], b: Optional[int]) -> bool:
+    if a is None or b is None:
+        return True
+    elif a == 0 or b == 0:
+        return True
+    else:
+        return a == b

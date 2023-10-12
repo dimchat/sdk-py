@@ -31,11 +31,85 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from mkm.crypto import SymmetricKey
-from mkm import ID
+from dimp import SymmetricKey
+from dimp import ID
+from dimp import Message
 
 
 class CipherKeyDelegate(ABC):
+
+    """
+        Situations:
+                      +-------------+-------------+-------------+-------------+
+                      |  receiver   |  receiver   |  receiver   |  receiver   |
+                      |     is      |     is      |     is      |     is      |
+                      |             |             |  broadcast  |  broadcast  |
+                      |    user     |    group    |    user     |    group    |
+        +-------------+-------------+-------------+-------------+-------------+
+        |             |      A      |             |             |             |
+        |             +-------------+-------------+-------------+-------------+
+        |    group    |             |      B      |             |             |
+        |     is      |-------------+-------------+-------------+-------------+
+        |    null     |             |             |      C      |             |
+        |             +-------------+-------------+-------------+-------------+
+        |             |             |             |             |      D      |
+        +-------------+-------------+-------------+-------------+-------------+
+        |             |      E      |             |             |             |
+        |             +-------------+-------------+-------------+-------------+
+        |    group    |             |             |             |             |
+        |     is      |-------------+-------------+-------------+-------------+
+        |  broadcast  |             |             |      F      |             |
+        |             +-------------+-------------+-------------+-------------+
+        |             |             |             |             |      G      |
+        +-------------+-------------+-------------+-------------+-------------+
+        |             |      H      |             |             |             |
+        |             +-------------+-------------+-------------+-------------+
+        |    group    |             |      J      |             |             |
+        |     is      |-------------+-------------+-------------+-------------+
+        |    normal   |             |             |      K      |             |
+        |             +-------------+-------------+-------------+-------------+
+        |             |             |             |             |             |
+        +-------------+-------------+-------------+-------------+-------------+
+
+    """
+
+    @classmethod
+    def destination_for_message(cls, msg: Message) -> ID:
+        """ get destination for cipher key vector: (sender, destination) """
+        receiver = msg.receiver
+        group = ID.parse(identifier=msg.get('group'))
+        return cls.get_destination(receiver=receiver, group=group)
+
+    @classmethod
+    def get_destination(cls, receiver: ID, group: Optional[ID]) -> ID:
+        if group is None and receiver.is_group:
+            # Transform:
+            #     (B) => (J)
+            #     (D) => (G)
+            group = receiver
+        # check group
+        if group is None:
+            # A : personal message (or hidden group message)
+            # C : broadcast message for anyone
+            assert receiver.is_user, 'receiver error: %s' % receiver
+            return receiver
+        assert group.is_group, 'group error: %s, receiver: %s' % (group, receiver)
+        if group.is_broadcast:
+            # E : unencrypted message for someone
+            #     return group as broadcast ID for disable encryption
+            # F : broadcast message for anyone
+            # G : (receiver == group) broadcast group message
+            assert receiver.is_user or receiver == group, 'receiver error: %s' % receiver
+            return group
+        elif receiver.is_broadcast:
+            # K : unencrypted group message, usually group command
+            #     return receiver as broadcast ID for disable encryption
+            assert receiver.is_user, 'receiver error: %s, group: %s' % (receiver, group)
+            return receiver
+        else:
+            # H    : group message split for someone
+            # J    : (receiver == group) non-split group message
+            return group
 
     @abstractmethod
     def cipher_key(self, sender: ID, receiver: ID, generate: bool = False) -> Optional[SymmetricKey]:

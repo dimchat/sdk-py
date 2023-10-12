@@ -40,8 +40,6 @@ from typing import Optional, List
 
 from mkm.crypto import SymmetricKey
 
-from dimp.transceiver import is_broadcast
-from dimp import ID
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Transceiver, Packer, Processor
@@ -49,7 +47,7 @@ from dimp import Transceiver, Packer, Processor
 from .delegate import CipherKeyDelegate
 
 
-class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, ABC):
+class Messenger(Transceiver, Packer, Processor, ABC):
 
     @property
     @abstractmethod
@@ -73,24 +71,27 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, ABC):
     #   Interfaces for Cipher Key
     #
 
-    # Override
-    def cipher_key(self, sender: ID, receiver: ID, generate: bool = False) -> Optional[SymmetricKey]:
+    def get_encrypt_key(self, msg: InstantMessage) -> Optional[SymmetricKey]:
+        sender = msg.sender
+        target = CipherKeyDelegate.destination_for_message(msg=msg)
         delegate = self.key_cache
-        return delegate.cipher_key(sender=sender, receiver=receiver, generate=generate)
+        return delegate.cipher_key(sender=sender, receiver=target, generate=True)
 
-    # Override
-    def cache_cipher_key(self, key: SymmetricKey, sender: ID, receiver: ID):
+    def get_decrypt_key(self, msg: SecureMessage) -> Optional[SymmetricKey]:
+        sender = msg.sender
+        target = CipherKeyDelegate.destination_for_message(msg=msg)
         delegate = self.key_cache
-        return delegate.cache_cipher_key(key=key, sender=sender, receiver=receiver)
+        return delegate.cipher_key(sender=sender, receiver=target, generate=False)
+
+    def cache_decrypt_key(self, key: SymmetricKey, msg: SecureMessage):
+        sender = msg.sender
+        target = CipherKeyDelegate.destination_for_message(msg=msg)
+        delegate = self.key_cache
+        return delegate.cache_cipher_key(key=key, sender=sender, receiver=target)
 
     #
     #   Interfaces for Packing Message
     #
-
-    # Override
-    def overt_group(self, content: Content) -> Optional[ID]:
-        delegate = self.packer
-        return delegate.overt_group(content=content)
 
     # Override
     def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
@@ -156,29 +157,22 @@ class Messenger(Transceiver, CipherKeyDelegate, Packer, Processor, ABC):
     #
 
     # Override
-    def deserialize_key(self, data: Optional[bytes], sender: ID, receiver: ID,
-                        msg: SecureMessage) -> Optional[SymmetricKey]:
+    def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
         if data is None:
-            # get key from cache
-            return self.cipher_key(sender=sender, receiver=receiver, generate=False)
+            # get key from cache with direction: sender -> receiver(group)
+            return self.get_decrypt_key(msg=msg)
         else:
-            return super().deserialize_key(data=data, sender=sender, receiver=receiver, msg=msg)
+            return super().deserialize_key(data=data, msg=msg)
 
     # Override
     def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
         content = super().deserialize_content(data=data, key=key, msg=msg)
-        assert content is not None, 'content error: %d' % len(data)
-        if not is_broadcast(msg=msg) and content is not None:
-            # check and cache key for reuse
-            group = self.overt_group(content=content)
-            if group is None:
-                # personal message or (group) command
-                # cache key with direction (sender -> receiver)
-                self.cache_cipher_key(key=key, sender=msg.sender, receiver=msg.receiver)
-            else:
-                # group message (excludes group command)
-                # cache the key with direction (sender -> group)
-                self.cache_cipher_key(key=key, sender=msg.sender, receiver=group)
+        # cache decrypt key when success
+        if content is None:
+            assert False, 'content error: %d' % len(data)
+        else:
+            # cache the key with direction: sender -> receiver(group)
+            self.cache_decrypt_key(key=key, msg=msg)
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         after deserialize content, this job should be do in subclass
         return content
