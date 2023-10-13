@@ -36,7 +36,7 @@
 from typing import Optional
 
 from dimp import ID, EntityType
-from dimp.mkm import BaseUser
+from dimp import BaseUser
 
 
 class Bot(BaseUser):

@@ -36,8 +36,8 @@ from dimp import DateTime
 from dimp import ID
 from dimp import ContentType, Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp.dkd import EnvelopeFactory, InstantMessageFactory, SecureMessageFactory, ReliableMessageFactory
-from dimp.msg import MessageEnvelope, PlainMessage, EncryptedMessage, NetworkMessage
+from dimp import EnvelopeFactory, InstantMessageFactory, SecureMessageFactory, ReliableMessageFactory
+from dimp import MessageEnvelope, PlainMessage, EncryptedMessage, NetworkMessage
 
 
 class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactory, ReliableMessageFactory):

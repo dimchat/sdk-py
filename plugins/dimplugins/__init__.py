@@ -34,30 +34,11 @@
 
 """
 
-from .format import Base64Data, Base64DataFactory
-from .format import BaseNetworkFile, BaseNetworkFileFactory
+from .format import *
 
-from .crypto import PlainKey, PlainKeyFactory
-from .crypto import AESKey, AESKeyFactory
-from .crypto import RSAPublicKey, RSAPublicKeyFactory
-from .crypto import RSAPrivateKey, RSAPrivateKeyFactory
-from .crypto import ECCPublicKey, ECCPublicKeyFactory
-from .crypto import ECCPrivateKey, ECCPrivateKeyFactory
+from .crypto import *
 
-from .mkm import BTCAddress, ETHAddress
-from .mkm import DefaultMeta, BTCMeta, ETHMeta
-from .mkm import BaseAddressFactory, GeneralAddressFactory
-from .mkm import GeneralIdentifierFactory, GeneralMetaFactory, GeneralDocumentFactory
-
-from .format import register_data_coders
-from .crypto import register_data_digesters
-from .crypto import register_symmetric_key_factories
-from .crypto import register_asymmetric_key_factories
-
-from .mkm import register_address_factory
-from .mkm import register_identifier_factory
-from .mkm import register_meta_factories
-from .mkm import register_document_factories
+from .mkm import *
 
 
 #
@@ -84,8 +65,11 @@ __all__ = [
     #
     #   Format
     #
+
     'Base64Data', 'Base64DataFactory',
     'BaseNetworkFile', 'BaseNetworkFileFactory',
+
+    'register_data_coders',
 
     #
     #   Crypto
@@ -100,6 +84,10 @@ __all__ = [
     'ECCPublicKey', 'ECCPublicKeyFactory',
     'ECCPrivateKey', 'ECCPrivateKeyFactory',
 
+    'register_data_digesters',
+    'register_symmetric_key_factories',
+    'register_asymmetric_key_factories',
+
     #
     #   MingKeMing
     #
@@ -112,12 +100,14 @@ __all__ = [
     'GeneralMetaFactory',
     'GeneralDocumentFactory',
 
+    'register_address_factory',
+    'register_identifier_factory',
+    'register_meta_factories',
+    'register_document_factories',
+
     #
     #   Register
     #
-    'register_data_coders', 'register_data_digesters',
-    'register_symmetric_key_factories', 'register_asymmetric_key_factories',
-    'register_identifier_factory', 'register_address_factory',
-    'register_meta_factories', 'register_document_factories',
+
     'register_plugins',
 ]

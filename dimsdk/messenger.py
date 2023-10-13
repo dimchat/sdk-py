@@ -38,8 +38,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from mkm.crypto import SymmetricKey
-
+from dimp import SymmetricKey
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Transceiver, Packer, Processor

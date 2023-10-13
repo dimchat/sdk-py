@@ -42,7 +42,7 @@ from dimp import EntityType, ID
 from dimp import User, Group
 from dimp import Meta, Document
 from dimp import Barrack
-from dimp.mkm import BaseUser, BaseGroup
+from dimp import BaseUser, BaseGroup
 
 from .mkm import ServiceProvider, Station, Bot
 

@@ -28,18 +28,18 @@ from mkm.format import PortableNetworkFile, TransportableData
 from .ted import Base64Data, Base64DataFactory
 from .pnf import BaseNetworkFile, BaseNetworkFileFactory
 
-from .coder import register_data_coders as register_coders
+from .coder import register_base_coders
 
 
 def register_data_coders():
-    register_coders()
+    register_base_coders()
     # PNF
     factory = BaseNetworkFileFactory()
     PortableNetworkFile.register(factory=factory)
     # TED
     factory = Base64DataFactory()
     TransportableData.register(algorithm=TransportableData.BASE_64, factory=factory)
-    TransportableData.register(algorithm=TransportableData.DEFAULT, factory=factory)
+    # TransportableData.register(algorithm=TransportableData.DEFAULT, factory=factory)
     TransportableData.register(algorithm='*', factory=factory)
 
 

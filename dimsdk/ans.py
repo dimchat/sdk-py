@@ -38,7 +38,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from mkm import ID
+from dimp import ID
 
 
 class AddressNameService(ABC):

@@ -39,7 +39,7 @@ class PlainKey(BaseSymmetricKey):
 
     def __init__(self):
         key = {'algorithm': self.PLAIN}
-        super().__init__(key=key)
+        super().__init__(key)
 
     @property
     def size(self) -> int:

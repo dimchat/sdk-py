@@ -39,7 +39,7 @@ class ECCPublicKey(BasePublicKey):
     """ ECC Public Key """
 
     def __init__(self, key: Dict[str, Any]):
-        super().__init__(key=key)
+        super().__init__(key)
         self.__key = None
         self.__data = None
 
@@ -102,7 +102,7 @@ class ECCPrivateKey(BasePrivateKey):
     """ ECC Private Key """
 
     def __init__(self, key: Dict[str, Any]):
-        super().__init__(key=key)
+        super().__init__(key)
         # check key data
         pem: str = key.get('data')
         if pem is None or len(pem) == 0:
@@ -177,7 +177,7 @@ class ECCPrivateKey(BasePrivateKey):
             'curve': 'SECP256k1',
             'digest': 'SHA256'
         }
-        return ECCPublicKey(key=info)
+        return ECCPublicKey(info)
 
     # Override
     def sign(self, data: bytes) -> bytes:
@@ -200,7 +200,7 @@ class ECCPublicKeyFactory(PublicKeyFactory):
 
     # Override
     def parse_public_key(self, key: dict) -> Optional[PublicKey]:
-        return ECCPublicKey(key=key)
+        return ECCPublicKey(key)
 
 
 class ECCPrivateKeyFactory(PrivateKeyFactory):
@@ -208,8 +208,8 @@ class ECCPrivateKeyFactory(PrivateKeyFactory):
     # Override
     def generate_private_key(self) -> Optional[PrivateKey]:
         key = {'algorithm': AsymmetricKey.ECC}
-        return ECCPrivateKey(key=key)
+        return ECCPrivateKey(key)
 
     # Override
     def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
-        return ECCPrivateKey(key=key)
+        return ECCPrivateKey(key)

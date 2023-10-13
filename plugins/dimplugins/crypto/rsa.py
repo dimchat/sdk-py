@@ -41,7 +41,7 @@ class RSAPublicKey(BasePublicKey, EncryptKey):
     """ RSA Public Key """
 
     def __init__(self, key: Dict[str, Any]):
-        super().__init__(key=key)
+        super().__init__(key)
         self.__key = None
         self.__data = None
 
@@ -95,7 +95,7 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
     """ RSA Private Key """
 
     def __init__(self, key: Dict[str, Any]):
-        super().__init__(key=key)
+        super().__init__(key)
         # check key data
         pem: str = key.get('data')
         if pem is None or len(pem) == 0:
@@ -159,7 +159,7 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
             'padding': 'PKCS1',
             'digest': 'SHA256'
         }
-        return RSAPublicKey(key=info)
+        return RSAPublicKey(info)
 
     # Override
     def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
@@ -196,7 +196,7 @@ class RSAPublicKeyFactory(PublicKeyFactory):
 
     # Override
     def parse_public_key(self, key: dict) -> Optional[PublicKey]:
-        return RSAPublicKey(key=key)
+        return RSAPublicKey(key)
 
 
 class RSAPrivateKeyFactory(PrivateKeyFactory):
@@ -204,8 +204,8 @@ class RSAPrivateKeyFactory(PrivateKeyFactory):
     # Override
     def generate_private_key(self) -> Optional[PrivateKey]:
         key = {'algorithm': AsymmetricKey.RSA}
-        return RSAPrivateKey(key=key)
+        return RSAPrivateKey(key)
 
     # Override
     def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
-        return RSAPrivateKey(key=key)
+        return RSAPrivateKey(key)

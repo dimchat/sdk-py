@@ -61,7 +61,7 @@ from .eth import ETHAddress
 class DefaultMeta(BaseMeta):
 
     def __init__(self, meta: Dict[str, Any] = None,
-                 version: Union[int, MetaType] = None, key: VerifyKey = None,
+                 version: int = None, key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches
@@ -100,7 +100,7 @@ class DefaultMeta(BaseMeta):
 class BTCMeta(BaseMeta):
 
     def __init__(self, meta: Dict[str, Any] = None,
-                 version: Union[int, MetaType] = None, key: VerifyKey = None,
+                 version: int = None, key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches
@@ -137,7 +137,7 @@ class BTCMeta(BaseMeta):
 class ETHMeta(BaseMeta):
 
     def __init__(self, meta: Dict[str, Any] = None,
-                 version: Union[int, MetaType] = None, key: VerifyKey = None,
+                 version: int = None, key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, key=key, seed=seed, fingerprint=fingerprint)
         # caches

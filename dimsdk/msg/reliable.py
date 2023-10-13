@@ -33,7 +33,7 @@ from abc import abstractmethod
 from typing import Optional
 
 from dimp import SecureMessage, ReliableMessage
-from dimp.dkd import ReliableMessageDelegate
+from dimp import ReliableMessageDelegate
 
 
 class ReliableMessagePacker:

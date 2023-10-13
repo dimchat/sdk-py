@@ -33,22 +33,22 @@ from typing import Optional, Any, Dict
 from dimp import Envelope, InstantMessage, SecureMessage, ReliableMessage
 from dimp import ContentType, Content
 from dimp import Command, GroupCommand
-from dimp.protocol import CommandFactory
-from dimp.dkd import ContentFactory
-from dimp.dkd import CommandFactoryManager
-from dimp.dkd import BaseContent
-from dimp.dkd import BaseTextContent, ListContent, SecretContent
-from dimp.dkd import WebPageContent, NameCardContent
-from dimp.dkd import BaseFileContent, ImageFileContent, AudioFileContent, VideoFileContent
-from dimp.dkd import BaseMoneyContent, TransferMoneyContent
-from dimp.dkd import AppCustomizedContent
-from dimp.dkd import BaseCommand
-from dimp.dkd import BaseMetaCommand, BaseDocumentCommand
-from dimp.dkd import BaseReceiptCommand
-from dimp.dkd import BaseHistoryCommand, BaseGroupCommand
-from dimp.dkd import InviteGroupCommand, ExpelGroupCommand, JoinGroupCommand
-from dimp.dkd import QuitGroupCommand, QueryGroupCommand, ResetGroupCommand
-from dimp.dkd import HireGroupCommand, FireGroupCommand, ResignGroupCommand
+from dimp import CommandFactory
+from dimp import ContentFactory
+from dimp import CommandFactoryManager
+from dimp import BaseContent
+from dimp import BaseTextContent, ListContent, SecretContent
+from dimp import WebPageContent, NameCardContent
+from dimp import BaseFileContent, ImageFileContent, AudioFileContent, VideoFileContent
+from dimp import BaseMoneyContent, TransferMoneyContent
+from dimp import AppCustomizedContent
+from dimp import BaseCommand
+from dimp import BaseMetaCommand, BaseDocumentCommand
+from dimp import BaseReceiptCommand
+from dimp import BaseHistoryCommand, BaseGroupCommand
+from dimp import InviteGroupCommand, ExpelGroupCommand, JoinGroupCommand
+from dimp import QuitGroupCommand, QueryGroupCommand, ResetGroupCommand
+from dimp import HireGroupCommand, FireGroupCommand, ResignGroupCommand
 
 from ..msg import MessageFactory
 

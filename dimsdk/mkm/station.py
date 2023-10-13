@@ -43,7 +43,7 @@ from mkm.types import Converter
 from dimp import EntityType, ID, Meta, Document, Visa
 from dimp import ANYWHERE, EVERYWHERE
 from dimp import User, UserDataSource
-from dimp.mkm import Identifier, BaseUser, BaseGroup
+from dimp import Identifier, BaseUser, BaseGroup
 
 
 class Station(User):

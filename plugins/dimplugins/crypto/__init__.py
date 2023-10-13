@@ -23,8 +23,8 @@
 # SOFTWARE.
 # ==============================================================================
 
-from mkm.crypto import SymmetricKeyFactory, AsymmetricKey
-from mkm.crypto import SymmetricKey, PublicKey, PrivateKey
+from mkm.crypto import AsymmetricKey, SymmetricKey
+from mkm.crypto import PublicKey, PrivateKey
 
 from .plain import PlainKey, PlainKeyFactory
 from .aes import AESKey, AESKeyFactory

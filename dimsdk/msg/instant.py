@@ -31,13 +31,14 @@
 import weakref
 from typing import Optional, List
 
-from dimp import utf8_decode
+from mkm.format import utf8_decode
+
 from dimp import TransportableData
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import InstantMessage, SecureMessage
-from dimp.dkd import InstantMessageDelegate
-from dimp.msg import BaseMessage
+from dimp import InstantMessageDelegate
+from dimp import BaseMessage
 
 
 class InstantMessagePacker:

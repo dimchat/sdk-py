@@ -107,7 +107,7 @@ class U(StringCoder):
         return data.decode('utf-8')
 
 
-def register_data_coders():
+def register_base_coders():
     # Base64 coding
     Base64.coder = B64()
     # Base58 coding

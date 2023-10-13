@@ -45,7 +45,7 @@ class AESKey(BaseSymmetricKey):
     """ AES Key """
 
     def __init__(self, key: Dict[str, Any]):
-        super().__init__(key=key)
+        super().__init__(key)
         # check key data
         base64 = self.get('data')
         if base64 is None or len(base64) == 0:
@@ -176,8 +176,8 @@ class AESKeyFactory(SymmetricKeyFactory):
     # Override
     def generate_symmetric_key(self) -> Optional[SymmetricKey]:
         key = {'algorithm': SymmetricKey.AES}
-        return AESKey(key=key)
+        return AESKey(key)
 
     # Override
     def parse_symmetric_key(self, key: dict) -> Optional[SymmetricKey]:
-        return AESKey(key=key)
+        return AESKey(key)
