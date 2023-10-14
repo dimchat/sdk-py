@@ -61,9 +61,8 @@ class TwinsHelper:
     #   Convenient responding
     #
 
-    # protected
-    def respond_receipt(self, text: str, envelope: Envelope, content: Optional[Content],
-                        extra: Optional[Dict]) -> List[ReceiptCommand]:
+    def _respond_receipt(self, text: str, envelope: Envelope, content: Optional[Content],
+                         extra: Optional[Dict] = None) -> List[ReceiptCommand]:
         return [
             # create base receipt command with text, original envelope, serial number & group ID
             self.create_receipt(text=text, envelope=envelope, content=content, extra=extra)

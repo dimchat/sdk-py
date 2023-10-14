@@ -109,14 +109,14 @@ class BTCMeta(BaseMeta):
     # Override
     def generate_address(self, network: int = None) -> Address:
         assert self.type in [MetaType.BTC, MetaType.ExBTC], 'meta version error: %d' % self.type
-        cached = self.__address
-        if cached is None or cached.type != network:
+        address = self.__address
+        if address is None or address.type != network:
             # TODO: compress public key?
             key = self.public_key
             data = key.data
             # generate and cache it
-            self.__address = cached = BTCAddress.from_data(data, network=network)
-        return cached
+            self.__address = address = BTCAddress.from_data(data, network=network)
+        return address
 
 
 """
@@ -147,14 +147,14 @@ class ETHMeta(BaseMeta):
     def generate_address(self, network: int = None) -> Address:
         assert self.type in [MetaType.ETH, MetaType.ExETH], 'meta version error: %d' % self.type
         assert network == EntityType.USER, 'ETH address type error: %d' % network
-        cached = self.__address
-        if cached is None:  # or cached.type != network:
+        address = self.__address
+        if address is None:  # or address.type != network:
             # 64 bytes key data without prefix 0x04
             key = self.public_key
             data = key.data
             # generate and cache it
-            self.__address = cached = ETHAddress.from_data(data)
-        return cached
+            self.__address = address = ETHAddress.from_data(data)
+        return address
 
 
 class GeneralMetaFactory(MetaFactory):
@@ -197,7 +197,7 @@ class GeneralMetaFactory(MetaFactory):
     # Override
     def parse_meta(self, meta: dict) -> Optional[Meta]:
         gf = AccountFactoryManager.general_factory
-        version = gf.get_meta_type(meta=meta)
+        version = gf.get_meta_type(meta=meta, default=0)
         if version == MetaType.MKM:
             # MKM
             out = DefaultMeta(meta=meta)

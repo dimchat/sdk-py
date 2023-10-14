@@ -63,7 +63,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
         meta = self.facebook.meta(identifier=identifier)
         if meta is None:
             text = 'Meta not found.'
-            return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+            return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Meta not found: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -83,7 +83,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
             return errors
         # 2. success
         text = 'Meta received.'
-        return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+        return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
             'template': 'Meta received: ${ID}.',
             'replacements': {
                 'ID': str(identifier),
@@ -96,7 +96,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
         # check meta
         if not self._check_meta(meta=meta, identifier=identifier):
             text = 'Meta not valid.'
-            return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+            return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Meta not valid: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -104,7 +104,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
             })
         elif not self.facebook.save_meta(meta=meta, identifier=identifier):
             text = 'Meta not accepted.'
-            return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+            return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Meta not accepted: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -138,7 +138,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             return self._put_doc(doc, identifier=identifier, content=content, envelope=r_msg.envelope)
         # error
         text = 'Document ID not match.'
-        return self.respond_receipt(text=text, content=content, envelope=r_msg.envelope, extra={
+        return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope, extra={
             'template': 'Document ID not match: ${ID}.',
             'replacements': {
                 'ID': str(identifier),
@@ -151,7 +151,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         doc = facebook.document(identifier=identifier, doc_type=doc_type)
         if doc is None:
             text = 'Document not found.'
-            return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+            return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Document not found: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -172,7 +172,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             meta = facebook.meta(identifier=identifier)
             if meta is None:
                 text = 'Meta not found.'
-                return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+                return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                     'template': 'Meta not found: ${ID}.',
                     'replacements': {
                         'ID': str(identifier),
@@ -191,7 +191,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             return errors
         # 3. success
         text = 'Document received.'
-        return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+        return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
             'template': 'Document received: ${ID}.',
             'replacements': {
                 'ID': str(identifier),
@@ -205,7 +205,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         if not self._check_document(doc, meta=meta):
             # document error
             text = 'Document not accepted.'
-            return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+            return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Document not accepted: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),
@@ -214,7 +214,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         elif not self.facebook.save_document(document=doc):
             # document expired
             text = 'Document not changed.'
-            return self.respond_receipt(text=text, content=content, envelope=envelope, extra={
+            return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Document not changed: ${ID}.',
                 'replacements': {
                     'ID': str(identifier),

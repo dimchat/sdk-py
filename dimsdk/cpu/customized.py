@@ -96,7 +96,7 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         :return: None on app ID matched
         """
         text = 'Content not support.'
-        return self.respond_receipt(text=text, content=content, envelope=msg.envelope, extra={
+        return self._respond_receipt(text=text, content=content, envelope=msg.envelope, extra={
             'template': 'Customized content (app: ${app}) not support yet!',
             'replacements': {
                 'app': app,
@@ -116,7 +116,7 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         app = content.application
         mod = content.module
         text = 'Content not support.'
-        return self.respond_receipt(text=text, content=content, envelope=msg.envelope, extra={
+        return self._respond_receipt(text=text, content=content, envelope=msg.envelope, extra={
             'template': 'Customized content (app: ${app}, mod: ${mod}, act: ${act}) not support yet!',
             'replacements': {
                 'app': app,

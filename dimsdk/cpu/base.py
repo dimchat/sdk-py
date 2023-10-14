@@ -68,7 +68,7 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # override to process this content
         text = 'Content not support.'
-        return self.respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
+        return self._respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
             'template': 'Content (type: ${type}) not support yet!',
             'replacements': {
                 'type': content.type,
@@ -86,7 +86,7 @@ class BaseCommandProcessor(BaseContentProcessor):
     def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
         text = 'Command not support.'
-        return self.respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
+        return self._respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
             'template': 'Command (name: ${command}) not support yet!',
             'replacements': {
                 'command': content.cmd,
