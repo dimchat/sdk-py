@@ -31,7 +31,10 @@
 from .instant import InstantMessagePacker
 from .secure import SecureMessagePacker
 from .reliable import ReliableMessagePacker
+
 from .factory import MessageFactory
+
+from .helper import MessageHelper
 
 
 __all__ = [
@@ -39,6 +42,9 @@ __all__ = [
     'InstantMessagePacker',
     'SecureMessagePacker',
     'ReliableMessagePacker',
+
     'MessageFactory',
+
+    'MessageHelper',
 
 ]

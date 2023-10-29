@@ -74,8 +74,16 @@ class ECCPublicKey(BasePublicKey):
         if self.__data is None:
             ecc_key = self.ecc_key
             assert ecc_key is not None, 'ecc key error: %s' % self
-            self.__data = ecc_key.to_string(encoding='uncompressed')
+            if self.compressed:
+                encoding = 'compressed'
+            else:
+                encoding = 'uncompressed'
+            self.__data = ecc_key.to_string(encoding=encoding)
         return self.__data
+
+    @property
+    def compressed(self) -> bool:
+        return self.get_bool(key='compressed', default=False)
 
     @property
     def size(self) -> int:

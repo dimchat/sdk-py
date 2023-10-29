@@ -40,8 +40,9 @@ from typing import Optional, List
 
 from mkm.types import Converter
 
-from dimp import EntityType, ID, Meta, Document, Visa
 from dimp import ANYWHERE, EVERYWHERE
+from dimp import EntityType, ID, Meta, Document, Visa
+from dimp import DocumentHelper
 from dimp import User, UserDataSource
 from dimp import Identifier, BaseUser, BaseGroup
 
@@ -90,7 +91,7 @@ class Station(User):
 
     def reload(self):
         """ Reload station info: host & port, SP ID """
-        doc = self.document()
+        doc = self.profile
         if doc is not None:
             host = doc.get_property(key='host')
             if host is not None:
@@ -101,6 +102,11 @@ class Station(User):
             isp = doc.get_property(key='ISP')
             if isp is not None:
                 self.__isp = ID.parse(identifier=isp)
+
+    @property
+    def profile(self) -> Optional[Document]:
+        """ Station Document """
+        return DocumentHelper.last_document(documents=self.documents)
 
     #
     #   Server
@@ -154,9 +160,9 @@ class Station(User):
     def meta(self) -> Meta:
         return self.__user.meta
 
-    # Override
-    def document(self, doc_type: str = '*') -> Optional[Document]:
-        return self.__user.document(doc_type=doc_type)
+    @property  # Override
+    def documents(self) -> List[Document]:
+        return self.__user.documents
 
     #
     #   User
@@ -202,8 +208,13 @@ class ServiceProvider(BaseGroup):
         assert identifier.type == EntityType.ISP, 'Service Provider ID type error: %s' % identifier
 
     @property
+    def profile(self) -> Optional[Document]:
+        """ Provider Document """
+        return DocumentHelper.last_document(documents=self.documents)
+
+    @property
     def stations(self) -> List:
-        doc = self.document()
+        doc = self.profile
         if doc is not None:
             array = doc.get_property(key='stations')
             if array is not None:

@@ -156,6 +156,8 @@ __all__ = [
     'User', 'UserDataSource', 'BaseUser',
     'Group', 'GroupDataSource', 'BaseGroup',
 
+    'DocumentHelper', 'BroadcastHelper',  # 'thanos',
+
     #
     #   Protocol core
     #
@@ -216,7 +218,7 @@ __all__ = [
     #
 
     'InstantMessagePacker', 'SecureMessagePacker', 'ReliableMessagePacker',
-    'MessageFactory',
+    'MessageFactory', 'MessageHelper',
 
     #
     #   Core extends

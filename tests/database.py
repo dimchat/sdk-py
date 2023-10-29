@@ -27,8 +27,8 @@ class Database(Facebook):
     def meta(self, identifier: ID) -> Optional[Meta]:
         pass
 
-    def document(self, identifier: ID, doc_type: str = '*') -> Optional[Document]:
-        pass
+    def documents(self, identifier: ID) -> List[Document]:
+        return []
 
     #
     #   UserDataSource

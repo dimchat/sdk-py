@@ -30,11 +30,11 @@
 
 import random
 import threading
-from typing import Optional, Union, Any, Dict
+from typing import Optional, Any, Dict
 
 from dimp import DateTime
 from dimp import ID
-from dimp import ContentType, Content, Envelope
+from dimp import Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import EnvelopeFactory, InstantMessageFactory, SecureMessageFactory, ReliableMessageFactory
 from dimp import MessageEnvelope, PlainMessage, EncryptedMessage, NetworkMessage
@@ -77,7 +77,7 @@ class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactor
     #
 
     # Override
-    def generate_serial_number(self, msg_type: Union[int, ContentType], now: DateTime) -> int:
+    def generate_serial_number(self, msg_type: int, now: DateTime) -> int:
         # because we must make sure all messages in a same chat box won't have
         # same serial numbers, so we can't use time-related numbers, therefore
         # the best choice is a totally random number, maybe.

@@ -35,6 +35,7 @@ from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import Packer
 
 from .core import TwinsHelper
+from .msg import MessageHelper
 from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
 
 from .facebook import Facebook
@@ -165,23 +166,28 @@ class MessagePacker(TwinsHelper, Packer):
         #       'P' -> 'visa'
         return ReliableMessage.parse(msg=dictionary)
 
-    def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        # TODO: make sure sender's meta exists before verifying message
-        facebook = self.facebook
+    def _check_attachments(self, msg: ReliableMessage) -> bool:
+        """ Check meta & visa """
         sender = msg.sender
         # [Meta Protocol]
-        meta = msg.meta
+        meta = MessageHelper.get_meta(msg=msg)
         if meta is not None:
-            facebook.save_meta(meta=meta, identifier=sender)
+            self.facebook.save_meta(meta=meta, identifier=sender)
         # [Visa Protocol]
-        visa = msg.visa
+        visa = MessageHelper.get_visa(msg=msg)
         if visa is not None:
-            facebook.save_document(document=visa)
+            self.facebook.save_document(document=visa)
         #
         # NOTICE: check [Visa Protocol] before calling this
-        #       make sure the sender's meta(visa) exists
-        #       (do it by application)
+        #         make sure the sender's meta(visa) exists
+        #         (do it by application)
         #
+        return True
+
+    def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
+        # make sure sender's meta exists before verifying message
+        if not self._check_attachments(msg=msg):
+            return None
         assert len(msg.signature) > 0, 'message signature cannot be empty: %s' % msg
         # verify 'data' with 'signature'
         return self.reliable_packer.verify_message(msg=msg)

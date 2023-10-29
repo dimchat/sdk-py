@@ -131,8 +131,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         doc = content.document
         if doc is None:
             # query entity document for ID
-            doc_type = content.get_str(key='doc_type', default='*')
-            return self._get_doc(identifier=identifier, doc_type=doc_type, content=content, envelope=r_msg.envelope)
+            return self._get_documents(identifier=identifier, content=content, envelope=r_msg.envelope)
         elif identifier == doc.identifier:
             # received a document for ID
             return self._put_doc(doc, identifier=identifier, content=content, envelope=r_msg.envelope)
@@ -146,10 +145,11 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         })
 
     # private
-    def _get_doc(self, identifier: ID, doc_type: str, content: DocumentCommand, envelope: Envelope) -> List[Content]:
+    def _get_documents(self, identifier: ID, content: DocumentCommand, envelope: Envelope) -> List[Content]:
         facebook = self.facebook
-        doc = facebook.document(identifier=identifier, doc_type=doc_type)
-        if doc is None:
+        documents = facebook.documents(identifier=identifier)
+        count = 0 if documents is None else len(documents)
+        if count == 0:
             text = 'Document not found.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Document not found: ${ID}.',
@@ -159,9 +159,14 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             })
         # document got
         meta = facebook.meta(identifier=identifier)
-        return [
-            DocumentCommand.response(document=doc, meta=meta, identifier=identifier)
-        ]
+        # respond first document with meta
+        command = DocumentCommand.response(identifier=identifier, meta=meta, document=documents[0])
+        responses = [command]
+        for i in range(1, count):
+            # respond other documents
+            command = DocumentCommand.response(identifier=identifier, meta=meta, document=documents[i])
+            responses.append(command)
+        return responses
 
     # private
     def _put_doc(self, doc: Document, identifier: ID, content: DocumentCommand, envelope: Envelope) -> List[Content]:
