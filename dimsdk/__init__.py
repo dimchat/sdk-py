@@ -43,8 +43,10 @@ from dimp import *
 from .mkm import *
 from .msg import *
 from .core import *
+from .utils import *
 
 from .ans import AddressNameService
+from .archivist import Archivist
 from .delegate import CipherKeyDelegate
 from .facebook import Facebook
 from .messenger import Messenger
@@ -236,10 +238,17 @@ __all__ = [
     'register_message_factories', 'register_all_factories',
 
     #
+    #   Utils
+    #
+    'FrequencyChecker',
+    'RecentTimeChecker',
+
+    #
     #   Extends
     #
 
     'AddressNameService', 'CipherKeyDelegate',
+    'Archivist',
     'Facebook', 'Messenger',
     'MessageProcessor', 'MessagePacker',
 

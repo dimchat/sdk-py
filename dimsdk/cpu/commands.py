@@ -32,6 +32,7 @@
 from typing import Optional, List
 
 from dimp import ID, Meta, Document
+from dimp import DocumentHelper
 from dimp import ReliableMessage
 from dimp import Envelope, Content
 from dimp import MetaCommand, DocumentCommand
@@ -158,6 +159,25 @@ class DocumentCommandProcessor(MetaCommandProcessor):
                 }
             })
         # document got
+        query_time = content.last_time
+        if query_time is not None:
+            # check last document time
+            last = DocumentHelper.last_document(documents=documents)
+            assert last is not None, 'should not happen'
+            last_time = last.time
+            if last_time is None:
+                assert False, 'document error: %s' % last
+                pass
+            elif not last_time.after(query_time):
+                # document not updated
+                text = 'Document not updated.'
+                return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
+                    'template': 'Document not updated: ${ID}, last time: ${time}.',
+                    'replacements': {
+                        'ID': str(identifier),
+                        'time': last_time.timestamp,
+                    }
+                })
         meta = facebook.meta(identifier=identifier)
         # respond first document with meta
         command = DocumentCommand.response(identifier=identifier, meta=meta, document=documents[0])

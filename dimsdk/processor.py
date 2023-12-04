@@ -28,6 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
+from abc import abstractmethod
 from typing import List, Optional
 
 from dimp import Content, Envelope
@@ -68,6 +69,7 @@ class MessageProcessor(TwinsHelper, Processor):
         return GeneralContentProcessorFactory(facebook=facebook, messenger=messenger, creator=creator)
 
     # protected
+    @abstractmethod
     def _create_creator(self) -> ContentProcessorCreator:
         """ Override for creating customized CPUs """
         raise NotImplemented

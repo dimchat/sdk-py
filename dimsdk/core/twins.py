@@ -50,11 +50,11 @@ class TwinsHelper:
         self.__messenger = weakref.ref(messenger)
 
     @property
-    def facebook(self) -> Barrack:
+    def facebook(self) -> Optional[Barrack]:
         return self.__facebook()
 
     @property
-    def messenger(self) -> Transceiver:
+    def messenger(self) -> Optional[Transceiver]:
         return self.__messenger()
 
     #

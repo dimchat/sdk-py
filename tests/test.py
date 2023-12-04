@@ -13,12 +13,12 @@ import unittest
 from dimsdk import *
 from plugins.dimplugins import *
 
-from tests.database import Database
+from tests.database import CommonFacebook
 
 register_all_factories()
 register_plugins()
 
-g_facebook = Database()
+g_facebook = CommonFacebook()
 
 moki_id = ID.parse(identifier='moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
 hulk_id = ID.parse(identifier='hulk@4YeVEN3aUnvC1DNUufCq1bs9zoBSJTzVEj')
