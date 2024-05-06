@@ -58,11 +58,11 @@ class Facebook(Barrack, ABC):
         raise NotImplemented
 
     # Override
-    def create_user(self, identifier: ID) -> Optional[User]:
+    async def create_user(self, identifier: ID) -> Optional[User]:
         assert identifier.is_user, 'user ID error: %s' % identifier
         # check visa key
         if not identifier.is_broadcast:
-            if self.public_key_for_encryption(identifier=identifier) is None:
+            if await self.public_key_for_encryption(identifier=identifier) is None:
                 # assert False, 'visa.key not found: %s' % identifier
                 return None
             #
@@ -78,11 +78,11 @@ class Facebook(Barrack, ABC):
         return BaseUser(identifier=identifier)
 
     # Override
-    def create_group(self, identifier: ID) -> Optional[Group]:
+    async def create_group(self, identifier: ID) -> Optional[Group]:
         assert identifier.is_group, 'group ID error: %s' % identifier
         # check members
         if not identifier.is_broadcast:
-            members = self.members(identifier=identifier)
+            members = await self.get_members(identifier=identifier)
             if len(members) == 0:
                 # assert False, 'group members not found: %s' % identifier
                 return None
@@ -99,7 +99,7 @@ class Facebook(Barrack, ABC):
 
     @property
     @abstractmethod
-    def local_users(self) -> List[User]:
+    async def local_users(self) -> List[User]:
         """
         Get all local users (for decrypting received message)
 
@@ -107,9 +107,9 @@ class Facebook(Barrack, ABC):
         """
         raise NotImplemented
 
-    def select_user(self, receiver: ID) -> Optional[User]:
+    async def select_user(self, receiver: ID) -> Optional[User]:
         """ Select local user for receiver """
-        users = self.local_users
+        users = await self.local_users
         if len(users) == 0:
             assert False, 'local users should not be empty'
             # return None
@@ -129,14 +129,14 @@ class Facebook(Barrack, ABC):
         assert receiver.is_group, 'receiver error: %s' % receiver
         # the messenger will check group info before decrypting message,
         # so we can trust that the group's meta & members MUST exist here.
-        members = self.members(identifier=receiver)
+        members = await self.get_members(identifier=receiver)
         assert len(members) > 0, 'members not found: %s' % receiver
         for item in users:
             if item.identifier in members:
                 # DISCUSS: set this item to be current user?
                 return item
 
-    def save_meta(self, meta: Meta, identifier: ID) -> bool:
+    async def save_meta(self, meta: Meta, identifier: ID) -> bool:
         if meta.valid and meta.match_identifier(identifier=identifier):
             # meta ok
             pass
@@ -144,20 +144,20 @@ class Facebook(Barrack, ABC):
             # assert False, 'meta not valid: %s' % identifier
             return False
         # check old meta
-        old = self.meta(identifier=identifier)
+        old = await self.get_meta(identifier=identifier)
         if old is not None:
             # assert meta == old, 'meta should not changed'
             return True
         # meta not exists yet, save it
         db = self.archivist
-        return db.save_meta(meta=meta, identifier=identifier)
+        return await db.save_meta(meta=meta, identifier=identifier)
 
-    def save_document(self, document: Document) -> bool:
+    async def save_document(self, document: Document) -> bool:
         identifier = document.identifier
         # assert identifier is not None, 'document error: %s' % document
         if not document.valid:
             # try to verify
-            meta = self.meta(identifier=identifier)
+            meta = await self.get_meta(identifier=identifier)
             if meta is None:
                 # assert False, 'meta not found: %s' % identifier
                 return False
@@ -171,35 +171,35 @@ class Facebook(Barrack, ABC):
         if doc_type is None:
             doc_type = '*'
         # check old documents with type
-        all_documents = self.documents(identifier=identifier)
+        all_documents = await self.get_documents(identifier=identifier)
         old_doc = DocumentHelper.last_document(documents=all_documents, doc_type=doc_type)
         if old_doc is not None and DocumentHelper.is_expired(document, old_doc):
             # assert False, 'drop expired document: %s' % identifier
             return False
         # document ok, save it
         db = self.archivist
-        return db.save_document(document=document)
+        return await db.save_document(document=document)
 
     #
     #   EntityDataSource
     #
 
     # Override
-    def meta(self, identifier: ID) -> Optional[Meta]:
+    async def get_meta(self, identifier: ID) -> Optional[Meta]:
         # if identifier.is_broadcast:
         #     # broadcast ID has no meta
         #     return None
         db = self.archivist
-        info = db.meta(identifier=identifier)
-        db.check_meta(identifier=identifier, meta=info)
+        info = await db.get_meta(identifier=identifier)
+        await db.check_meta(identifier=identifier, meta=info)
         return info
 
     # Override
-    def documents(self, identifier: ID) -> List[Document]:
+    async def get_documents(self, identifier: ID) -> List[Document]:
         if identifier.is_broadcast:
             # broadcast ID has no documents
             return []
         db = self.archivist
-        docs = db.documents(identifier=identifier)
-        db.check_documents(identifier=identifier, documents=docs)
+        docs = await db.get_documents(identifier=identifier)
+        await db.check_documents(identifier=identifier, documents=docs)
         return docs

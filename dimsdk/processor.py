@@ -88,76 +88,76 @@ class MessageProcessor(TwinsHelper, Processor):
     #
 
     # Override
-    def process_package(self, data: bytes) -> List[bytes]:
+    async def process_package(self, data: bytes) -> List[bytes]:
         messenger = self.messenger
         # 1. deserialize message
-        msg = messenger.deserialize_message(data=data)
+        msg = await messenger.deserialize_message(data=data)
         if msg is None:
             # no valid message received
             return []
         # 2. process message
-        responses = messenger.process_reliable_message(msg=msg)
+        responses = await messenger.process_reliable_message(msg=msg)
         if len(responses) == 0:
             # nothing to respond
             return []
         # 3. serialize messages
         packages = []
         for res in responses:
-            pack = messenger.serialize_message(msg=res)
+            pack = await messenger.serialize_message(msg=res)
             if pack is not None:
                 packages.append(pack)
         return packages
 
     # Override
-    def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
+    async def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
         # TODO: override to check broadcast message before calling it
         messenger = self.messenger
         # 1. verify message
-        s_msg = messenger.verify_message(msg=msg)
+        s_msg = await messenger.verify_message(msg=msg)
         if s_msg is None:
             # TODO: suspend and waiting for sender's meta if not exists
             return []
         # 2. process message
-        responses = messenger.process_secure_message(msg=s_msg, r_msg=msg)
+        responses = await messenger.process_secure_message(msg=s_msg, r_msg=msg)
         if len(responses) == 0:
             # nothing to respond
             return []
         # 3. sign message
         messages = []
         for res in responses:
-            signed = messenger.sign_message(msg=res)
+            signed = await messenger.sign_message(msg=res)
             if signed is not None:
                 messages.append(signed)
         return messages
         # TODO: override to deliver to the receiver when catch exception "receiver error ..."
 
     # Override
-    def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
+    async def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
         messenger = self.messenger
         # 1. decrypt message
-        i_msg = messenger.decrypt_message(msg=msg)
+        i_msg = await messenger.decrypt_message(msg=msg)
         if i_msg is None:
             # cannot decrypt this message, not for you?
             # delivering message to other receiver?
             return []
         # 2. process message
-        responses = messenger.process_instant_message(msg=i_msg, r_msg=r_msg)
+        responses = await messenger.process_instant_message(msg=i_msg, r_msg=r_msg)
         if len(responses) == 0:
             # nothing to respond
             return []
         # 3. encrypt messages
         messages = []
         for res in responses:
-            encrypted = messenger.encrypt_message(msg=res)
+            encrypted = await messenger.encrypt_message(msg=res)
             if encrypted is not None:
                 messages.append(encrypted)
         return messages
 
     # Override
-    def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
+    async def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
         messenger = self.messenger
         # 1. process content from sender
-        responses = messenger.process_content(content=msg.content, r_msg=r_msg)
+        responses = await messenger.process_content(content=msg.content, r_msg=r_msg)
         if len(responses) == 0:
             # nothing to respond
             return []
@@ -165,7 +165,7 @@ class MessageProcessor(TwinsHelper, Processor):
         sender = msg.sender
         receiver = msg.receiver
         facebook = self.facebook
-        user = facebook.select_user(receiver=receiver)
+        user = await facebook.select_user(receiver=receiver)
         if user is None:
             # assert False, 'receiver error: %s' % receiver
             return []
@@ -181,7 +181,7 @@ class MessageProcessor(TwinsHelper, Processor):
         return messages
 
     # Override
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # TODO: override to check group
         cpu = self.get_processor(content=content)
         if cpu is None:

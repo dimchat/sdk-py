@@ -72,7 +72,7 @@ class Archivist(EntityDataSource, ABC):
 
     # protected
     # noinspection PyMethodMayBeStatic
-    def needs_query_meta(self, identifier: ID, meta: Optional[Meta]) -> bool:
+    async def needs_query_meta(self, identifier: ID, meta: Optional[Meta]) -> bool:
         """ check whether need to query meta """
         if identifier.is_broadcast:
             # broadcast entity has no meta to query
@@ -90,7 +90,7 @@ class Archivist(EntityDataSource, ABC):
         return self.__last_document_times.set_last_time(key=identifier, last_time=last_time)
 
     # protected
-    def needs_query_documents(self, identifier: ID, documents: List[Document]) -> bool:
+    async def needs_query_documents(self, identifier: ID, documents: List[Document]) -> bool:
         """ check whether need to query documents """
         if identifier.is_broadcast:
             # broadcast entity has no document to query
@@ -101,12 +101,12 @@ class Archivist(EntityDataSource, ABC):
         elif len(documents) == 0:
             # documents not found, sure to query
             return True
-        current = self.get_last_document_time(identifier=identifier, documents=documents)
+        current = await self.get_last_document_time(identifier=identifier, documents=documents)
         return self.__last_document_times.is_expired(key=identifier, now=current)
 
     # protected
     # noinspection PyMethodMayBeStatic
-    def get_last_document_time(self, identifier: ID, documents: List[Document]) -> Optional[DateTime]:
+    async def get_last_document_time(self, identifier: ID, documents: List[Document]) -> Optional[DateTime]:
         if documents is None or len(documents) == 0:
             return None
         last_time: Optional[DateTime] = None
@@ -129,7 +129,7 @@ class Archivist(EntityDataSource, ABC):
         return self.__last_history_times.set_last_time(key=group, last_time=last_time)
 
     # protected
-    def needs_query_members(self, group: ID, members: List[ID]) -> bool:
+    async def needs_query_members(self, group: ID, members: List[ID]) -> bool:
         """ check whether need to query group members """
         if group.is_broadcast:
             # broadcast group has no members to query
@@ -140,19 +140,19 @@ class Archivist(EntityDataSource, ABC):
         elif len(members) == 0:
             # members not found, sure to query
             return True
-        current = self.get_last_group_history_time(group=group)
+        current = await self.get_last_group_history_time(group=group)
         return self.__last_history_times.is_expired(key=group, now=current)
 
     # protected
     @abstractmethod
-    def get_last_group_history_time(self, group: ID) -> Optional[DateTime]:
+    async def get_last_group_history_time(self, group: ID) -> Optional[DateTime]:
         raise NotImplemented
 
     #
     #   Checking
     #
 
-    def check_meta(self, identifier: ID, meta: Optional[Meta]) -> bool:
+    async def check_meta(self, identifier: ID, meta: Optional[Meta]) -> bool:
         """
         Check meta for querying
 
@@ -160,15 +160,15 @@ class Archivist(EntityDataSource, ABC):
         :param meta:       exists meta
         :return: true on querying
         """
-        if self.needs_query_meta(identifier=identifier, meta=meta):
+        if await self.needs_query_meta(identifier=identifier, meta=meta):
             # if not self.is_meta_query_expired(identifier=identifier):
             #     # query not expired yet
             #     return False
-            return self.query_meta(identifier=identifier)
+            return await self.query_meta(identifier=identifier)
         # no need to query meta again
         return False
 
-    def check_documents(self, identifier: ID, documents: List[Document]) -> bool:
+    async def check_documents(self, identifier: ID, documents: List[Document]) -> bool:
         """
         Check documents for querying/updating
 
@@ -176,15 +176,15 @@ class Archivist(EntityDataSource, ABC):
         :param documents:  exist documents
         :return: true on querying
         """
-        if self.needs_query_documents(identifier=identifier, documents=documents):
+        if await self.needs_query_documents(identifier=identifier, documents=documents):
             # if not self.is_documents_query_expired(identifier=identifier):
             #     # query not expired yet
             #     return False
-            return self.query_documents(identifier=identifier, documents=documents)
+            return await self.query_documents(identifier=identifier, documents=documents)
         # no need to update document now
         return False
 
-    def check_members(self, group: ID, members: List[ID]) -> bool:
+    async def check_members(self, group: ID, members: List[ID]) -> bool:
         """
         Check group members for querying
 
@@ -192,11 +192,11 @@ class Archivist(EntityDataSource, ABC):
         :param members: exist members
         :return: true on querying
         """
-        if self.needs_query_members(group=group, members=members):
+        if await self.needs_query_members(group=group, members=members):
             # if not self.is_members_query_expired(group=group):
             #     # query not expired yet
             #     return False
-            return self.query_members(group=group, members=members)
+            return await self.query_members(group=group, members=members)
         # no need to update group members now
         return False
 
@@ -205,7 +205,7 @@ class Archivist(EntityDataSource, ABC):
     #
 
     @abstractmethod
-    def query_meta(self, identifier: ID) -> bool:
+    async def query_meta(self, identifier: ID) -> bool:
         """
         Request for meta with entity ID
         (call 'isMetaQueryExpired()' before sending command)
@@ -216,7 +216,7 @@ class Archivist(EntityDataSource, ABC):
         raise NotImplemented
 
     @abstractmethod
-    def query_documents(self, identifier: ID, documents: List[Document]) -> bool:
+    async def query_documents(self, identifier: ID, documents: List[Document]) -> bool:
         """
         Request for documents with entity ID
         (call 'isDocumentQueryExpired()' before sending command)
@@ -228,7 +228,7 @@ class Archivist(EntityDataSource, ABC):
         raise NotImplemented
 
     @abstractmethod
-    def query_members(self, group: ID, members: List[ID]) -> bool:
+    async def query_members(self, group: ID, members: List[ID]) -> bool:
         """
         Request for group members with group ID
         (call 'isMembersQueryExpired()' before sending command)
@@ -244,7 +244,7 @@ class Archivist(EntityDataSource, ABC):
     #
 
     @abstractmethod
-    def save_meta(self, meta: Meta, identifier: ID) -> bool:
+    async def save_meta(self, meta: Meta, identifier: ID) -> bool:
         """
         Save meta for entity ID (must verify first)
 
@@ -255,7 +255,7 @@ class Archivist(EntityDataSource, ABC):
         raise NotImplemented
 
     @abstractmethod
-    def save_document(self, document: Document) -> bool:
+    async def save_document(self, document: Document) -> bool:
         """
         Save entity document with ID (must verify first)
 

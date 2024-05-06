@@ -65,7 +65,7 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         return transceiver
 
     # Override
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         # override to process this content
         text = 'Content not support.'
         return self._respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
@@ -83,7 +83,7 @@ class BaseCommandProcessor(BaseContentProcessor):
     """
 
     # Override
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, Command), 'command error: %s' % content
         text = 'Command not support.'
         return self._respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={

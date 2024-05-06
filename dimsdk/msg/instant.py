@@ -65,8 +65,8 @@ class InstantMessagePacker:
                               +----------+
     """
 
-    def encrypt_message(self, msg: InstantMessage, password: SymmetricKey,
-                        members: List[ID] = None) -> Optional[SecureMessage]:
+    async def encrypt_message(self, msg: InstantMessage, password: SymmetricKey,
+                              members: List[ID] = None) -> Optional[SecureMessage]:
         """
         1. Encrypt message, replace 'content' field with encrypted 'data'
         2. Encrypt group message, replace 'content' field with encrypted 'data'
@@ -82,12 +82,12 @@ class InstantMessagePacker:
         #
         #   1. Serialize 'message.content' to data (JsON / ProtoBuf / ...)
         #
-        body = transceiver.serialize_content(content=msg.content, key=password, msg=msg)
+        body = await transceiver.serialize_content(content=msg.content, key=password, msg=msg)
         assert len(body) > 0, 'failed to serialize content: %s' % msg.content
         #
         #   2. Encrypt content data to 'message.data' with symmetric key
         #
-        ciphertext = transceiver.encrypt_content(data=body, key=password, msg=msg)
+        ciphertext = await transceiver.encrypt_content(data=body, key=password, msg=msg)
         assert len(ciphertext) > 0, 'failed to encrypt content with key: %s' % password
         #
         #   3. Encode 'message.data' to String (Base64)
@@ -108,7 +108,7 @@ class InstantMessagePacker:
         #
         #   4. Serialize message key to data (JsON / ProtoBuf / ...)
         #
-        pwd = transceiver.serialize_key(key=password, msg=msg)
+        pwd = await transceiver.serialize_key(key=password, msg=msg)
         if pwd is None:
             # A) broadcast message has no key
             # B) reused key
@@ -121,7 +121,7 @@ class InstantMessagePacker:
             #
             #   5. Encrypt key data to 'message.key/keys' with receiver's public key
             #
-            encrypted_key = transceiver.encrypt_key(data=pwd, receiver=receiver, msg=msg)
+            encrypted_key = await transceiver.encrypt_key(data=pwd, receiver=receiver, msg=msg)
             if encrypted_key is None:
                 # public key for encryption not found
                 # TODO: suspend this message for waiting receiver's visa
@@ -139,7 +139,7 @@ class InstantMessagePacker:
                 #
                 #   5. Encrypt key data to 'message.keys' with member's public key
                 #
-                encrypted_key = transceiver.encrypt_key(data=pwd, receiver=receiver, msg=msg)
+                encrypted_key = await transceiver.encrypt_key(data=pwd, receiver=receiver, msg=msg)
                 if encrypted_key is None:
                     # public key for member not found
                     # TODO: suspend this message for waiting member's visa

@@ -7,7 +7,7 @@
 
     Unit test for DIM-SDK
 """
-
+import asyncio
 import unittest
 
 from dimsdk import *
@@ -89,7 +89,7 @@ class CATestCase(unittest.TestCase):
     def test3_key(self):
         print('\n---------------- %s' % self)
 
-        # moki_meta = g_immortals.meta(identifier=moki_id)
+        # moki_meta = g_immortals.get_meta(identifier=moki_id)
         # moki_pk = moki_meta.key
         # common['key'] = moki_pk
         # print('pubic key: ', common['key'])
@@ -106,7 +106,7 @@ class CATestCase(unittest.TestCase):
         # common['info'] = CAData(info)
         # print_data(common['info'])
         #
-        # moki = g_immortals.user(identifier=moki_id)
+        # moki = g_immortals.get_user(identifier=moki_id)
         #
         # string = json.dumps(common['info']).encode('utf-8')
         # signature = moki.sign(string)
@@ -124,11 +124,14 @@ class EntityTestCase(unittest.TestCase):
 
     def test1_immortals(self):
         print('\n---------------- %s' % self)
+        asyncio.run(self.__check_user())
 
+    # noinspection PyMethodMayBeStatic
+    async def __check_user(self):
         id1 = ID.parse('moki@4WDfe3zZ4T7opFSi3iDAKiuTnUHjxmXekk')
-        meta = g_facebook.meta(identifier=id1)
+        meta = await g_facebook.get_meta(identifier=id1)
         if meta is not None:
-            moki = g_facebook.user(identifier=id1)
+            moki = await g_facebook.get_user(identifier=id1)
             print('moki: ', moki)
 
 

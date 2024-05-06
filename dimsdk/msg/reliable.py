@@ -62,7 +62,7 @@ class ReliableMessagePacker:
     """
 
     @abstractmethod
-    def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
+    async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         """
         Verify 'data' and 'signature' field with sender's public key
 
@@ -89,7 +89,7 @@ class ReliableMessagePacker:
         #
         #   2. Verify the message data and signature with sender's public key
         #
-        ok = transceiver.verify_data_signature(data=ciphertext, signature=signature, msg=msg)
+        ok = await transceiver.verify_data_signature(data=ciphertext, signature=signature, msg=msg)
         if not ok:
             # assert False, 'message signature not match: %s => %s, %s'\
             #               % (msg.sender, msg.receiver, msg.group)

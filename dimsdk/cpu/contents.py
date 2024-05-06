@@ -45,14 +45,14 @@ class ForwardContentProcessor(BaseContentProcessor):
     """
 
     # Override
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ForwardContent), 'forward content error: %s' % content
         # call messenger to process it
         messenger = self.messenger
         secrets = content.secrets
         responses = []
         for item in secrets:
-            results = messenger.process_reliable_message(msg=item)
+            results = await messenger.process_reliable_message(msg=item)
             if len(results) == 1:
                 res = ForwardContent.create(message=results[0])
             else:
@@ -69,14 +69,14 @@ class ArrayContentProcessor(BaseContentProcessor):
     """
 
     # Override
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, ArrayContent), 'forward content error: %s' % content
         # call messenger to process it
         messenger = self.messenger
         contents = content.contents
         responses = []
         for item in contents:
-            results = messenger.process_content(content=item, r_msg=r_msg)
+            results = await messenger.process_content(content=item, r_msg=r_msg)
             if len(results) == 1:
                 res = results[0]
             else:

@@ -70,108 +70,108 @@ class Messenger(Transceiver, Packer, Processor, ABC):
     #   Interfaces for Cipher Key
     #
 
-    def get_encrypt_key(self, msg: InstantMessage) -> Optional[SymmetricKey]:
+    async def get_encrypt_key(self, msg: InstantMessage) -> Optional[SymmetricKey]:
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
         delegate = self.key_cache
-        return delegate.cipher_key(sender=sender, receiver=target, generate=True)
+        return await delegate.get_cipher_key(sender=sender, receiver=target, generate=True)
 
-    def get_decrypt_key(self, msg: SecureMessage) -> Optional[SymmetricKey]:
+    async def get_decrypt_key(self, msg: SecureMessage) -> Optional[SymmetricKey]:
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
         delegate = self.key_cache
-        return delegate.cipher_key(sender=sender, receiver=target, generate=False)
+        return await delegate.get_cipher_key(sender=sender, receiver=target, generate=False)
 
-    def cache_decrypt_key(self, key: SymmetricKey, msg: SecureMessage):
+    async def cache_decrypt_key(self, key: SymmetricKey, msg: SecureMessage):
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
         delegate = self.key_cache
-        return delegate.cache_cipher_key(key=key, sender=sender, receiver=target)
+        return await delegate.cache_cipher_key(key=key, sender=sender, receiver=target)
 
     #
     #   Interfaces for Packing Message
     #
 
     # Override
-    def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
+    async def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
         delegate = self.packer
-        return delegate.encrypt_message(msg=msg)
+        return await delegate.encrypt_message(msg=msg)
 
     # Override
-    def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
+    async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
         delegate = self.packer
-        return delegate.sign_message(msg=msg)
+        return await delegate.sign_message(msg=msg)
 
     # Override
-    def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
+    async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
         delegate = self.packer
-        return delegate.serialize_message(msg=msg)
+        return await delegate.serialize_message(msg=msg)
 
     # Override
-    def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
+    async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
         delegate = self.packer
-        return delegate.deserialize_message(data=data)
+        return await delegate.deserialize_message(data=data)
 
     # Override
-    def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
+    async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         delegate = self.packer
-        return delegate.verify_message(msg=msg)
+        return await delegate.verify_message(msg=msg)
 
     # Override
-    def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
+    async def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
         delegate = self.packer
-        return delegate.decrypt_message(msg=msg)
+        return await delegate.decrypt_message(msg=msg)
 
     #
     #   Interfaces for Processing Message
     #
 
     # Override
-    def process_package(self, data: bytes) -> List[bytes]:
+    async def process_package(self, data: bytes) -> List[bytes]:
         delegate = self.processor
-        return delegate.process_package(data=data)
+        return await delegate.process_package(data=data)
 
     # Override
-    def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
+    async def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
         delegate = self.processor
-        return delegate.process_reliable_message(msg=msg)
+        return await delegate.process_reliable_message(msg=msg)
 
     # Override
-    def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
+    async def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
         delegate = self.processor
-        return delegate.process_secure_message(msg=msg, r_msg=r_msg)
+        return await delegate.process_secure_message(msg=msg, r_msg=r_msg)
 
     # Override
-    def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
+    async def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
         delegate = self.processor
-        return delegate.process_instant_message(msg=msg, r_msg=r_msg)
+        return await delegate.process_instant_message(msg=msg, r_msg=r_msg)
 
     # Override
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         delegate = self.processor
-        return delegate.process_content(content=content, r_msg=r_msg)
+        return await delegate.process_content(content=content, r_msg=r_msg)
 
     #
     #   SecureMessageDelegate
     #
 
     # Override
-    def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
+    async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
         if data is None:
             # get key from cache with direction: sender -> receiver(group)
-            return self.get_decrypt_key(msg=msg)
+            return await self.get_decrypt_key(msg=msg)
         else:
-            return super().deserialize_key(data=data, msg=msg)
+            return await super().deserialize_key(data=data, msg=msg)
 
     # Override
-    def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
-        content = super().deserialize_content(data=data, key=key, msg=msg)
+    async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
+        content = await super().deserialize_content(data=data, key=key, msg=msg)
         # cache decrypt key when success
         if content is None:
             assert False, 'content error: %d' % len(data)
         else:
             # cache the key with direction: sender -> receiver(group)
-            self.cache_decrypt_key(key=key, msg=msg)
+            await self.cache_decrypt_key(key=key, msg=msg)
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         after deserialize content, this job should be do in subclass
         return content

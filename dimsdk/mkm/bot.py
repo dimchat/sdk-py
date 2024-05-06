@@ -47,13 +47,13 @@ class Bot(BaseUser):
         assert identifier.type == EntityType.BOT, 'Bot ID type error: %s' % identifier
 
     @property
-    def profile(self) -> Optional[Document]:
+    async def profile(self) -> Optional[Document]:
         """ Bot Document """
-        return self.visa
+        return await self.visa
 
     @property
-    def provider(self) -> Optional[ID]:
-        doc = self.profile
+    async def provider(self) -> Optional[ID]:
+        doc = await self.profile
         if doc is not None:
             icp = doc.get_property(key='ICP')
             return ID.parse(identifier=icp)

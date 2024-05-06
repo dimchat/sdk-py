@@ -63,7 +63,7 @@ class SecureMessagePacker:
     """
 
     @abstractmethod
-    def decrypt_message(self, msg: SecureMessage, receiver: ID) -> Optional[InstantMessage]:
+    async def decrypt_message(self, msg: SecureMessage, receiver: ID) -> Optional[InstantMessage]:
         """
         Decrypt message, replace encrypted 'data' with 'content' field
 
@@ -85,7 +85,7 @@ class SecureMessagePacker:
             #
             #   2. Decrypt 'message.key' with receiver's private key
             #
-            key_data = transceiver.decrypt_key(data=encrypted_key, receiver=receiver, msg=msg)
+            key_data = await transceiver.decrypt_key(data=encrypted_key, receiver=receiver, msg=msg)
             if key_data is None:
                 # A: my visa updated but the sender doesn't got the new one;
                 # B: key data error.
@@ -98,7 +98,7 @@ class SecureMessagePacker:
         #   3. Deserialize message key from data (JsON / ProtoBuf / ...)
         #      (if key is empty, means it should be reused, get it from key cache)
         #
-        password = transceiver.deserialize_key(data=key_data, msg=msg)
+        password = await transceiver.deserialize_key(data=key_data, msg=msg)
         if password is None:
             # A: key data is empty, and cipher key not found from local storage;
             # B: key data error.
@@ -115,7 +115,7 @@ class SecureMessagePacker:
         #
         #   5. Decrypt 'message.data' with symmetric key
         #
-        body = transceiver.decrypt_content(data=ciphertext, key=password, msg=msg)
+        body = await transceiver.decrypt_content(data=ciphertext, key=password, msg=msg)
         if body is None:
             # A: password is a reused key loaded from local storage, but it's expired;
             # B: key error.
@@ -127,7 +127,7 @@ class SecureMessagePacker:
         #
         #   6. Deserialize message content from data (JsON / ProtoBuf / ...)
         #
-        content = transceiver.deserialize_content(data=body, key=password, msg=msg)
+        content = await transceiver.deserialize_content(data=body, key=password, msg=msg)
         if content is None:
             # assert False, 'failed to deserialize content: %d byte(s) %s => %s, %s'\
             #               % (len(body), msg.sender, receiver, msg.group)
@@ -162,7 +162,7 @@ class SecureMessagePacker:
                               +----------+
     """
 
-    def sign_message(self, msg: SecureMessage) -> ReliableMessage:
+    async def sign_message(self, msg: SecureMessage) -> ReliableMessage:
         """
         Sign message.data, add 'signature' field
 
@@ -179,7 +179,7 @@ class SecureMessagePacker:
         #
         #   1. Sign 'message.data' with sender's private key
         #
-        signature = transceiver.sign_data(data=ciphertext, msg=msg)
+        signature = await transceiver.sign_data(data=ciphertext, msg=msg)
         assert len(signature) > 0, 'failed to sign message: %d byte(s) %s => %s, %s'\
                                    % (len(ciphertext), msg.sender, msg.receiver, msg.group)
         #

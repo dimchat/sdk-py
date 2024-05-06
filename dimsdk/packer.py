@@ -79,7 +79,7 @@ class MessagePacker(TwinsHelper, Packer):
     #
 
     # Override
-    def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
+    async def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
         # TODO: check receiver before calling this, make sure the visa.key exists;
         #       otherwise, suspend this message for waiting receiver's visa/meta;
         #       if receiver is a group, query all members' visa too!
@@ -100,7 +100,7 @@ class MessagePacker(TwinsHelper, Packer):
         #
         #   1. get message key with direction (sender -> receiver) or (sender -> group)
         #
-        password = self.messenger.get_encrypt_key(msg=msg)
+        password = await self.messenger.get_encrypt_key(msg=msg)
         assert password is not None, 'failed to get msg key: %s => %s, %s' % (msg.sender, receiver, msg.get('group'))
 
         #
@@ -108,15 +108,15 @@ class MessagePacker(TwinsHelper, Packer):
         #
         if receiver.is_group:
             # group message
-            members = self.facebook.members(identifier=receiver)
+            members = await self.facebook.get_members(identifier=receiver)
             assert len(members) > 0, 'group not ready: %s' % receiver
             # a station will never send group message, so here must be a client;
             # the client messenger should check the group's meta & members before encrypting,
             # so we can trust that the group members MUST exist here.
-            s_msg = self.instant_packer.encrypt_message(msg=msg, password=password, members=members)
+            s_msg = await self.instant_packer.encrypt_message(msg=msg, password=password, members=members)
         else:
             # personal message (or split group message)
-            s_msg = self.instant_packer.encrypt_message(msg=msg, password=password)
+            s_msg = await self.instant_packer.encrypt_message(msg=msg, password=password)
         if s_msg is None:
             # public key for encryption not found
             # TODO: suspend this message for waiting receiver's meta
@@ -131,13 +131,13 @@ class MessagePacker(TwinsHelper, Packer):
         return s_msg
 
     # Override
-    def sign_message(self, msg: SecureMessage) -> ReliableMessage:
+    async def sign_message(self, msg: SecureMessage) -> ReliableMessage:
         assert len(msg.data) > 0, 'message data cannot be empty: %s' % msg
         # sign 'data' by sender
-        return self.secure_packer.sign_message(msg=msg)
+        return await self.secure_packer.sign_message(msg=msg)
 
     # Override
-    def serialize_message(self, msg: ReliableMessage) -> bytes:
+    async def serialize_message(self, msg: ReliableMessage) -> bytes:
         js = json_encode(obj=msg.dictionary)
         return utf8_encode(string=js)
 
@@ -145,7 +145,7 @@ class MessagePacker(TwinsHelper, Packer):
     #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
     #
 
-    def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
+    async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
         js = utf8_decode(data=data)
         if js is None:
             # assert False, 'message data error: %d' % len(data)
@@ -166,17 +166,17 @@ class MessagePacker(TwinsHelper, Packer):
         #       'P' -> 'visa'
         return ReliableMessage.parse(msg=dictionary)
 
-    def _check_attachments(self, msg: ReliableMessage) -> bool:
+    async def _check_attachments(self, msg: ReliableMessage) -> bool:
         """ Check meta & visa """
         sender = msg.sender
         # [Meta Protocol]
         meta = MessageHelper.get_meta(msg=msg)
         if meta is not None:
-            self.facebook.save_meta(meta=meta, identifier=sender)
+            await self.facebook.save_meta(meta=meta, identifier=sender)
         # [Visa Protocol]
         visa = MessageHelper.get_visa(msg=msg)
         if visa is not None:
-            self.facebook.save_document(document=visa)
+            await self.facebook.save_document(document=visa)
         #
         # NOTICE: check [Visa Protocol] before calling this
         #         make sure the sender's meta(visa) exists
@@ -184,26 +184,26 @@ class MessagePacker(TwinsHelper, Packer):
         #
         return True
 
-    def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
+    async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         # make sure sender's meta exists before verifying message
-        if not self._check_attachments(msg=msg):
+        if not await self._check_attachments(msg=msg):
             return None
         assert len(msg.signature) > 0, 'message signature cannot be empty: %s' % msg
         # verify 'data' with 'signature'
-        return self.reliable_packer.verify_message(msg=msg)
+        return await self.reliable_packer.verify_message(msg=msg)
 
-    def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
+    async def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
         # TODO: check receiver before calling this, make sure you are the receiver,
         #       or you are a member of the group when this is a group message,
         #       so that you will have a private key (decrypt key) to decrypt it.
         facebook = self.facebook
         receiver = msg.receiver
-        user = facebook.select_user(receiver=receiver)
+        user = await facebook.select_user(receiver=receiver)
         if user is None:
             # not for you?
             raise LookupError('receiver error: %s, from %s, %s' % (receiver, msg.sender, msg.group))
         assert len(msg.data) > 0, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
         # decrypt 'data' to 'content'
-        return self.secure_packer.decrypt_message(msg=msg, receiver=user.identifier)
+        return await self.secure_packer.decrypt_message(msg=msg, receiver=user.identifier)
         # TODO: check top-secret message
         #       (do it by application)

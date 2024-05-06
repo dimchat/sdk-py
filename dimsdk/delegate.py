@@ -112,7 +112,7 @@ class CipherKeyDelegate(ABC):
             return group
 
     @abstractmethod
-    def cipher_key(self, sender: ID, receiver: ID, generate: bool = False) -> Optional[SymmetricKey]:
+    async def get_cipher_key(self, sender: ID, receiver: ID, generate: bool = False) -> Optional[SymmetricKey]:
         """
         Get cipher key for encrypt message from 'sender' to 'receiver'
 
@@ -124,7 +124,7 @@ class CipherKeyDelegate(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def cache_cipher_key(self, key: SymmetricKey, sender: ID, receiver: ID):
+    async def cache_cipher_key(self, key: SymmetricKey, sender: ID, receiver: ID):
         """
         Cache cipher key for reusing, with direction (from 'sender' to 'receiver')
 

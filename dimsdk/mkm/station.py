@@ -89,24 +89,28 @@ class Station(User):
         # check with inner user's ID
         return self.__user != other
 
-    def reload(self):
+    async def reload(self):
         """ Reload station info: host & port, SP ID """
-        doc = self.profile
+        doc = await self.profile
         if doc is not None:
             host = doc.get_property(key='host')
+            host = Converter.get_str(value=host, default=None)
             if host is not None:
-                self.__host = Converter.get_str(value=host, default=None)
+                self.__host = host
             port = doc.get_property(key='port')
-            if port is not None:
-                self.__port = Converter.get_int(value=port, default=0)
+            port = Converter.get_int(value=port, default=0)
+            if port > 0:
+                self.__port = port
             isp = doc.get_property(key='ISP')
+            isp = ID.parse(identifier=isp)
             if isp is not None:
-                self.__isp = ID.parse(identifier=isp)
+                self.__isp = isp
 
     @property
-    def profile(self) -> Optional[Document]:
+    async def profile(self) -> Optional[Document]:
         """ Station Document """
-        return DocumentHelper.last_document(documents=self.documents)
+        docs = await self.documents
+        return DocumentHelper.last_document(documents=docs)
 
     #
     #   Server
@@ -114,20 +118,17 @@ class Station(User):
 
     @property
     def host(self) -> str:
-        if self.__host is None:
-            self.reload()
+        """ Station IP """
         return self.__host
 
     @property
     def port(self) -> int:
-        if self.__port == 0:
-            self.reload()
+        """ Station Port """
         return self.__port
 
     @property
     def provider(self) -> Optional[ID]:
-        if self.__isp is None:
-            self.reload()
+        """ ISP ID, station group """
         return self.__isp
 
     #
@@ -157,48 +158,48 @@ class Station(User):
         self.__user.data_source = delegate
 
     @property  # Override
-    def meta(self) -> Meta:
-        return self.__user.meta
+    async def meta(self) -> Meta:
+        return await self.__user.meta
 
     @property  # Override
-    def documents(self) -> List[Document]:
-        return self.__user.documents
+    async def documents(self) -> List[Document]:
+        return await self.__user.documents
 
     #
     #   User
     #
 
     @property  # Override
-    def visa(self) -> Optional[Visa]:
-        return self.__user.visa
+    async def visa(self) -> Optional[Visa]:
+        return await self.__user.visa
 
     @property  # Override
-    def contacts(self) -> List[ID]:
-        return self.__user.contacts
+    async def contacts(self) -> List[ID]:
+        return await self.__user.contacts
 
     # Override
-    def verify(self, data: bytes, signature: bytes) -> bool:
-        return self.__user.verify(data=data, signature=signature)
+    async def verify(self, data: bytes, signature: bytes) -> bool:
+        return await self.__user.verify(data=data, signature=signature)
 
     # Override
-    def encrypt(self, data: bytes) -> bytes:
-        return self.__user.encrypt(data=data)
+    async def encrypt(self, data: bytes) -> bytes:
+        return await self.__user.encrypt(data=data)
 
     # Override
-    def sign(self, data: bytes) -> bytes:
-        return self.__user.sign(data=data)
+    async def sign(self, data: bytes) -> bytes:
+        return await self.__user.sign(data=data)
 
     # Override
-    def decrypt(self, data: bytes) -> Optional[bytes]:
-        return self.__user.decrypt(data=data)
+    async def decrypt(self, data: bytes) -> Optional[bytes]:
+        return await self.__user.decrypt(data=data)
 
     # Override
-    def sign_visa(self, visa: Visa) -> Visa:
-        return self.__user.sign_visa(visa=visa)
+    async def sign_visa(self, visa: Visa) -> Visa:
+        return await self.__user.sign_visa(visa=visa)
 
     # Override
-    def verify_visa(self, visa: Visa) -> bool:
-        return self.__user.verify_visa(visa=visa)
+    async def verify_visa(self, visa: Visa) -> bool:
+        return await self.__user.verify_visa(visa=visa)
 
 
 class ServiceProvider(BaseGroup):
@@ -208,13 +209,14 @@ class ServiceProvider(BaseGroup):
         assert identifier.type == EntityType.ISP, 'Service Provider ID type error: %s' % identifier
 
     @property
-    def profile(self) -> Optional[Document]:
+    async def profile(self) -> Optional[Document]:
         """ Provider Document """
-        return DocumentHelper.last_document(documents=self.documents)
+        docs = await self.documents
+        return DocumentHelper.last_document(documents=docs)
 
     @property
-    def stations(self) -> List:
-        doc = self.profile
+    async def stations(self) -> List:
+        doc = await self.profile
         if doc is not None:
             array = doc.get_property(key='stations')
             if array is not None:

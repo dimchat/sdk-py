@@ -50,7 +50,7 @@ class ContentProcessor(ABC):
     """
 
     @abstractmethod
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         """
         Process message content
 

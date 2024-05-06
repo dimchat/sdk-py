@@ -45,7 +45,8 @@ class CustomizedContentHandler(ABC):
     """
 
     @abstractmethod
-    def handle_action(self, act: str, sender: ID, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
+    async def handle_action(self, act: str, sender: ID,
+                            content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
         """
         Do your job
 
@@ -65,7 +66,7 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
     """
 
     # Override
-    def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, CustomizedContent), 'customized content error: %s' % content
         # 1. check app id
         app = content.application
@@ -82,7 +83,7 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         # 3. do the job
         act = content.action
         sender = r_msg.sender
-        return handler.handle_action(act, sender=sender, content=content, msg=r_msg)
+        return await handler.handle_action(act, sender=sender, content=content, msg=r_msg)
 
     # noinspection PyUnusedLocal
     def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[List[Content]]:
@@ -111,7 +112,8 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         return self
 
     # Override
-    def handle_action(self, act: str, sender: ID, content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
+    async def handle_action(self, act: str, sender: ID,
+                            content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
         """ Override for customized actions """
         app = content.application
         mod = content.module
