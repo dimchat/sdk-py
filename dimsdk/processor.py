@@ -188,5 +188,5 @@ class MessageProcessor(TwinsHelper, Processor):
             # default content processor
             cpu = self.get_content_processor(0)
             assert cpu is not None, 'default CPU not defined'
-        return cpu.process_content(content=content, r_msg=r_msg)
+        return await cpu.process_content(content=content, r_msg=r_msg)
         # TODO: override to filter the response
