@@ -34,7 +34,7 @@
 
 """
 
-from typing import List
+from typing import Optional, List
 
 from dimp import ReliableMessage
 from dimp import Content, Command
@@ -53,13 +53,13 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     """
 
     @property
-    def facebook(self) -> Facebook:
+    def facebook(self) -> Optional[Facebook]:
         barrack = super().facebook
         assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
         return barrack
 
     @property
-    def messenger(self) -> Messenger:
+    def messenger(self) -> Optional[Messenger]:
         transceiver = super().messenger
         assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
         return transceiver

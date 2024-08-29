@@ -137,10 +137,8 @@ class Facebook(Barrack, ABC):
                 return item
 
     async def save_meta(self, meta: Meta, identifier: ID) -> bool:
-        if meta.valid and meta.match_identifier(identifier=identifier):
-            # meta ok
-            pass
-        else:
+        ok = meta.valid and meta.match_identifier(identifier=identifier)
+        if not ok:
             # assert False, 'meta not valid: %s' % identifier
             return False
         # check old meta
@@ -154,17 +152,14 @@ class Facebook(Barrack, ABC):
 
     async def save_document(self, document: Document) -> bool:
         identifier = document.identifier
-        # assert identifier is not None, 'document error: %s' % document
+        assert identifier is not None, 'document error: %s' % document
         if not document.valid:
             # try to verify
             meta = await self.get_meta(identifier=identifier)
             if meta is None:
                 # assert False, 'meta not found: %s' % identifier
                 return False
-            elif document.verify(public_key=meta.public_key):
-                # document ok
-                pass
-            else:
+            elif not document.verify(public_key=meta.public_key):
                 # assert False, 'failed to verify document: %s' % identifier
                 return False
         doc_type = document.type

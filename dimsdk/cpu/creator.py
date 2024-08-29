@@ -42,6 +42,9 @@ from dimp import ContentType, Command
 from ..core import TwinsHelper
 from ..core import ContentProcessor, ContentProcessorCreator
 
+from ..facebook import Facebook
+from ..messenger import Messenger
+
 # from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
 
@@ -54,6 +57,18 @@ from .commands import DocumentCommandProcessor
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
     """ Base ContentProcessor Creator """
+
+    @property
+    def facebook(self) -> Optional[Facebook]:
+        barrack = super().facebook
+        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
+        return barrack
+
+    @property
+    def messenger(self) -> Optional[Messenger]:
+        transceiver = super().messenger
+        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
+        return transceiver
 
     # Override
     def create_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:

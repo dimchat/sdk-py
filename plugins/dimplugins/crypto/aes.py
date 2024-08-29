@@ -28,7 +28,6 @@ from typing import Optional, Any, Dict
 
 from Crypto.Cipher import AES
 
-from mkm.format import base64_decode
 from mkm.format import TransportableData
 from mkm.crypto import SymmetricKey, SymmetricKeyFactory
 
@@ -44,109 +43,118 @@ def random_bytes(size: int) -> bytes:
 class AESKey(BaseSymmetricKey):
     """ AES Key """
 
+    AES_CBC_PKCS7 = "AES/CBC/PKCS7Padding"
+
     def __init__(self, key: Dict[str, Any]):
         super().__init__(key)
+        # TODO: check algorithm parameters
+        #   1. check mode = 'CBC'
+        #   2. check padding = 'PKCS7Padding'
+        #
         # check key data
         base64 = self.get('data')
-        if base64 is None or len(base64) == 0:
-            # generate key data & iv
-            data, iv = generate(key_size=self.size, block_size=AES.block_size)
-            data = TransportableData.create(data=data)
-            iv = TransportableData.create(data=iv)
-            self.__data = data
-            self.__iv = iv
-            self['data'] = data.object  # base64_encode()
-            self['iv'] = iv.object      # base64_encode()
-            # self['mode'] = 'CBC'
-            # self['padding'] = 'PKCS7'
+        if base64 is None:
+            # new key
+            self.__data = self.__generate()
         else:
+            # lazy load
             self.__data: Optional[TransportableData] = None
-            self.__iv: Optional[TransportableData] = None
+
+    def __generate(self) -> TransportableData:
+        # random key data
+        pwd = random_bytes(size=self.size)
+        ted = TransportableData.create(data=pwd)
+        self['data'] = ted.object  # base64_encode()
+        # self['mode'] = 'CBC'
+        # self['padding'] = 'PKCS7'
+        return ted
+
+    @property
+    def size(self) -> int:
+        # TODO: get from key data
+        count = self.get_int(key='keySize', default=None)
+        return self.bits >> 3 if count is None else count
+
+    @property
+    def bits(self) -> int:
+        return self.get_int(key='sizeInBits', default=256)  # AES-256
+
+    @property
+    def block_size(self) -> int:
+        # TODO: get from iv data
+        return self.get(key='blockSize', default=AES.block_size)  # 16
 
     @property  # Override
     def data(self) -> bytes:
         ted = self.__data
         if ted is None:
             base64 = self.get('data')
-            assert len(base64) > 0, 'failed to get key data: %s' % self
+            assert base64 is not None, 'key data not found: %s' % self
             self.__data = ted = TransportableData.parse(base64)
             assert ted is not None, 'key data error: %s' % base64
         return ted.data
 
-    @property
-    def iv(self) -> bytes:
-        ted = self.__iv
-        if ted is None:
-            base64 = self.get('iv')
-            if base64 is None or len(base64) == 0:
-                # iv = b'\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'
-                iv = AES.block_size * chr(0).encode('utf-8')
-            else:
-                iv = base64_decode(string=base64)
-            self.__iv = ted = TransportableData.create(data=iv)
-        return ted.data
-
-    def __set_iv(self, base64: Any):
-        # if new iv not exists, this will erase the decoded iv data,
-        # and cause reloading from dictionary again.
-        self.__iv = TransportableData.parse(base64)
-
-    @property
-    def size(self) -> int:
-        return self.bits >> 3
-
-    @property
-    def bits(self) -> int:
-        bits = self.get('sizeInBits')
-        if bits is None:
-            return 256  # AES-256
+    def __get_init_vector(self, params: Optional[Dict]) -> bytes:
+        """ get IV from params """
+        # get base64 encoded IV from params
+        if params is None:
+            assert False, 'params must provided to fetch IV for AES'
         else:
-            return int(bits)
+            base64 = params.get('IV')
+            if base64 is None:
+                base64 = params.get('iv')
+        if base64 is None:
+            # compatible with old version
+            base64 = self.get_str(key='iv', default=None)
+            if base64 is None:
+                base64 = self.get_str(key='IV', default=None)
+        # decode IV data
+        ted = TransportableData.parse(base64)
+        if ted is not None:
+            iv = ted.data
+            if iv is not None:
+                return iv
+        assert base64 is None, 'IV data error: %s' % base64
+        # zero IV:
+        #           b'\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'
+        return self.block_size * chr(0).encode('utf-8')
+
+    def __new_init_vector(self, extra: Optional[Dict]) -> bytes:
+        # random IV data
+        iv = random_bytes(size=self.block_size)
+        # put encoded IV into extra
+        if extra is None:
+            assert False, 'extra dict must provided to store IV for AES'
+        else:
+            ted = TransportableData.create(data=iv)
+            extra['IV'] = ted.object
+        # OK
+        return iv
 
     # Override
     def encrypt(self, data: bytes, extra: Optional[Dict]) -> bytes:
-        # 0. TODO: random new 'IV'
-        if extra is None:
-            assert False, 'failed to encrypt without extra info'
-        else:
-            base64 = self.get_str(key='iv', default=None)
-            if base64 is None:
-                assert False, 'failed to get initial vector'
-            else:
-                extra['IV'] = base64
-        # 1. get key data & initial vector
+        # 1. random new 'IV'
+        key_iv = self.__new_init_vector(extra=extra)
+        # 2. get key data
         key_data = self.data
-        key_iv = self.iv
-        # 2. try to encrypt
+        # 3. try to encrypt
         data = pkcs7_pad(data=data, block_size=AES.block_size)
         key = AES.new(key_data, AES.MODE_CBC, key_iv)
         return key.encrypt(data)
 
     # Override
     def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
-        # 0. get 'IV' from extra params
-        if params is None:
-            assert False, 'failed to decrypt without extra params'
-        else:
-            base64 = params.get('IV')
-            if base64 is not None:
-                self.__set_iv(base64=base64)
-        # 1. get key data & initial vector
+        # 1. get 'IV' from extra params
+        key_iv = self.__get_init_vector(params=params)
+        # 2. get key data
         key_data = self.data
-        key_iv = self.iv
-        # 2. try to decrypt
+        # 3. try to decrypt
         try:
             key = AES.new(key_data, AES.MODE_CBC, key_iv)
             plaintext = key.decrypt(data)
             return pkcs7_unpad(data=plaintext)
         except ValueError:
             return None
-
-
-def generate(key_size: int, block_size: int) -> (bytes, bytes):
-    data = random_bytes(key_size)
-    iv = random_bytes(block_size)
-    return data, iv
 
 
 def pkcs7_pad(data: bytes, block_size: int) -> bytes:

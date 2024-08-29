@@ -105,31 +105,37 @@ class BaseNetworkFile(Dictionary, PortableNetworkFile):
     # Override
     def __str__(self) -> str:
         url = self.__get_url()
-        if url is None:
-            # not a single URL, encode the entire dictionary
-            return json_encode(obj=self.dictionary)
-        else:
+        if url is not None:
             # only contains 'URL', return the URL string directly
             return url
+        else:
+            # not a single URL, encode the entire dictionary
+            return json_encode(obj=self.dictionary)
 
     @property  # Override
     def object(self) -> Any:
         url = self.__get_url()
-        if url is None:
-            # not a single URL, return the entire dictionary
-            return self.dictionary
-        else:
+        if url is not None:
             # only contains 'URL', return the URL string directly
             return url
+        else:
+            # not a single URL, return the entire dictionary
+            return self.dictionary
 
     def __get_url(self) -> Optional[str]:
+        url = self.get_str(key='URL', default=None)
+        if url is None:
+            return None
+        elif url.startswith('data:'):
+            # 'data:...;...,...'
+            return url
         count = len(self.dictionary)
         if count == 1:
             # if only contains 'URL' field, return the URL string directly
-            return self.get_str(key='URL', default=None)
+            return url
         elif count == 2 and 'filename' in self.dictionary:
             # ignore 'filename' field
-            return self.get_str(key='URL', default=None)
+            return url
         # not a single URL
 
 
