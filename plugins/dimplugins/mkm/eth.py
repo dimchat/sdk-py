@@ -56,18 +56,6 @@ class ETHAddress(ConstantString, Address):
     def type(self) -> int:
         return EntityType.USER.value
 
-    @property  # Override
-    def is_broadcast(self) -> bool:
-        return False
-
-    @property  # Override
-    def is_user(self) -> bool:
-        return True
-
-    @property  # Override
-    def is_group(self) -> bool:
-        return False
-
     @classmethod
     def validate_address(cls, address: str) -> Optional[str]:
         if is_eth(address=address):

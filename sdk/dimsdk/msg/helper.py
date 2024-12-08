@@ -32,7 +32,7 @@ from abc import ABC
 from typing import Optional
 
 from dimp import Meta, Visa, Document
-from dimp import ReliableMessage
+from dimp import Message
 
 
 class MessageHelper(ABC):
@@ -44,12 +44,12 @@ class MessageHelper(ABC):
     """
 
     @classmethod
-    def get_meta(cls, msg: ReliableMessage) -> Optional[Meta]:
+    def get_meta(cls, msg: Message) -> Optional[Meta]:
         meta = msg.get('meta')
         return Meta.parse(meta=meta)
 
     @classmethod
-    def set_meta(cls, meta: Meta, msg: ReliableMessage):
+    def set_meta(cls, meta: Optional[Meta], msg: Message):
         msg.set_map(key='meta', value=meta)
 
     """
@@ -59,7 +59,7 @@ class MessageHelper(ABC):
     """
 
     @classmethod
-    def get_visa(cls, msg: ReliableMessage) -> Optional[Visa]:
+    def get_visa(cls, msg: Message) -> Optional[Visa]:
         visa = msg.get('visa')
         doc = Document.parse(document=visa)
         if isinstance(doc, Visa):
@@ -67,5 +67,5 @@ class MessageHelper(ABC):
         assert doc is None, 'visa document error: %s' % visa
 
     @classmethod
-    def set_visa(cls, visa: Visa, msg: ReliableMessage):
+    def set_visa(cls, visa: Optional[Visa], msg: Message):
         msg.set_map(key='visa', value=visa)

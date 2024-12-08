@@ -10,8 +10,11 @@ from dimsdk import Archivist, Facebook
 
 class Database(Archivist):
 
+    # each query will be expired after 10 minutes
+    QUERY_EXPIRES = 600.0  # seconds
+
     def __init__(self):
-        super().__init__(expires=Archivist.QUERY_EXPIRES)
+        super().__init__(expires=Database.QUERY_EXPIRES)
 
     # Override
     async def save_meta(self, meta: Meta, identifier: ID) -> bool:

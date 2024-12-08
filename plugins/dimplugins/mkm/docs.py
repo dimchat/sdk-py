@@ -83,11 +83,11 @@ def get_doc_type(doc_type: str, identifier: ID) -> str:
     elif identifier.is_user:
         return Document.VISA
     else:
-        return 'profile'
+        return Document.PROFILE
 
 
 def register_document_factories():
     Document.register(doc_type='*', factory=GeneralDocumentFactory(doc_type='*'))
-    Document.register(doc_type='profile', factory=GeneralDocumentFactory(doc_type='*'))
     Document.register(doc_type=Document.VISA, factory=GeneralDocumentFactory(doc_type=Document.VISA))
+    Document.register(doc_type=Document.PROFILE, factory=GeneralDocumentFactory(doc_type=Document.PROFILE))
     Document.register(doc_type=Document.BULLETIN, factory=GeneralDocumentFactory(doc_type=Document.BULLETIN))

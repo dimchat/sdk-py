@@ -63,7 +63,7 @@ class GeneralIdentifierFactory(IDFactory):
 
     # Override
     def create_identifier(self, name: Optional[str], address: Address, terminal: Optional[str]) -> ID:
-        identifier = concat(address=address, name=name, terminal=terminal)
+        identifier = Identifier.concat(address=address, name=name, terminal=terminal)
         cid = self.__ids.get(identifier)
         if cid is None:
             cid = self._new_id(identifier=identifier, name=name, address=address, terminal=terminal)
@@ -112,15 +112,8 @@ class GeneralIdentifierFactory(IDFactory):
             return None
         if address is not None:
             return self._new_id(identifier=identifier, name=name, address=address, terminal=terminal)
-
-
-def concat(name: Optional[str], address: Address, terminal: Optional[str]) -> str:
-    string = str(address)
-    if name is not None and len(name) > 0:
-        string = name + '@' + string
-    if terminal is not None and len(terminal) > 0:
-        string = string + '/' + terminal
-    return string
+        else:
+            assert False, 'ID error: %s' % identifier
 
 
 def register_identifier_factory():

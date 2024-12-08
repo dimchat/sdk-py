@@ -41,9 +41,6 @@ from .utils import RecentTimeChecker
 
 class Archivist(EntityDataSource, ABC):
 
-    # each query will be expired after 10 minutes
-    QUERY_EXPIRES = 600.0  # seconds
-
     def __init__(self, expires: float):
         super().__init__()
         # query checkers

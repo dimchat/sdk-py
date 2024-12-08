@@ -60,8 +60,10 @@ class BaseAddressFactory(AddressFactory, ABC):
     # Override
     def generate_address(self, meta: Meta, network: int = None) -> Optional[Address]:
         address = meta.generate_address(network=network)
-        assert address is not None, 'failed to generate address with meta: %s' % meta
-        self.__addresses[str(address)] = address
+        if address is not None:
+            self.__addresses[str(address)] = address
+        # else:
+        #     assert False, 'failed to generate address with meta: %s' % meta
         return address
 
     # Override
@@ -90,17 +92,27 @@ class GeneralAddressFactory(BaseAddressFactory):
     # Override
     def create_address(self, address: str) -> Optional[Address]:
         size = len(address)
+        #
+        #  checking for broadcast address
+        #
         if size == 8:
+            # "anywhere"
             if address.lower() == 'anywhere':
                 return ANYWHERE
         elif size == 10:
+            # "everywhere"
             if address.lower() == 'everywhere':
                 return EVERYWHERE
-        res = None
-        if size == 42:
-            res = ETHAddress.from_str(address=address)
+        #
+        #  checking normal address
+        #
         if 26 <= size <= 35:
             res = BTCAddress.from_str(address=address)
+        elif size == 42:
+            res = ETHAddress.from_str(address=address)
+        else:
+            assert False, 'invalid address: %s' % address
+        # TODO: other types of address
         assert res is not None, 'invalid address: %s' % address
         return res
 

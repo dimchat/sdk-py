@@ -49,8 +49,8 @@ from dimp import Identifier, BaseUser, BaseGroup
 
 class Station(User):
 
-    ANY = Identifier(identifier='station@anywhere', name='station', address=ANYWHERE)
-    EVERY = Identifier(identifier='stations@everywhere', name='stations', address=EVERYWHERE)
+    ANY = Identifier.new(name='station', address=ANYWHERE)
+    EVERY = Identifier.new(name='stations', address=EVERYWHERE)
 
     def __init__(self, identifier: ID = None, host: str = None, port: int = 0):
         super().__init__()
@@ -89,19 +89,23 @@ class Station(User):
         # check with inner user's ID
         return self.__user != other
 
+    # Override
+    def __hash__(self) -> int:
+        return hash(self.__user)
+
     async def reload(self):
         """ Reload station info: host & port, SP ID """
         doc = await self.profile
         if doc is not None:
-            host = doc.get_property(key='host')
+            host = doc.get_property(name='host')
             host = Converter.get_str(value=host, default=None)
             if host is not None:
                 self.__host = host
-            port = doc.get_property(key='port')
+            port = doc.get_property(name='port')
             port = Converter.get_int(value=port, default=0)
             if port > 0:
                 self.__port = port
-            isp = doc.get_property(key='ISP')
+            isp = doc.get_property(name='ISP')
             isp = ID.parse(identifier=isp)
             if isp is not None:
                 self.__isp = isp
@@ -218,7 +222,7 @@ class ServiceProvider(BaseGroup):
     async def stations(self) -> List:
         doc = await self.profile
         if doc is not None:
-            array = doc.get_property(key='stations')
+            array = doc.get_property(name='stations')
             if array is not None:
                 return array
         # TODO: load from local storage

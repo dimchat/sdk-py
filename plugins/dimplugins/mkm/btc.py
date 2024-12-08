@@ -33,7 +33,7 @@ from typing import Optional
 from mkm.types import ConstantString
 from mkm.crypto import sha256, ripemd160
 from mkm.format import base58_encode, base58_decode
-from mkm import Address, EntityType
+from mkm import Address
 
 
 class BTCAddress(ConstantString, Address):
@@ -60,18 +60,6 @@ class BTCAddress(ConstantString, Address):
     @property  # Override
     def type(self) -> int:
         return self.__network
-
-    @property  # Override
-    def is_broadcast(self) -> bool:
-        return False
-
-    @property  # Override
-    def is_user(self) -> bool:
-        return EntityType.is_user(network=self.type)
-
-    @property  # Override
-    def is_group(self) -> bool:
-        return EntityType.is_group(network=self.type)
 
     #
     #   Factory methods

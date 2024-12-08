@@ -7,6 +7,14 @@
 
     Unit test for DIM-SDK
 """
+import os
+import sys
+path = os.path.abspath(__file__)
+path = os.path.dirname(path)
+path = os.path.dirname(path)
+sys.path.insert(0, os.path.join(path, 'sdk'))
+sys.path.insert(0, os.path.join(path, 'plugins'))
+
 import asyncio
 import unittest
 
@@ -215,15 +223,16 @@ class CryptoTestCase(unittest.TestCase):
         self.assertTrue(ok)
 
         pub = Hex.encode(data=p_key.data)
-        meta = ETHMeta({
-            'type': MetaType.ETH.value,
+        meta = Meta.parse(meta={
+            'type': Meta.ETH,
             'key': {
                 'algorithm': 'ECC',
                 'data': pub
             },
         })
+        valid = meta.valid
         identifier = meta.generate_address(network=EntityType.USER)
-        print('ETH identifier: %s' % identifier)
+        print('ETH identifier: %s (%s)' % (identifier, valid))
         self.assertEqual(identifier, exp)
 
     def test2_eth(self):

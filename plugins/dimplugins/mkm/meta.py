@@ -28,13 +28,13 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Union, Optional, Any, Dict
+from typing import Optional, Any, Dict
 
 from mkm.format import utf8_encode
 from mkm.format import TransportableData
 from mkm.crypto import VerifyKey, SignKey, PrivateKey
 from mkm import EntityType, Address
-from mkm import MetaType, Meta, MetaFactory
+from mkm import Meta, MetaFactory
 from mkm import AccountFactoryManager
 
 from dimp.mkm import BaseMeta
@@ -61,24 +61,28 @@ from .eth import ETHAddress
 class DefaultMeta(BaseMeta):
 
     def __init__(self, meta: Dict[str, Any] = None,
-                 version: int = None, public_key: VerifyKey = None,
+                 version: str = None, public_key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
         # caches
-        self.__addresses = {}
+        self.__addresses = {}  # int -> Address
+
+    # Override
+    def has_seed(self) -> bool:
+        return True
 
     # Override
     def generate_address(self, network: int = None) -> Address:
-        assert self.type == MetaType.MKM, 'meta version error: %d' % self.type
+        # assert self.type == 'MKM' or self.type == '1', 'meta version error: %d' % self.type
         assert network is not None, 'address type should not be empty'
         # check caches
-        address = self.__addresses.get(network)
-        if address is None:
+        cached = self.__addresses.get(network)
+        if cached is None:
             # generate and cache it
             data = self.fingerprint
-            address = BTCAddress.from_data(data, network=network)
-            self.__addresses[network] = address
-        return address
+            cached = BTCAddress.from_data(data, network=network)
+            self.__addresses[network] = cached
+        return cached
 
 
 """
@@ -100,23 +104,30 @@ class DefaultMeta(BaseMeta):
 class BTCMeta(BaseMeta):
 
     def __init__(self, meta: Dict[str, Any] = None,
-                 version: int = None, public_key: VerifyKey = None,
+                 version: str = None, public_key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
         # caches
-        self.__address: Optional[Address] = None
+        self.__addresses = {}  # int -> Address
+
+    # Override
+    def has_seed(self) -> bool:
+        return False
 
     # Override
     def generate_address(self, network: int = None) -> Address:
-        assert self.type in [MetaType.BTC, MetaType.ExBTC], 'meta version error: %d' % self.type
-        address = self.__address
-        if address is None or address.type != network:
+        # assert self.type == 'BTC' or self.type == '2', 'meta version error: %d' % self.type
+        assert network is not None, 'address type should not be empty'
+        # check caches
+        cached = self.__addresses.get(network)
+        if cached is None:
             # TODO: compress public key?
             key = self.public_key
             data = key.data
             # generate and cache it
-            self.__address = address = BTCAddress.from_data(data, network=network)
-        return address
+            cached = BTCAddress.from_data(data, network=network)
+            self.__addresses[network] = cached
+        return cached
 
 
 """
@@ -137,33 +148,41 @@ class BTCMeta(BaseMeta):
 class ETHMeta(BaseMeta):
 
     def __init__(self, meta: Dict[str, Any] = None,
-                 version: int = None, public_key: VerifyKey = None,
+                 version: str = None, public_key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
         # caches
         self.__address: Optional[Address] = None
 
     # Override
+    def has_seed(self) -> bool:
+        return False
+
+    # Override
     def generate_address(self, network: int = None) -> Address:
-        assert self.type in [MetaType.ETH, MetaType.ExETH], 'meta version error: %d' % self.type
+        # assert self.type == 'ETH' or self.type == '4', 'meta version error: %d' % self.type
         assert network == EntityType.USER, 'ETH address type error: %d' % network
-        address = self.__address
-        if address is None:  # or address.type != network:
+        # check cache
+        cached = self.__address
+        if cached is None:  # or cached.type != network:
             # 64 bytes key data without prefix 0x04
             key = self.public_key
             data = key.data
             # generate and cache it
-            self.__address = address = ETHAddress.from_data(data)
-        return address
+            cached = ETHAddress.from_data(data)
+            self.__address = cached
+        return cached
 
 
 class GeneralMetaFactory(MetaFactory):
 
-    def __init__(self, version: Union[int, MetaType]):
+    def __init__(self, version: str):
         super().__init__()
-        if isinstance(version, MetaType):
-            version = version.value
         self.__type = version
+
+    @property  # protected
+    def type(self) -> str:
+        return self.__type
 
     # Override
     def generate_meta(self, private_key: SignKey, seed: Optional[str]) -> Meta:
@@ -178,34 +197,33 @@ class GeneralMetaFactory(MetaFactory):
 
     # Override
     def create_meta(self, public_key: VerifyKey, seed: Optional[str], fingerprint: Optional[TransportableData]) -> Meta:
-        if self.__type == MetaType.MKM:
+        version = self.type
+        if version == Meta.MKM:
             # MKM
-            return DefaultMeta(version=self.__type, public_key=public_key, seed=seed, fingerprint=fingerprint)
-        elif self.__type == MetaType.BTC:
+            out = DefaultMeta(version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
+        elif version == Meta.BTC:
             # BTC
-            return BTCMeta(version=self.__type, public_key=public_key)
-        elif self.__type == MetaType.ExBTC:
-            # ExBTC
-            return BTCMeta(version=self.__type, public_key=public_key, seed=seed, fingerprint=fingerprint)
-        elif self.__type == MetaType.ETH:
+            out = BTCMeta(version=version, public_key=public_key)
+        elif version == Meta.ETH:
             # ETH
-            return ETHMeta(version=self.__type, public_key=public_key)
-        elif self.__type == MetaType.ExETH:
-            # ExETH
-            return ETHMeta(version=self.__type, public_key=public_key, seed=seed, fingerprint=fingerprint)
+            out = ETHMeta(version=version, public_key=public_key)
+        else:
+            raise TypeError('unknown meta type: %d' % version)
+        assert out.valid, 'meta error: %s' % out
+        return out
 
     # Override
     def parse_meta(self, meta: dict) -> Optional[Meta]:
         gf = AccountFactoryManager.general_factory
-        version = gf.get_meta_type(meta=meta, default=0)
-        if version == MetaType.MKM:
+        version = gf.get_meta_type(meta=meta, default='')
+        if version == Meta.MKM:
             # MKM
             out = DefaultMeta(meta=meta)
-        elif version == MetaType.BTC or version == MetaType.ExBTC:
-            # BTC, ExBTC
+        elif version == Meta.BTC:
+            # BTC
             out = BTCMeta(meta=meta)
-        elif version == MetaType.ETH or version == MetaType.ExETH:
-            # ETH, ExETH
+        elif version == Meta.ETH:
+            # ETH
             out = ETHMeta(meta=meta)
         else:
             raise TypeError('unknown meta type: %d' % version)
@@ -214,8 +232,6 @@ class GeneralMetaFactory(MetaFactory):
 
 
 def register_meta_factories():
-    Meta.register(version=MetaType.MKM, factory=GeneralMetaFactory(version=MetaType.MKM))
-    Meta.register(version=MetaType.BTC, factory=GeneralMetaFactory(version=MetaType.BTC))
-    Meta.register(version=MetaType.ExBTC, factory=GeneralMetaFactory(version=MetaType.ExBTC))
-    Meta.register(version=MetaType.ETH, factory=GeneralMetaFactory(version=MetaType.ETH))
-    Meta.register(version=MetaType.ExETH, factory=GeneralMetaFactory(version=MetaType.ExETH))
+    Meta.register(version=Meta.MKM, factory=GeneralMetaFactory(version=Meta.MKM))
+    Meta.register(version=Meta.BTC, factory=GeneralMetaFactory(version=Meta.BTC))
+    Meta.register(version=Meta.ETH, factory=GeneralMetaFactory(version=Meta.ETH))

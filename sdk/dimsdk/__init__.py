@@ -112,7 +112,7 @@ __all__ = [
     #   MingKeMing
     #
 
-    'EntityType', 'MetaType',
+    'EntityType',
     'Address', 'AddressFactory',
     'ID', 'IDFactory',
     'Meta', 'MetaFactory',
