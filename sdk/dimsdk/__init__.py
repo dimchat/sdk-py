@@ -28,30 +28,21 @@
 # SOFTWARE.
 # ==============================================================================
 
-from mkm.types import *
-from mkm.format import *
-from mkm.crypto import *
-from mkm import *
-from dkd import *
-
-from dimp.crypto import *
-from dimp.mkm import *
-from dimp.dkd import *
-from dimp.msg import *
+from mkm.format import TransportableDataFactory, PortableNetworkFileFactory
 from dimp import *
 
 from .mkm import *
+from .dkd import *
 from .msg import *
 from .core import *
-from .utils import *
 
 from .ans import AddressNameService
 from .archivist import Archivist
-from .delegate import CipherKeyDelegate
 from .facebook import Facebook
 from .messenger import Messenger
-from .processor import MessageProcessor
 from .packer import MessagePacker
+from .processor import MessageProcessor
+from .twins import TwinsHelper
 
 
 name = 'DIM-SDK'
@@ -61,12 +52,11 @@ __author__ = 'Albert Moky'
 
 __all__ = [
 
-    #
-    #   Types
-    #
+    'Singleton',
 
     'URI', 'DateTime',
-    'Converter',
+
+    'Converter', 'Copier',
     'Wrapper', 'Stringer', 'Mapper',
     'ConstantString',  # 'String',
     'Dictionary',
@@ -75,18 +65,20 @@ __all__ = [
     #   Data Format
     #
 
-    'DataCoder', 'Hex', 'Base64', 'Base58',
-    'ObjectCoder', 'JSON', 'MapCoder', 'JSONMap', 'ListCoder', 'JSONList',
+    'DataCoder', 'Hex', 'Base58', 'Base64',
+    'ObjectCoder', 'JSON',
+    'MapCoder', 'JSONMap',
+    'ListCoder', 'JSONList',
     'StringCoder', 'UTF8',
 
     'hex_encode', 'hex_decode',
-    'base64_encode', 'base64_decode', 'base58_encode', 'base58_decode',
+    'base58_encode', 'base58_decode',
+    'base64_encode', 'base64_decode',
     'json_encode', 'json_decode',
     'utf8_encode', 'utf8_decode',
 
     'TransportableData', 'TransportableDataFactory',
     'PortableNetworkFile', 'PortableNetworkFileFactory',
-    'FormatGeneralFactory', 'FormatFactoryManager',
 
     #
     #   Data Digest
@@ -100,45 +92,12 @@ __all__ = [
     #   Crypto Keys
     #
 
-    'CryptographyKey', 'EncryptKey', 'DecryptKey',
-    'AsymmetricKey', 'SignKey', 'VerifyKey',
-    'SymmetricKey', 'SymmetricKeyFactory',
-    'PublicKey', 'PublicKeyFactory',
-    'PrivateKey', 'PrivateKeyFactory',
+    'CryptographyKey',
+    'EncryptKey', 'DecryptKey', 'SignKey', 'VerifyKey',
+    'SymmetricKey', 'AsymmetricKey',
+    'PrivateKey', 'PublicKey',
 
-    'CryptographyKeyGeneralFactory', 'CryptographyKeyFactoryManager',
-
-    #
-    #   MingKeMing
-    #
-
-    'EntityType',
-    'Address', 'AddressFactory',
-    'ID', 'IDFactory',
-    'Meta', 'MetaFactory',
-    # 'TAI',
-    'Document', 'DocumentFactory',
-    'Visa', 'Bulletin',
-
-    'BroadcastAddress', 'Identifier',
-    'AccountGeneralFactory', 'AccountFactoryManager',
-    'ANYWHERE', 'EVERYWHERE', 'ANYONE', 'EVERYONE', 'FOUNDER',
-
-    #
-    #   DaoKeDao
-    #
-
-    'ContentType', 'Content', 'ContentFactory',
-    'Envelope', 'EnvelopeFactory',
-    'Message', 'InstantMessage', 'SecureMessage', 'ReliableMessage',
-    'InstantMessageFactory', 'SecureMessageFactory', 'ReliableMessageFactory',
-
-    'InstantMessageDelegate', 'SecureMessageDelegate', 'ReliableMessageDelegate',
-    'MessageGeneralFactory', 'MessageFactoryManager',
-
-    #
-    #   Crypto core
-    #
+    'SymmetricKeyFactory', 'PrivateKeyFactory', 'PublicKeyFactory',
 
     'BaseKey', 'BaseSymmetricKey',
     'BaseAsymmetricKey', 'BasePublicKey', 'BasePrivateKey',
@@ -147,80 +106,127 @@ __all__ = [
     'BaseFileWrapper',
 
     #
-    #   MingKeMing core
+    #   MingKeMing
     #
 
-    'BaseMeta', 'MetaHelper',
+    'EntityType',
+    'Address',
+    'ID',
+    'Meta',
+    'Document', 'Visa', 'Bulletin',
+
+    'AddressFactory',
+    'IDFactory',
+    'MetaFactory',
+    'DocumentFactory',
+
+    'Identifier',
+    'ANYONE', 'EVERYONE', 'FOUNDER',
+    'ANYWHERE', 'EVERYWHERE',
+    # 'BroadcastAddress',
+
+    'BaseMeta',
     'BaseDocument', 'BaseVisa', 'BaseBulletin',
 
-    'EntityDelegate',
-    'Entity', 'EntityDataSource', 'BaseEntity',
-    'User', 'UserDataSource', 'BaseUser',
-    'Group', 'GroupDataSource', 'BaseGroup',
-
-    'DocumentHelper', 'BroadcastHelper',  # 'thanos',
-
     #
-    #   Protocol core
+    #   DaoKeDao
     #
 
+    'ContentType',
+    'Content',
+    'Envelope',
+    'Message',
+    'InstantMessage', 'SecureMessage', 'ReliableMessage',
+
+    # contents
     'TextContent', 'ArrayContent', 'ForwardContent',
     'PageContent', 'NameCard',
     'FileContent', 'ImageContent', 'AudioContent', 'VideoContent',
     'MoneyContent', 'TransferContent',
-    'CustomizedContent',
+    'QuoteContent', 'CombineContent',
 
-    'Command', 'CommandFactory',
+    # commands
+    'Command',
     'MetaCommand', 'DocumentCommand',
     'ReceiptCommand',
 
+    # group history
     'HistoryCommand', 'GroupCommand',
     'InviteCommand', 'ExpelCommand', 'JoinCommand', 'QuitCommand', 'QueryCommand', 'ResetCommand',
     'HireCommand', 'FireCommand', 'ResignCommand',
 
-    #
-    #   DaoKeDao core
-    #
-
+    # extend contents
     'BaseContent',
     'BaseTextContent', 'ListContent', 'SecretContent',
     'WebPageContent', 'NameCardContent',
     'BaseFileContent', 'ImageFileContent', 'AudioFileContent', 'VideoFileContent',
     'BaseMoneyContent', 'TransferMoneyContent',
-    'AppCustomizedContent',
+    'BaseQuoteContent', 'CombineForwardContent',
 
+    # extend commands
     'BaseCommand',
     'BaseMetaCommand', 'BaseDocumentCommand',
     'BaseReceiptCommand',
 
+    # extend group history
     'BaseHistoryCommand', 'BaseGroupCommand',
     'InviteGroupCommand', 'ExpelGroupCommand', 'JoinGroupCommand',
     'QuitGroupCommand', 'QueryGroupCommand', 'ResetGroupCommand',
     'HireGroupCommand', 'FireGroupCommand', 'ResignGroupCommand',
 
-    'CommandGeneralFactory', 'CommandFactoryManager',
+    #
+    #   Message
+    #
 
-    'MessageEnvelope', 'BaseMessage',
+    'MessageEnvelope',
+    'BaseMessage',
     'PlainMessage', 'EncryptedMessage', 'NetworkMessage',
+
+    # factories
+    'ContentFactory', 'CommandFactory',
+    'EnvelopeFactory',
+    'InstantMessageFactory', 'SecureMessageFactory', 'ReliableMessageFactory',
+
+    # delegates
+    'InstantMessageDelegate', 'SecureMessageDelegate', 'ReliableMessageDelegate',
 
     #
     #   Core
     #
 
     'Barrack', 'Transceiver', 'Packer', 'Processor',
+    'CipherKeyDelegate',
 
     #
     #   MingKeMing extends
     #
 
+    'EntityDelegate',
+    'Entity', 'EntityDataSource', 'BaseEntity',
+    'User', 'UserDataSource', 'BaseUser',
+    'Group', 'GroupDataSource', 'BaseGroup',
+
     'ServiceProvider', 'Station', 'Bot',
+
+    'MemberType',
+
+    'MetaUtils', 'DocumentUtils',
 
     #
     #   DaoKeDao extends
     #
 
+    'ContentProcessor',
+    'ContentProcessorCreator',
+    'ContentProcessorFactory',
+    'GeneralContentProcessorFactory',
+
+    'GeneralCommandFactory',
+    'HistoryCommandFactory',
+    'GroupCommandFactory',
+
     'InstantMessagePacker', 'SecureMessagePacker', 'ReliableMessagePacker',
-    'MessageFactory', 'MessageHelper',
+    'MessageFactory', 'MessageUtils',
 
     #
     #   Core extends
@@ -228,26 +234,7 @@ __all__ = [
 
     'TwinsHelper',
 
-    'ContentProcessor', 'ContentProcessorCreator', 'ContentProcessorFactory',
-    'GeneralContentProcessorFactory',
-
-    'ContentFactoryBuilder', 'CommandFactoryBuilder',
-    'GeneralCommandFactory', 'HistoryCommandFactory', 'GroupCommandFactory',
-
-    'register_content_factories', 'register_command_factories',
-    'register_message_factories', 'register_all_factories',
-
-    #
-    #   Utils
-    #
-    'FrequencyChecker',
-    'RecentTimeChecker',
-
-    #
-    #   Extends
-    #
-
-    'AddressNameService', 'CipherKeyDelegate',
+    'AddressNameService',
     'Archivist',
     'Facebook', 'Messenger',
     'MessageProcessor', 'MessagePacker',

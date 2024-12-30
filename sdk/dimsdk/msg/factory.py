@@ -77,7 +77,7 @@ class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactor
     #
 
     # Override
-    def generate_serial_number(self, msg_type: int, now: DateTime) -> int:
+    def generate_serial_number(self, msg_type: Optional[int], now: Optional[DateTime]) -> int:
         # because we must make sure all messages in a same chat box won't have
         # same serial numbers, so we can't use time-related numbers, therefore
         # the best choice is a totally random number, maybe.

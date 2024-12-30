@@ -38,13 +38,15 @@
 
 from typing import Optional, List
 
-from mkm.types import Converter
-
+from dimp import Converter
 from dimp import ANYWHERE, EVERYWHERE
-from dimp import EntityType, ID, Meta, Document, Visa
-from dimp import DocumentHelper
-from dimp import User, UserDataSource
-from dimp import Identifier, BaseUser, BaseGroup
+from dimp import EntityType, ID, Identifier
+from dimp import Meta, Document, Visa
+
+from .utils import DocumentUtils
+from .user import User, UserDataSource
+from .user import BaseUser
+from .group import BaseGroup
 
 
 class Station(User):
@@ -68,7 +70,7 @@ class Station(User):
         """ Return str(self). """
         clazz = self.__class__.__name__
         identifier = self.identifier
-        network = identifier.address.type
+        network = identifier.address.network
         return '<%s id="%s" network=%d host="%s" port=%d />' % (clazz, identifier, network, self.host, self.port)
 
     # Override
@@ -114,7 +116,7 @@ class Station(User):
     async def profile(self) -> Optional[Document]:
         """ Station Document """
         docs = await self.documents
-        return DocumentHelper.last_document(documents=docs)
+        return DocumentUtils.last_document(documents=docs)
 
     #
     #   Server
@@ -216,7 +218,7 @@ class ServiceProvider(BaseGroup):
     async def profile(self) -> Optional[Document]:
         """ Provider Document """
         docs = await self.documents
-        return DocumentHelper.last_document(documents=docs)
+        return DocumentUtils.last_document(documents=docs)
 
     @property
     async def stations(self) -> List:

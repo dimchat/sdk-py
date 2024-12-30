@@ -41,9 +41,9 @@ from typing import Optional, List
 from dimp import SymmetricKey
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import Transceiver, Packer, Processor
 
-from .delegate import CipherKeyDelegate
+from .core import Transceiver, Packer, Processor
+from .core import CipherKeyDelegate
 
 
 class Messenger(Transceiver, Packer, Processor, ABC):
@@ -73,20 +73,20 @@ class Messenger(Transceiver, Packer, Processor, ABC):
     async def get_encrypt_key(self, msg: InstantMessage) -> Optional[SymmetricKey]:
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
-        delegate = self.key_cache
-        return await delegate.get_cipher_key(sender=sender, receiver=target, generate=True)
+        db = self.key_cache
+        return await db.get_cipher_key(sender=sender, receiver=target, generate=True)
 
     async def get_decrypt_key(self, msg: SecureMessage) -> Optional[SymmetricKey]:
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
-        delegate = self.key_cache
-        return await delegate.get_cipher_key(sender=sender, receiver=target, generate=False)
+        db = self.key_cache
+        return await db.get_cipher_key(sender=sender, receiver=target, generate=False)
 
     async def cache_decrypt_key(self, key: SymmetricKey, msg: SecureMessage):
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
-        delegate = self.key_cache
-        return await delegate.cache_cipher_key(key=key, sender=sender, receiver=target)
+        db = self.key_cache
+        return await db.cache_cipher_key(key=key, sender=sender, receiver=target)
 
     #
     #   Interfaces for Packing Message

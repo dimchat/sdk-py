@@ -34,7 +34,7 @@ from .reliable import ReliableMessagePacker
 
 from .factory import MessageFactory
 
-from .helper import MessageHelper
+from .utils import MessageUtils
 
 
 __all__ = [
@@ -45,6 +45,6 @@ __all__ = [
 
     'MessageFactory',
 
-    'MessageHelper',
+    'MessageUtils',
 
 ]

@@ -37,7 +37,8 @@ from typing import Optional
 
 from dimp import ID, EntityType
 from dimp import Document
-from dimp import BaseUser
+
+from .user import BaseUser
 
 
 class Bot(BaseUser):

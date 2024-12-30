@@ -29,18 +29,17 @@
 # ==============================================================================
 
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List
 
 from dimp import Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import Processor
 
-from .core import TwinsHelper
-from .core import ContentProcessor, ContentProcessorFactory, ContentProcessorCreator
-from .core import GeneralContentProcessorFactory
+from .dkd import ContentProcessorFactory
+from .core import Processor
 
 from .facebook import Facebook
 from .messenger import Messenger
+from .twins import TwinsHelper
 
 
 class MessageProcessor(TwinsHelper, Processor):
@@ -49,39 +48,14 @@ class MessageProcessor(TwinsHelper, Processor):
         super().__init__(facebook=facebook, messenger=messenger)
         self.__factory = self._create_factory()
 
-    @property
-    def facebook(self) -> Optional[Facebook]:
-        barrack = super().facebook
-        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
-        return barrack
+    @property  # private
+    def factory(self) -> ContentProcessorFactory:
+        """ CPU Factory """
+        return self.__factory
 
-    @property
-    def messenger(self) -> Optional[Messenger]:
-        transceiver = super().messenger
-        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
-        return transceiver
-
-    # protected
+    @abstractmethod  # protected
     def _create_factory(self) -> ContentProcessorFactory:
-        facebook = self.facebook
-        messenger = self.messenger
-        creator = self._create_creator()
-        return GeneralContentProcessorFactory(facebook=facebook, messenger=messenger, creator=creator)
-
-    # protected
-    @abstractmethod
-    def _create_creator(self) -> ContentProcessorCreator:
-        """ Override for creating customized CPUs """
         raise NotImplemented
-
-    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
-        return self.__factory.get_processor(content=content)
-
-    def get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
-        return self.__factory.get_content_processor(msg_type)
-
-    def get_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
-        return self.__factory.get_command_processor(msg_type, cmd=cmd)
 
     #
     #  Processing Message
@@ -104,8 +78,10 @@ class MessageProcessor(TwinsHelper, Processor):
         packages = []
         for res in responses:
             pack = await messenger.serialize_message(msg=res)
-            if pack is not None:
-                packages.append(pack)
+            if pack is None:
+                # should not happen
+                continue
+            packages.append(pack)
         return packages
 
     # Override
@@ -126,8 +102,10 @@ class MessageProcessor(TwinsHelper, Processor):
         messages = []
         for res in responses:
             signed = await messenger.sign_message(msg=res)
-            if signed is not None:
-                messages.append(signed)
+            if signed is None:
+                # should not happen
+                continue
+            messages.append(signed)
         return messages
         # TODO: override to deliver to the receiver when catch exception "receiver error ..."
 
@@ -149,8 +127,10 @@ class MessageProcessor(TwinsHelper, Processor):
         messages = []
         for res in responses:
             encrypted = await messenger.encrypt_message(msg=res)
-            if encrypted is not None:
-                messages.append(encrypted)
+            if encrypted is None:
+                # should not happen
+                continue
+            messages.append(encrypted)
         return messages
 
     # Override
@@ -182,11 +162,12 @@ class MessageProcessor(TwinsHelper, Processor):
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+        factory = self.factory
         # TODO: override to check group
-        cpu = self.get_processor(content=content)
+        cpu = factory.get_content_processor(content=content)
         if cpu is None:
             # default content processor
-            cpu = self.get_content_processor(0)
+            cpu = factory.get_content_processor_for_type(0)
             assert cpu is not None, 'default CPU not defined'
         return await cpu.process_content(content=content, r_msg=r_msg)
         # TODO: override to filter the response

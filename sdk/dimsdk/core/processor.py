@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 #
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#   DIMP : Decentralized Instant Messaging Protocol
 #
-#                                Written in 2023 by Moky <albert.moky@gmail.com>
+#                                Written in 2020 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2023 Albert Moky
+# Copyright (c) 2020 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,62 +29,66 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import List
 
-from dimp import VerifyKey, EncryptKey
-from dimp import ID
-
-from .mkm import User, Group
+from dimp import Content, InstantMessage, SecureMessage, ReliableMessage
 
 
-class Archivist(ABC):
+class Processor(ABC):
+    """
+        Message Processor
+        ~~~~~~~~~~~~~~~~~
+    """
 
-    @abstractmethod  # protected
-    async def create_user(self, identifier: ID) -> Optional[User]:
-        """
-        Create user when visa.key exists
-
-        :param identifier: user ID
-        :return: user, None on not ready
-        """
-        raise NotImplemented
-
-    @abstractmethod  # protected
-    async def create_group(self, identifier: ID) -> Optional[Group]:
-        """
-        Create group when members exist
-
-        :param identifier: group ID
-        :return: group, None on not ready
-        """
-        raise NotImplemented
-
-    @property
     @abstractmethod
-    async def local_users(self) -> List[User]:
+    async def process_package(self, data: bytes) -> List[bytes]:
         """
-        Get all local users (for decrypting received message)
+        Process data package
 
-        :return: users with private key
+        :param data: data to be processed
+        :return: responses
         """
         raise NotImplemented
 
     @abstractmethod
-    async def get_meta_key(self, identifier: ID) -> Optional[VerifyKey]:
+    async def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
         """
-        Get meta.key
+        Process network message
 
-        :param identifier: user ID
-        :return: None on not found
+        :param msg: message to be processed
+        :return: response messages
         """
         raise NotImplemented
 
     @abstractmethod
-    async def get_visa_key(self, identifier: ID) -> Optional[EncryptKey]:
+    async def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
         """
-        Get visa.key
+        Process encrypted message
 
-        :param identifier: user ID
-        :return: None on not found
+        :param msg:   message to be processed
+        :param r_msg: message received
+        :return: response messages
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    async def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
+        """
+        Process plain message
+
+        :param msg:   message to be processed
+        :param r_msg: message received
+        :return: response messages
+        """
+        raise NotImplemented
+
+    @abstractmethod
+    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
+        """
+        Process message content
+
+        :param content: content to be processed
+        :param r_msg: message received
+        :return: response contents
         """
         raise NotImplemented

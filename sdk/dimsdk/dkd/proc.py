@@ -40,8 +40,6 @@ from typing import Optional, List, Dict
 from dimp import ReliableMessage
 from dimp import Content, Command, GroupCommand
 
-from .twins import TwinsHelper
-
 
 class ContentProcessor(ABC):
     """
@@ -100,7 +98,7 @@ class ContentProcessorFactory(ABC):
     """
 
     @abstractmethod
-    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
+    def get_content_processor(self, content: Content) -> Optional[ContentProcessor]:
         """
         Get content/command processor
 
@@ -110,19 +108,15 @@ class ContentProcessorFactory(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
-        raise NotImplemented
-
-    @abstractmethod
-    def get_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
+    def get_content_processor_for_type(self, msg_type: int) -> Optional[ContentProcessor]:
         raise NotImplemented
 
 
-class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
+class GeneralContentProcessorFactory(ContentProcessorFactory):
     """ General ContentProcessor Factory """
 
-    def __init__(self, facebook, messenger, creator: ContentProcessorCreator):
-        super().__init__(facebook=facebook, messenger=messenger)
+    def __init__(self, creator: ContentProcessorCreator):
+        super().__init__()
         self.__creator = creator
         self.__content_processors: Dict[int, ContentProcessor] = {}
         self.__command_processors: Dict[str, ContentProcessor] = {}
@@ -131,57 +125,39 @@ class GeneralContentProcessorFactory(TwinsHelper, ContentProcessorFactory):
     def creator(self) -> ContentProcessorCreator:
         return self.__creator
 
-    # protected
-    def _get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
-        return self.__content_processors.get(msg_type)
-
-    # protected
-    def _put_content_processor(self, msg_type: int, cpu: ContentProcessor):
-        self.__content_processors[msg_type] = cpu
-
-    # protected
-    def _get_command_processor(self, cmd: str) -> Optional[ContentProcessor]:
-        return self.__command_processors.get(cmd)
-
-    # protected
-    def _put_command_processor(self, cmd: str, cpu: ContentProcessor):
-        self.__command_processors[cmd] = cpu
-
     #
     #   ContentProcessorFactory
     #
 
     # Override
-    def get_processor(self, content: Content) -> Optional[ContentProcessor]:
+    def get_content_processor(self, content: Content) -> Optional[ContentProcessor]:
         msg_type = content.type
         if isinstance(content, Command):
             name = content.cmd
-            # command processor
-            cpu = self.get_command_processor(msg_type, cmd=name)
+            cpu = self._get_command_processor(msg_type, cmd=name)
             if cpu is not None:
                 return cpu
-            elif isinstance(content, GroupCommand):
-                # group command processor
-                cpu = self.get_command_processor(msg_type, cmd='group')
+            elif isinstance(content, GroupCommand):  # or 'group' in content:
+                cpu = self._get_command_processor(msg_type, cmd='group')
                 if cpu is not None:
                     return cpu
         # content processor
-        return self.get_content_processor(msg_type)
+        return self.get_content_processor_for_type(msg_type)
 
     # Override
-    def get_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
-        cpu = self._get_content_processor(msg_type)
+    def get_content_processor_for_type(self, msg_type: int) -> Optional[ContentProcessor]:
+        cpu = self.__content_processors.get(msg_type)
         if cpu is None:
             cpu = self.creator.create_content_processor(msg_type)
             if cpu is not None:
-                self._put_content_processor(msg_type, cpu=cpu)
+                self.__content_processors[msg_type] = cpu
         return cpu
 
-    # Override
-    def get_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
-        cpu = self._get_command_processor(cmd=cmd)
+    # private
+    def _get_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
+        cpu = self.__command_processors.get(cmd)
         if cpu is None:
-            cpu = self.creator.create_command_processor(msg_type, cmd=cmd)
+            cpu = self.creator.create_command_processor(msg_type, cmd)
             if cpu is not None:
-                self._put_command_processor(cmd=cmd, cpu=cpu)
+                self.__command_processors[cmd] = cpu
         return cpu

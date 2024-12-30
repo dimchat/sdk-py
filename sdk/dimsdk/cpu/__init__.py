@@ -34,41 +34,38 @@
 
 """
 
-from ..core import ContentProcessor
-from ..core import ContentProcessorCreator
-from ..core import ContentProcessorFactory
-from ..core import GeneralContentProcessorFactory
+from ..dkd import ContentProcessor
+from ..dkd import ContentProcessorCreator
+from ..dkd import ContentProcessorFactory
+from ..dkd import GeneralContentProcessorFactory
 
 from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
 
-from .contents import ForwardContentProcessor
 from .contents import ArrayContentProcessor
+from .contents import ForwardContentProcessor
 
 from .commands import MetaCommandProcessor
 from .commands import DocumentCommandProcessor
-
-from .customized import CustomizedContentProcessor
-from .customized import CustomizedContentHandler
 
 from .creator import BaseContentProcessorCreator
 
 
 __all__ = [
 
-    'ContentProcessor', 'ContentProcessorCreator', 'ContentProcessorFactory',
+    'ContentProcessor',
+    'ContentProcessorCreator',
+    'ContentProcessorFactory',
     'GeneralContentProcessorFactory',
 
-    'BaseContentProcessor', 'BaseCommandProcessor',
+    'BaseContentProcessor',
+    'BaseCommandProcessor',
 
-    'ForwardContentProcessor',
     'ArrayContentProcessor',
+    'ForwardContentProcessor',
 
     'MetaCommandProcessor',
     'DocumentCommandProcessor',
-
-    'CustomizedContentProcessor',
-    'CustomizedContentHandler',
 
     'BaseContentProcessorCreator',
 

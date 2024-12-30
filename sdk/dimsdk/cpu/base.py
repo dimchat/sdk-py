@@ -34,16 +34,16 @@
 
 """
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from dimp import ReliableMessage
+from dimp import Envelope
 from dimp import Content, Command
+from dimp import ReceiptCommand
 
-from ..core import TwinsHelper
-from ..core import ContentProcessor
+from ..dkd import ContentProcessor
 
-from ..facebook import Facebook
-from ..messenger import Messenger
+from ..twins import TwinsHelper
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):
@@ -51,18 +51,6 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         Content Processing Unit
         ~~~~~~~~~~~~~~~~~~~~~~~
     """
-
-    @property
-    def facebook(self) -> Optional[Facebook]:
-        barrack = super().facebook
-        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
-        return barrack
-
-    @property
-    def messenger(self) -> Optional[Messenger]:
-        transceiver = super().messenger
-        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
-        return transceiver
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
@@ -74,6 +62,35 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
                 'type': content.type,
             }
         })
+
+    #
+    #   Convenient responding
+    #
+
+    def _respond_receipt(self, text: str, envelope: Envelope, content: Optional[Content],
+                         extra: Optional[Dict] = None) -> List[ReceiptCommand]:
+        return [
+            self.create_receipt(text=text, envelope=envelope, content=content, extra=extra)
+        ]
+
+    @classmethod
+    def create_receipt(cls, text: str, envelope: Envelope, content: Optional[Content],
+                       extra: Optional[Dict]) -> ReceiptCommand:
+        """
+        Receipt command with text, original envelope, serial number & group
+
+        :param text:     respond message
+        :param envelope: original message envelope
+        :param content:  original message content
+        :param extra:    extra info
+        :return: receipt command
+        """
+        res = ReceiptCommand.create(text=text, envelope=envelope, content=content)
+        # add extra key-values
+        if extra is not None:
+            for key in extra:
+                res[key] = extra.get(key)
+        return res
 
 
 class BaseCommandProcessor(BaseContentProcessor):

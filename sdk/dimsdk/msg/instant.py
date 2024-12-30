@@ -31,8 +31,7 @@
 import weakref
 from typing import Optional, List
 
-from mkm.format import utf8_decode
-
+from dimp import utf8_decode
 from dimp import TransportableData
 from dimp import SymmetricKey
 from dimp import ID

@@ -39,36 +39,21 @@ from typing import Optional
 
 from dimp import ContentType, Command
 
-from ..core import TwinsHelper
-from ..core import ContentProcessor, ContentProcessorCreator
+from ..dkd import ContentProcessor, ContentProcessorCreator
 
-from ..facebook import Facebook
-from ..messenger import Messenger
+from ..twins import TwinsHelper
 
-# from .base import BaseContentProcessor
+from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
 
 from .contents import ForwardContentProcessor
 from .contents import ArrayContentProcessor
-# from .customized import CustomizedContentProcessor
 from .commands import MetaCommandProcessor
 from .commands import DocumentCommandProcessor
 
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
     """ Base ContentProcessor Creator """
-
-    @property
-    def facebook(self) -> Optional[Facebook]:
-        barrack = super().facebook
-        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
-        return barrack
-
-    @property
-    def messenger(self) -> Optional[Messenger]:
-        transceiver = super().messenger
-        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
-        return transceiver
 
     # Override
     def create_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
@@ -79,19 +64,13 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         if msg_type == ContentType.ARRAY.value:
             return ArrayContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
-        # # application customized
-        # if msg_type == ContentType.APPLICATION.value:
-        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
-        # elif msg_type == ContentType.CUSTOMIZED.value:
-        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
-
-        # group commands
+        # default commands
         if msg_type == ContentType.COMMAND.value:
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
 
-        # # default contents
-        # if msg_type == 0:
-        #     return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # default contents
+        if msg_type == 0:  # ContentType.ANY.value:
+            return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
     # Override
     def create_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:

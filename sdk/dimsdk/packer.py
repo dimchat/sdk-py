@@ -30,37 +30,39 @@
 
 from typing import Optional
 
-from mkm.format import utf8_encode, utf8_decode, json_encode, json_decode
-from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import Packer
+from dimp import utf8_encode, utf8_decode, json_encode, json_decode
+from dimp import InstantMessage, InstantMessageDelegate
+from dimp import SecureMessage, SecureMessageDelegate
+from dimp import ReliableMessage, ReliableMessageDelegate
 
-from .core import TwinsHelper
-from .msg import MessageHelper
 from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
+from .msg import MessageUtils
+from .core import Packer
 
 from .facebook import Facebook
 from .messenger import Messenger
+from .twins import TwinsHelper
 
 
 class MessagePacker(TwinsHelper, Packer):
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)
-        self.__instant_packer = InstantMessagePacker(messenger=messenger)
-        self.__secure_packer = SecureMessagePacker(messenger=messenger)
-        self.__reliablePacker = ReliableMessagePacker(messenger=messenger)
+        self.__instant_packer = self._create_instant_message_packer(messenger=messenger)
+        self.__secure_packer = self._create_secure_message_packer(messenger=messenger)
+        self.__reliablePacker = self._create_reliable_message_packer(messenger=messenger)
 
-    @property
-    def facebook(self) -> Optional[Facebook]:
-        barrack = super().facebook
-        assert isinstance(barrack, Facebook), 'barrack error: %s' % barrack
-        return barrack
+    # noinspection PyMethodMayBeStatic
+    def _create_instant_message_packer(self, messenger: InstantMessageDelegate):
+        return InstantMessagePacker(messenger=messenger)
 
-    @property
-    def messenger(self) -> Optional[Messenger]:
-        transceiver = super().messenger
-        assert isinstance(transceiver, Messenger), 'transceiver error: %s' % transceiver
-        return transceiver
+    # noinspection PyMethodMayBeStatic
+    def _create_secure_message_packer(self, messenger: SecureMessageDelegate):
+        return SecureMessagePacker(messenger=messenger)
+
+    # noinspection PyMethodMayBeStatic
+    def _create_reliable_message_packer(self, messenger: ReliableMessageDelegate):
+        return ReliableMessagePacker(messenger=messenger)
 
     @property
     def instant_packer(self) -> InstantMessagePacker:
@@ -170,11 +172,11 @@ class MessagePacker(TwinsHelper, Packer):
         """ Check meta & visa """
         sender = msg.sender
         # [Meta Protocol]
-        meta = MessageHelper.get_meta(msg=msg)
+        meta = MessageUtils.get_meta(msg=msg)
         if meta is not None:
             await self.facebook.save_meta(meta=meta, identifier=sender)
         # [Visa Protocol]
-        visa = MessageHelper.get_visa(msg=msg)
+        visa = MessageUtils.get_visa(msg=msg)
         if visa is not None:
             await self.facebook.save_document(document=visa)
         #
@@ -196,9 +198,8 @@ class MessagePacker(TwinsHelper, Packer):
         # TODO: check receiver before calling this, make sure you are the receiver,
         #       or you are a member of the group when this is a group message,
         #       so that you will have a private key (decrypt key) to decrypt it.
-        facebook = self.facebook
         receiver = msg.receiver
-        user = await facebook.select_user(receiver=receiver)
+        user = await self.facebook.select_user(receiver=receiver)
         if user is None:
             # not for you?
             raise LookupError('receiver error: %s, from %s, %s' % (receiver, msg.sender, msg.group))

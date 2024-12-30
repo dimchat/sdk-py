@@ -32,10 +32,11 @@
 from typing import Optional, List
 
 from dimp import ID, Meta, Document
-from dimp import DocumentHelper
 from dimp import ReliableMessage
 from dimp import Envelope, Content
 from dimp import MetaCommand, DocumentCommand
+
+from ..mkm import MetaUtils, DocumentUtils
 
 from .base import BaseCommandProcessor
 
@@ -115,7 +116,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
 
     # noinspection PyMethodMayBeStatic
     async def _check_meta(self, meta: Meta, identifier: ID) -> bool:
-        return meta.valid and meta.match_identifier(identifier=identifier)
+        return meta.valid and MetaUtils.match_identifier(identifier=identifier, meta=meta)
 
 
 class DocumentCommandProcessor(MetaCommandProcessor):
@@ -162,7 +163,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         query_time = content.last_time
         if query_time is not None:
             # check last document time
-            last = DocumentHelper.last_document(documents=documents)
+            last = DocumentUtils.last_document(documents=documents)
             assert last is not None, 'should not happen'
             last_time = last.time
             if last_time is None:

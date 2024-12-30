@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#   DIMP : Decentralized Instant Messaging Protocol
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -28,26 +28,34 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .barrack import thanos
-from .barrack import Barrack
 
-from .packer import Packer
-from .processor import Processor
-from .transceiver import Transceiver
+from abc import ABC, abstractmethod
+from typing import Optional
 
-from .delegate import CipherKeyDelegate
+from dimp import ID
+
+from .user import User
+from .group import Group
 
 
-__all__ = [
+class EntityDelegate(ABC):
 
-    'thanos',
+    @abstractmethod
+    async def get_user(self, identifier: ID) -> Optional[User]:
+        """
+        Create user with ID
 
-    'Barrack',
+        :param identifier: ID object
+        :return: User object
+        """
+        raise NotImplemented
 
-    'Packer',
-    'Processor',
-    'Transceiver',
+    @abstractmethod
+    async def get_group(self, identifier: ID) -> Optional[Group]:
+        """
+        Create group with ID
 
-    'CipherKeyDelegate',
-
-]
+        :param identifier: ID object
+        :return: Group object
+        """
+        raise NotImplemented

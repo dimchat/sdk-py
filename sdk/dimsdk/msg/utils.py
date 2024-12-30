@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 #
-#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
+#   DIMP : Decentralized Instant Messaging Protocol
 #
-#                                Written in 2022 by Moky <albert.moky@gmail.com>
+#                                Written in 2023 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2022 Albert Moky
+# Copyright (c) 2023 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +28,44 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .checker import FrequencyChecker
-from .checker import RecentTimeChecker
+from abc import ABC
+from typing import Optional
+
+from dimp import Meta, Visa, Document
+from dimp import Message
 
 
-__all__ = [
+class MessageUtils(ABC):
 
-    'FrequencyChecker',
+    """
+        Sender's Meta
+        ~~~~~~~~~~~~~
+        Extends for the first message package of 'Handshake' protocol.
+    """
 
-    'RecentTimeChecker',
+    @classmethod
+    def get_meta(cls, msg: Message) -> Optional[Meta]:
+        meta = msg.get('meta')
+        return Meta.parse(meta=meta)
 
-]
+    @classmethod
+    def set_meta(cls, meta: Optional[Meta], msg: Message):
+        msg.set_map(key='meta', value=meta)
+
+    """
+        Sender's Visa
+        ~~~~~~~~~~~~~
+        Extends for the first message package of 'Handshake' protocol.
+    """
+
+    @classmethod
+    def get_visa(cls, msg: Message) -> Optional[Visa]:
+        visa = msg.get('visa')
+        doc = Document.parse(document=visa)
+        if isinstance(doc, Visa):
+            return doc
+        assert doc is None, 'visa document error: %s' % visa
+
+    @classmethod
+    def set_visa(cls, visa: Optional[Visa], msg: Message):
+        msg.set_map(key='visa', value=visa)

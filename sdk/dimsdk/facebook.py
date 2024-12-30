@@ -38,19 +38,17 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from dimp import EntityType, ID
-from dimp import User, Group
-from dimp import Meta, Document
-from dimp import DocumentHelper
-from dimp import Barrack
-from dimp import BaseUser, BaseGroup
+from dimp import EncryptKey, VerifyKey
+from dimp import ID, Meta, Document
 
-from .mkm import ServiceProvider, Station, Bot
+from .core import Barrack
+from .mkm import User, UserDataSource
+from .mkm import Group, GroupDataSource
 
 from .archivist import Archivist
 
 
-class Facebook(Barrack, ABC):
+class Facebook(Barrack, UserDataSource, GroupDataSource, ABC):
 
     @property
     @abstractmethod
@@ -58,143 +56,131 @@ class Facebook(Barrack, ABC):
         raise NotImplemented
 
     # Override
-    async def create_user(self, identifier: ID) -> Optional[User]:
-        assert identifier.is_user, 'user ID error: %s' % identifier
-        # check visa key
-        if not identifier.is_broadcast:
-            if await self.public_key_for_encryption(identifier=identifier) is None:
-                # assert False, 'visa.key not found: %s' % identifier
-                return None
-            #
-            #   NOTICE: if visa.key exists, then visa & meta must exist too.
-            #
-        network = identifier.type
-        # check user type
-        if network == EntityType.STATION:
-            return Station(identifier=identifier)
-        elif network == EntityType.BOT:
-            return Bot(identifier=identifier)
-        # general user, or 'anyone@anywhere'
-        return BaseUser(identifier=identifier)
+    def cache_user(self, user: User):
+        if user.data_source is None:
+            user.data_source = self
+        super().cache_user(user=user)
 
     # Override
-    async def create_group(self, identifier: ID) -> Optional[Group]:
+    def cache_group(self, group: Group):
+        if group.data_source is None:
+            group.data_source = self
+        super().cache_group(group=group)
+
+    #
+    #   Entity Delegate
+    #
+
+    # Override
+    async def get_user(self, identifier: ID) -> Optional[User]:
+        assert identifier.is_user, 'user ID error: %s' % identifier
+        # 1. get from user cache
+        user = await super().get_user(identifier=identifier)
+        if user is None:
+            # 2. create user and cache it
+            user = await self.archivist.create_user(identifier=identifier)
+            if user is not None:
+                self.cache_user(user=user)
+        return user
+
+    # Override
+    async def get_group(self, identifier: ID) -> Optional[Group]:
         assert identifier.is_group, 'group ID error: %s' % identifier
-        # check members
-        if not identifier.is_broadcast:
-            members = await self.get_members(identifier=identifier)
-            if len(members) == 0:
-                # assert False, 'group members not found: %s' % identifier
-                return None
-            #
-            #   NOTICE: if members exist, then owner (founder) must exist,
-            #           and bulletin & meta must exist too.
-            #
-        network = identifier.type
-        # check group type
-        if network == EntityType.ISP:
-            return ServiceProvider(identifier=identifier)
-        # general group, or 'everyone@everywhere'
-        return BaseGroup(identifier=identifier)
-
-    @property
-    @abstractmethod
-    async def local_users(self) -> List[User]:
-        """
-        Get all local users (for decrypting received message)
-
-        :return: users with private key
-        """
-        raise NotImplemented
+        # 1. get from group cache
+        group = await super().get_group(identifier=identifier)
+        if group is None:
+            # 2. create group and cache it
+            group = await self.archivist.create_group(identifier=identifier)
+            if group is not None:
+                self.cache_group(group=group)
+        return group
 
     async def select_user(self, receiver: ID) -> Optional[User]:
-        """ Select local user for receiver """
-        users = await self.local_users
-        if len(users) == 0:
+        """
+        Select local user for receiver
+
+        :param receiver: user/group ID
+        :return: local user
+        """
+        if receiver.is_group:
+            # group message (recipient not designated)
+            # TODO: check members of group
+            return None
+        else:
+            assert receiver.is_user, 'receiver error: %s' % receiver
+        users = await self.archivist.local_users
+        if users is None or len(users) == 0:
             assert False, 'local users should not be empty'
             # return None
         elif receiver.is_broadcast:
             # broadcast message can decrypt by anyone, so just return current user
             return users[0]
-        elif receiver.is_user:
-            # 1. personal message
-            # 2. split group message
-            for item in users:
-                if item.identifier == receiver:
-                    # DISCUSS: set this item to be current user?
-                    return item
-            # not me?
-            return None
-        # group message (recipient not designated)
-        assert receiver.is_group, 'receiver error: %s' % receiver
-        # the messenger will check group info before decrypting message,
-        # so we can trust that the group's meta & members MUST exist here.
-        members = await self.get_members(identifier=receiver)
-        assert len(members) > 0, 'members not found: %s' % receiver
+        # 1. personal message
+        # 2. split group message
         for item in users:
-            if item.identifier in members:
+            if item.identifier == receiver:
                 # DISCUSS: set this item to be current user?
                 return item
+        # not me?
+        return None
 
+    @abstractmethod
     async def save_meta(self, meta: Meta, identifier: ID) -> bool:
-        ok = meta.valid and meta.match_identifier(identifier=identifier)
-        if not ok:
-            # assert False, 'meta not valid: %s' % identifier
-            return False
-        # check old meta
-        old = await self.get_meta(identifier=identifier)
-        if old is not None:
-            # assert meta == old, 'meta should not changed'
-            return True
-        # meta not exists yet, save it
-        db = self.archivist
-        return await db.save_meta(meta=meta, identifier=identifier)
+        """
+        Save meta for entity ID (must verify first)
 
+        :param meta:       entity meta
+        :param identifier: entity ID
+        :return: True on success
+        """
+        raise NotImplemented
+
+    @abstractmethod
     async def save_document(self, document: Document) -> bool:
-        identifier = document.identifier
-        assert identifier is not None, 'document error: %s' % document
-        if not document.valid:
-            # try to verify
-            meta = await self.get_meta(identifier=identifier)
-            if meta is None:
-                # assert False, 'meta not found: %s' % identifier
-                return False
-            elif not document.verify(public_key=meta.public_key):
-                # assert False, 'failed to verify document: %s' % identifier
-                return False
-        doc_type = document.type
-        if doc_type is None:
-            doc_type = '*'
-        # check old documents with type
-        all_documents = await self.get_documents(identifier=identifier)
-        old_doc = DocumentHelper.last_document(documents=all_documents, doc_type=doc_type)
-        if old_doc is not None and DocumentHelper.is_expired(document, old_doc):
-            # assert False, 'drop expired document: %s' % identifier
-            return False
-        # document ok, save it
-        db = self.archivist
-        return await db.save_document(document=document)
+        """
+        Save entity document with ID (must verify first)
+
+        :param document: entity document
+        :return: True on success
+        """
+        raise NotImplemented
 
     #
-    #   EntityDataSource
+    #   User DataSource
     #
 
     # Override
-    async def get_meta(self, identifier: ID) -> Optional[Meta]:
-        # if identifier.is_broadcast:
-        #     # broadcast ID has no meta
-        #     return None
+    async def public_key_for_encryption(self, identifier: ID) -> Optional[EncryptKey]:
+        assert identifier.is_user, 'user ID error: %s' % identifier
         db = self.archivist
-        info = await db.get_meta(identifier=identifier)
-        await db.check_meta(identifier=identifier, meta=info)
-        return info
+        # 1. get key from visa
+        key = await db.get_visa_key(identifier=identifier)
+        if key is not None:
+            # if visa.key exists, use it for encryption
+            return key
+        # 2. get key from meta
+        key = await db.get_meta_key(identifier=identifier)
+        if isinstance(key, EncryptKey):
+            # if visa.key not exists and meta.key is encrypt key,
+            # use it for encryption
+            return key
 
     # Override
-    async def get_documents(self, identifier: ID) -> List[Document]:
-        if identifier.is_broadcast:
-            # broadcast ID has no documents
-            return []
+    async def public_keys_for_verification(self, identifier: ID) -> List[VerifyKey]:
+        # assert identifier.is_user, 'user ID error: %s' % identifier
+        keys: List[VerifyKey] = []
         db = self.archivist
-        docs = await db.get_documents(identifier=identifier)
-        await db.check_documents(identifier=identifier, documents=docs)
-        return docs
+        # 1. get key from visa
+        key = await db.get_visa_key(identifier=identifier)
+        if isinstance(key, VerifyKey):
+            # the sender may use communication key to sign message.data,
+            # so try to verify it with visa.key first
+            keys.append(key)
+        # 2. get key from meta
+        key = await db.get_meta_key(identifier=identifier)
+        if key is not None:
+            # the sender may use identity key to sign message.data,
+            # try to verify it with meta.key too
+            keys.append(key)
+        assert len(keys) > 0, 'failed to get verify key for user: %s' % identifier
+        return keys
