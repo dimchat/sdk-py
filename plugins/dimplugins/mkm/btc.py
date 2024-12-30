@@ -30,10 +30,10 @@
 
 from typing import Optional
 
-from mkm.types import ConstantString
-from mkm.crypto import sha256, ripemd160
-from mkm.format import base58_encode, base58_decode
-from mkm import Address
+from dimp import ConstantString
+from dimp import sha256, ripemd160
+from dimp import base58_encode, base58_decode
+from dimp import Address
 
 
 class BTCAddress(ConstantString, Address):
@@ -55,11 +55,11 @@ class BTCAddress(ConstantString, Address):
 
     def __init__(self, address: str, network: int):
         super().__init__(string=address)
-        self.__network = network
+        self.__type = network
 
     @property  # Override
-    def type(self) -> int:
-        return self.__network
+    def network(self) -> int:
+        return self.__type
 
     #
     #   Factory methods
@@ -73,10 +73,14 @@ class BTCAddress(ConstantString, Address):
         :param network:     address type
         :return: Address object
         """
-        head = chr(network).encode('latin1')
-        body = ripemd160(sha256(fingerprint))
-        tail = check_code(head + body)
-        address = base58_encode(head + body + tail)
+        # 1. digest = ripemd160(sha256(fingerprint))
+        digest = ripemd160(sha256(fingerprint))
+        # 2. head = network + digest
+        head = chr(network).encode('latin1') + digest
+        # 3. cc = sha256(sha256(head)).prefix(4)
+        code = check_code(head)
+        # 4. data = base58_encode(head + cc)
+        address = base58_encode(head + code)
         return cls(address=address, network=network)
 
     @classmethod

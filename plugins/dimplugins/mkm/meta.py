@@ -30,14 +30,13 @@
 
 from typing import Optional, Any, Dict
 
-from mkm.format import utf8_encode
-from mkm.format import TransportableData
-from mkm.crypto import VerifyKey, SignKey, PrivateKey
-from mkm import EntityType, Address
-from mkm import Meta, MetaFactory
-from mkm import AccountFactoryManager
-
-from dimp.mkm import BaseMeta
+from dimp import utf8_encode
+from dimp import TransportableData
+from dimp import VerifyKey, SignKey, PrivateKey
+from dimp import EntityType, Address
+from dimp import Meta, MetaFactory
+from dimp import BaseMeta
+from dimp.plugins import SharedAccountExtensions
 
 from .btc import BTCAddress
 from .eth import ETHAddress
@@ -67,7 +66,7 @@ class DefaultMeta(BaseMeta):
         # caches
         self.__addresses = {}  # int -> Address
 
-    # Override
+    @property  # Override
     def has_seed(self) -> bool:
         return True
 
@@ -110,7 +109,7 @@ class BTCMeta(BaseMeta):
         # caches
         self.__addresses = {}  # int -> Address
 
-    # Override
+    @property  # Override
     def has_seed(self) -> bool:
         return False
 
@@ -154,7 +153,7 @@ class ETHMeta(BaseMeta):
         # caches
         self.__address: Optional[Address] = None
 
-    # Override
+    @property  # Override
     def has_seed(self) -> bool:
         return False
 
@@ -174,7 +173,7 @@ class ETHMeta(BaseMeta):
         return cached
 
 
-class GeneralMetaFactory(MetaFactory):
+class BaseMetaFactory(MetaFactory):
 
     def __init__(self, version: str):
         super().__init__()
@@ -214,8 +213,8 @@ class GeneralMetaFactory(MetaFactory):
 
     # Override
     def parse_meta(self, meta: dict) -> Optional[Meta]:
-        gf = AccountFactoryManager.general_factory
-        version = gf.get_meta_type(meta=meta, default='')
+        ext = SharedAccountExtensions()
+        version = ext.helper.get_meta_type(meta=meta, default='')
         if version == Meta.MKM:
             # MKM
             out = DefaultMeta(meta=meta)
@@ -229,9 +228,3 @@ class GeneralMetaFactory(MetaFactory):
             raise TypeError('unknown meta type: %d' % version)
         if out.valid:
             return out
-
-
-def register_meta_factories():
-    Meta.register(version=Meta.MKM, factory=GeneralMetaFactory(version=Meta.MKM))
-    Meta.register(version=Meta.BTC, factory=GeneralMetaFactory(version=Meta.BTC))
-    Meta.register(version=Meta.ETH, factory=GeneralMetaFactory(version=Meta.ETH))

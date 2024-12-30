@@ -23,8 +23,8 @@
 # SOFTWARE.
 # ==============================================================================
 
-from mkm.crypto import AsymmetricKey, SymmetricKey
-from mkm.crypto import PublicKey, PrivateKey
+from .digest import MD5Digester, SHA1Digester, SHA256Digester
+from .digest import Keccak256Digester, RipeMD160Digester
 
 from .plain import PlainKey, PlainKeyFactory
 from .aes import AESKey, AESKeyFactory
@@ -35,42 +35,11 @@ from .rsa import RSAPrivateKey, RSAPrivateKeyFactory
 from .ecc import ECCPublicKey, ECCPublicKeyFactory
 from .ecc import ECCPrivateKey, ECCPrivateKeyFactory
 
-from .digest import register_data_digesters
-
-
-def register_symmetric_key_factories():
-    # Symmetric Key: AES
-    factory = AESKeyFactory()
-    SymmetricKey.register(algorithm=SymmetricKey.AES, factory=factory)
-    SymmetricKey.register(algorithm='AES/CBC/PKCS7Padding', factory=factory)
-    # Symmetric Key: Plain
-    factory = PlainKeyFactory()
-    SymmetricKey.register(algorithm=PlainKey.PLAIN, factory=factory)
-
-
-def register_asymmetric_key_factories():
-    # Public Key: ECC
-    factory = ECCPublicKeyFactory()
-    PublicKey.register(algorithm=AsymmetricKey.ECC, factory=factory)
-    PublicKey.register(algorithm='SHA256withECDSA', factory=factory)
-    # Private Key: ECC
-    factory = ECCPrivateKeyFactory()
-    PrivateKey.register(algorithm=AsymmetricKey.ECC, factory=factory)
-    PrivateKey.register(algorithm='SHA256withECDSA', factory=factory)
-
-    # Public Key: RSA
-    factory = RSAPublicKeyFactory()
-    PublicKey.register(algorithm=AsymmetricKey.RSA, factory=factory)
-    PublicKey.register(algorithm='SHA256withRSA', factory=factory)
-    PublicKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=factory)
-    # Private Key: RSA
-    factory = RSAPrivateKeyFactory()
-    PrivateKey.register(algorithm=AsymmetricKey.RSA, factory=factory)
-    PrivateKey.register(algorithm='SHA256withRSA', factory=factory)
-    PrivateKey.register(algorithm='RSA/ECB/PKCS1Padding', factory=factory)
-
 
 __all__ = [
+
+    'MD5Digester', 'SHA1Digester', 'SHA256Digester',
+    'Keccak256Digester', 'RipeMD160Digester',
 
     'PlainKey', 'PlainKeyFactory',
     'AESKey', 'AESKeyFactory',
@@ -80,9 +49,5 @@ __all__ = [
 
     'ECCPublicKey', 'ECCPublicKeyFactory',
     'ECCPrivateKey', 'ECCPrivateKeyFactory',
-
-    'register_data_digesters',
-    'register_symmetric_key_factories',
-    'register_asymmetric_key_factories',
 
 ]

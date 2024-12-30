@@ -28,11 +28,10 @@ from typing import Optional, Union, Any, Dict
 
 import ecdsa
 
-from mkm.crypto import AsymmetricKey
-from mkm.crypto import PublicKey, PublicKeyFactory
-from mkm.crypto import PrivateKey, PrivateKeyFactory
-
-from dimp.crypto import BasePublicKey, BasePrivateKey
+from dimp import AsymmetricKey
+from dimp import PublicKey, PublicKeyFactory
+from dimp import PrivateKey, PrivateKeyFactory
+from dimp import BasePublicKey, BasePrivateKey
 
 
 class ECCPublicKey(BasePublicKey):

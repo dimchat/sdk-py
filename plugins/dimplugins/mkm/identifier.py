@@ -30,11 +30,9 @@
 
 from typing import Optional
 
-from mkm import ID, IDFactory, Identifier
-from mkm import Address
-from mkm import Meta
-
-from dimp.barrack import thanos
+from dimp import ID, IDFactory, Identifier
+from dimp import Address
+from dimp import Meta
 
 
 class GeneralIdentifierFactory(IDFactory):
@@ -42,18 +40,7 @@ class GeneralIdentifierFactory(IDFactory):
 
     def __init__(self):
         super().__init__()
-        self.__ids = {}  # str -> ID
-
-    def reduce_memory(self) -> int:
-        """
-        Call it when received 'UIApplicationDidReceiveMemoryWarningNotification',
-        this will remove 50% of cached objects
-
-        :return: number of survivors
-        """
-        finger = 0
-        finger = thanos(self.__ids, finger)
-        return finger >> 1
+        self._identifiers = {}  # str -> ID
 
     # Override
     def generate_identifier(self, meta: Meta, network: int, terminal: Optional[str]) -> ID:
@@ -64,19 +51,19 @@ class GeneralIdentifierFactory(IDFactory):
     # Override
     def create_identifier(self, name: Optional[str], address: Address, terminal: Optional[str]) -> ID:
         identifier = Identifier.concat(address=address, name=name, terminal=terminal)
-        cid = self.__ids.get(identifier)
+        cid = self._identifiers.get(identifier)
         if cid is None:
             cid = self._new_id(identifier=identifier, name=name, address=address, terminal=terminal)
-            self.__ids[identifier] = cid
+            self._identifiers[identifier] = cid
         return cid
 
     # Override
     def parse_identifier(self, identifier: str) -> Optional[ID]:
-        cid = self.__ids.get(identifier)
+        cid = self._identifiers.get(identifier)
         if cid is None:
             cid = self._parse(identifier=identifier)
             if cid is not None:
-                self.__ids[identifier] = cid
+                self._identifiers[identifier] = cid
         return cid
 
     # noinspection PyMethodMayBeStatic
@@ -114,7 +101,3 @@ class GeneralIdentifierFactory(IDFactory):
             return self._new_id(identifier=identifier, name=name, address=address, terminal=terminal)
         else:
             assert False, 'ID error: %s' % identifier
-
-
-def register_identifier_factory():
-    ID.register(factory=GeneralIdentifierFactory())

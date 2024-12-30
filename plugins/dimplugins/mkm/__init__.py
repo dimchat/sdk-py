@@ -30,32 +30,26 @@
 
 from .btc import BTCAddress
 from .eth import ETHAddress
+from .address import BaseAddressFactory
 
-from .address import BaseAddressFactory, GeneralAddressFactory
 from .identifier import GeneralIdentifierFactory
 
-from .meta import DefaultMeta, BTCMeta, ETHMeta, GeneralMetaFactory
-from .docs import GeneralDocumentFactory
+from .meta import DefaultMeta, BTCMeta, ETHMeta
+from .meta import BaseMetaFactory
 
-from .address import register_address_factory
-from .identifier import register_identifier_factory
-from .meta import register_meta_factories
-from .docs import register_document_factories
+from .docs import GeneralDocumentFactory
 
 
 __all__ = [
 
     'BTCAddress', 'ETHAddress',
-    'DefaultMeta', 'BTCMeta', 'ETHMeta',
+    'BaseAddressFactory',
 
-    'BaseAddressFactory', 'GeneralAddressFactory',
     'GeneralIdentifierFactory',
-    'GeneralMetaFactory',
-    'GeneralDocumentFactory',
 
-    'register_address_factory',
-    'register_identifier_factory',
-    'register_meta_factories',
-    'register_document_factories',
+    'DefaultMeta', 'BTCMeta', 'ETHMeta',
+    'BaseMetaFactory',
+
+    'GeneralDocumentFactory',
 
 ]

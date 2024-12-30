@@ -30,12 +30,11 @@
 
 from typing import Optional, Any, Dict
 
-from mkm.format import TransportableData
-from mkm.factory import AccountFactoryManager
-from mkm import ID
-from mkm import Document, DocumentFactory
-
-from dimp.mkm import BaseDocument, BaseVisa, BaseBulletin
+from dimp import TransportableData
+from dimp import ID
+from dimp import Document, DocumentFactory
+from dimp import BaseDocument, BaseVisa, BaseBulletin
+from dimp.plugins import SharedAccountExtensions
 
 
 class GeneralDocumentFactory(DocumentFactory):
@@ -45,9 +44,13 @@ class GeneralDocumentFactory(DocumentFactory):
         super().__init__()
         self.__type = doc_type
 
+    @property  # protected
+    def type(self) -> str:
+        return self.__type
+
     # Override
     def create_document(self, identifier: ID, data: Optional[str], signature: Optional[TransportableData]) -> Document:
-        doc_type = get_doc_type(doc_type=self.__type, identifier=identifier)
+        doc_type = get_doc_type(doc_type=self.type, identifier=identifier)
         if doc_type == Document.VISA:
             return BaseVisa(identifier=identifier, data=data, signature=signature)
         elif doc_type == Document.BULLETIN:
@@ -62,8 +65,8 @@ class GeneralDocumentFactory(DocumentFactory):
             # assert False, 'document ID not found: %s' % document
             return None
         # check document type
-        gf = AccountFactoryManager.general_factory
-        doc_type = gf.get_document_type(document=document, default=None)
+        ext = SharedAccountExtensions()
+        doc_type = ext.helper.get_document_type(document=document, default=None)
         if doc_type is None:
             doc_type = get_doc_type(doc_type='*', identifier=identifier)
         # create with document type
@@ -84,10 +87,3 @@ def get_doc_type(doc_type: str, identifier: ID) -> str:
         return Document.VISA
     else:
         return Document.PROFILE
-
-
-def register_document_factories():
-    Document.register(doc_type='*', factory=GeneralDocumentFactory(doc_type='*'))
-    Document.register(doc_type=Document.VISA, factory=GeneralDocumentFactory(doc_type=Document.VISA))
-    Document.register(doc_type=Document.PROFILE, factory=GeneralDocumentFactory(doc_type=Document.PROFILE))
-    Document.register(doc_type=Document.BULLETIN, factory=GeneralDocumentFactory(doc_type=Document.BULLETIN))

@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/blob/master/LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dimchat/sdk-py/pulls)
-[![Platform](https://img.shields.io/badge/Platform-Dart%203-brightgreen.svg)](https://github.com/dimchat/sdk-py/wiki)
+[![Platform](https://img.shields.io/badge/Platform-Python%203-brightgreen.svg)](https://github.com/dimchat/sdk-py/wiki)
 [![Issues](https://img.shields.io/github/issues/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/issues)
 [![Repo Size](https://img.shields.io/github/repo-size/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/archive/refs/heads/main.zip)
 [![Tags](https://img.shields.io/github/tag/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/tags)
@@ -136,34 +136,44 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
 ### 3. extends ExtensionLoader
 
 ```python
+from dimsdk import ContentType
 from dimsdk.plugins import ExtensionLoader
 
-/// Extensions Loader
-/// ~~~~~~~~~~~~~~~~~
+from ..protocol import HandshakeCommand
+from ..protocol import AppCustomizedContent
+
+
 class CommonLoader(ExtensionLoader):
-    """"
-        Extensions Loader
-        ~~~~~~~~~~~~~~~~~
-    """"
-    pass
+
+    def _register_customized_factories(self):
+        # Application Customized
+        self._set_content_factory(msg_type=ContentType.APPLICATION, content_class=AppCustomizedContent)
+        self._set_content_factory(msg_type=ContentType.CUSTOMIZED, content_class=AppCustomizedContent)
+
+    # Override
+    def _register_content_factories(self):
+        super()._register_content_factories()
+        self._register_customized_factories()
+
+    # Override
+    def _register_command_factories(self):
+        super()._register_command_factories()
+        # Handshake
+        self._set_command_factory(cmd=HandshakeCommand.HANDSHAKE, command_class=HandshakeCommand)
 ```
 
 ## Usages
 
 You must load all extensions before your business run:
 
-```dart
-import 'common_loader.dart';
+```python
+from ..common import CommonLoader
 
-void main() {
 
-  var loader = CommonLoader();
-  loader.run();
-  
-  // do your jobs after all extensions loaded.
-  
-}
-
+if __name__ == '__main__':
+  loader = CommonLoader()
+  loader.run()
+  # do your jobs after all extensions loaded.
 ```
 
 Also, to let your **CustomizedContentProcessor** start to work,

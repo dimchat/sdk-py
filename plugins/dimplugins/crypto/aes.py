@@ -28,10 +28,9 @@ from typing import Optional, Any, Dict
 
 from Crypto.Cipher import AES
 
-from mkm.format import TransportableData
-from mkm.crypto import SymmetricKey, SymmetricKeyFactory
-
-from dimp.crypto import BaseSymmetricKey
+from dimp import TransportableData
+from dimp import SymmetricKey, SymmetricKeyFactory
+from dimp import BaseSymmetricKey
 
 
 def random_bytes(size: int) -> bytes:
@@ -55,12 +54,12 @@ class AESKey(BaseSymmetricKey):
         base64 = self.get('data')
         if base64 is None:
             # new key
-            self.__data = self.__generate()
+            self.__data = self._generate()
         else:
             # lazy load
             self.__data: Optional[TransportableData] = None
 
-    def __generate(self) -> TransportableData:
+    def _generate(self) -> TransportableData:
         # random key data
         pwd = random_bytes(size=self.size)
         ted = TransportableData.create(data=pwd)
@@ -94,7 +93,7 @@ class AESKey(BaseSymmetricKey):
             assert ted is not None, 'key data error: %s' % base64
         return ted.data
 
-    def __get_init_vector(self, params: Optional[Dict]) -> bytes:
+    def _get_init_vector(self, params: Optional[Dict]) -> Optional[bytes]:
         """ get IV from params """
         # get base64 encoded IV from params
         if params is None:
@@ -115,11 +114,13 @@ class AESKey(BaseSymmetricKey):
             if iv is not None:
                 return iv
         assert base64 is None, 'IV data error: %s' % base64
+
+    def _zero_init_vector(self):
         # zero IV:
         #           b'\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0'
         return self.block_size * chr(0).encode('utf-8')
 
-    def __new_init_vector(self, extra: Optional[Dict]) -> bytes:
+    def _new_init_vector(self, extra: Optional[Dict]) -> bytes:
         # random IV data
         iv = random_bytes(size=self.block_size)
         # put encoded IV into extra
@@ -133,8 +134,10 @@ class AESKey(BaseSymmetricKey):
 
     # Override
     def encrypt(self, data: bytes, extra: Optional[Dict]) -> bytes:
-        # 1. random new 'IV'
-        key_iv = self.__new_init_vector(extra=extra)
+        # 1. if 'IV' not found in extra params, new a random 'IV'
+        key_iv = self._get_init_vector(params=extra)
+        if key_iv is None:
+            key_iv = self._new_init_vector(extra=extra)
         # 2. get key data
         key_data = self.data
         # 3. try to encrypt
@@ -144,8 +147,10 @@ class AESKey(BaseSymmetricKey):
 
     # Override
     def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
-        # 1. get 'IV' from extra params
-        key_iv = self.__get_init_vector(params=params)
+        # 1. if 'IV' not found in extra params, use an empty 'IV'
+        key_iv = self._get_init_vector(params=params)
+        if key_iv is None:
+            key_iv = self._zero_init_vector()
         # 2. get key data
         key_data = self.data
         # 3. try to decrypt

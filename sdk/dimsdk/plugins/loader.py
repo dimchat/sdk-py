@@ -136,6 +136,7 @@ class ExtensionLoader:
         ReliableMessage.set_factory(factory=factory)
 
     def _register_content_factories(self):
+        """ Core content factories """
         # Text
         self._set_content_factory(msg_type=ContentType.TEXT, content_class=BaseTextContent)
 
@@ -190,6 +191,7 @@ class ExtensionLoader:
         Content.set_factory(msg_type, factory=factory)
 
     def _register_command_factories(self):
+        """ Core command factories """
         # Meta Command
         self._set_command_factory(cmd=Command.META, command_class=BaseMetaCommand)
 

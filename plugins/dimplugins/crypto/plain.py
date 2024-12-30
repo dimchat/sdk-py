@@ -25,9 +25,8 @@
 
 from typing import Optional, Dict
 
-from mkm.crypto import SymmetricKey, SymmetricKeyFactory
-
-from dimp.crypto import BaseSymmetricKey
+from dimp import SymmetricKey, SymmetricKeyFactory
+from dimp import BaseSymmetricKey
 
 
 class PlainKey(BaseSymmetricKey):

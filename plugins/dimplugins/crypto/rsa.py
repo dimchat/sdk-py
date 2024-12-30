@@ -30,11 +30,10 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
 from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
-from mkm.crypto import AsymmetricKey, EncryptKey, DecryptKey
-from mkm.crypto import PublicKey, PublicKeyFactory
-from mkm.crypto import PrivateKey, PrivateKeyFactory
-
-from dimp.crypto import BaseKey, BasePublicKey, BasePrivateKey
+from dimp import AsymmetricKey, EncryptKey, DecryptKey
+from dimp import PublicKey, PublicKeyFactory
+from dimp import PrivateKey, PrivateKeyFactory
+from dimp import BaseKey, BasePublicKey, BasePrivateKey
 
 
 class RSAPublicKey(BasePublicKey, EncryptKey):
@@ -178,7 +177,7 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
 
     # Override
     def match_encrypt_key(self, key: EncryptKey) -> bool:
-        return BaseKey.keys_match(encrypt_key=key, decrypt_key=self)
+        return BaseKey.match_encrypt_key(encrypt_key=key, decrypt_key=self)
 
 
 def generate(bits: int) -> (RSA.RsaKey, bytes):

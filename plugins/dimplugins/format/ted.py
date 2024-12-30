@@ -25,10 +25,10 @@
 
 from typing import Dict, Any, Optional
 
-from mkm.types import Dictionary
-from mkm.format import TransportableData, TransportableDataFactory
-
-from dimp.crypto import BaseDataWrapper
+from dimp import Dictionary
+from dimp import BaseDataWrapper
+from dimp import TransportableData
+from mkm.format import TransportableDataFactory
 
 
 class Base64Data(Dictionary, TransportableData):

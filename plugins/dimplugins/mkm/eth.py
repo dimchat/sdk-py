@@ -30,10 +30,10 @@
 
 from typing import Optional
 
-from mkm.types import ConstantString
-from mkm.crypto import keccak256
-from mkm.format import hex_encode
-from mkm import Address, EntityType
+from dimp import ConstantString
+from dimp import keccak256
+from dimp import hex_encode
+from dimp import Address, EntityType
 
 
 class ETHAddress(ConstantString, Address):
@@ -53,7 +53,7 @@ class ETHAddress(ConstantString, Address):
         super().__init__(string=address)
 
     @property  # Override
-    def type(self) -> int:
+    def network(self) -> int:
         return EntityType.USER.value
 
     @classmethod

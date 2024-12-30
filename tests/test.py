@@ -19,12 +19,14 @@ import asyncio
 import unittest
 
 from dimsdk import *
+from dimsdk.plugins import *
 from plugins.dimplugins import *
 
 from tests.database import CommonFacebook
 
-register_all_factories()
-register_plugins()
+
+ExtensionLoader().run()
+PluginLoader().run()
 
 g_facebook = CommonFacebook()
 

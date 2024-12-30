@@ -40,24 +40,7 @@ from .crypto import *
 
 from .mkm import *
 
-
-#
-#   Register
-#
-
-
-def register_plugins():
-    """ Register all factories """
-    register_data_coders()
-    register_data_digesters()
-
-    register_symmetric_key_factories()
-    register_asymmetric_key_factories()
-
-    register_identifier_factory()
-    register_address_factory()
-    register_meta_factories()
-    register_document_factories()
+from .loader import PluginLoader
 
 
 __all__ = [
@@ -66,10 +49,18 @@ __all__ = [
     #   Format
     #
 
+    'Base64Coder', 'Base58Coder', 'HexCoder',
+    'JSONCoder', 'UTF8Coder',
+
     'Base64Data', 'Base64DataFactory',
     'BaseNetworkFile', 'BaseNetworkFileFactory',
 
-    'register_data_coders',
+    #
+    #   Digest
+    #
+
+    'MD5Digester', 'SHA1Digester', 'SHA256Digester',
+    'Keccak256Digester', 'RipeMD160Digester',
 
     #
     #   Crypto
@@ -84,30 +75,24 @@ __all__ = [
     'ECCPublicKey', 'ECCPublicKeyFactory',
     'ECCPrivateKey', 'ECCPrivateKeyFactory',
 
-    'register_data_digesters',
-    'register_symmetric_key_factories',
-    'register_asymmetric_key_factories',
-
     #
     #   MingKeMing
     #
 
     'BTCAddress', 'ETHAddress',
-    'DefaultMeta', 'BTCMeta', 'ETHMeta',
+    'BaseAddressFactory',
 
-    'BaseAddressFactory', 'GeneralAddressFactory',
     'GeneralIdentifierFactory',
-    'GeneralMetaFactory',
+
+    'DefaultMeta', 'BTCMeta', 'ETHMeta',
+    'BaseMetaFactory',
+
     'GeneralDocumentFactory',
 
-    'register_address_factory',
-    'register_identifier_factory',
-    'register_meta_factories',
-    'register_document_factories',
-
     #
-    #   Register
+    #   Loader
     #
 
-    'register_plugins',
+    'PluginLoader',
+
 ]

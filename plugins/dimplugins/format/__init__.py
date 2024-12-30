@@ -23,31 +23,19 @@
 # SOFTWARE.
 # ==============================================================================
 
-from mkm.format import PortableNetworkFile, TransportableData
+from .coder import Base64Coder, Base58Coder, HexCoder
+from .coder import JSONCoder, UTF8Coder
 
 from .ted import Base64Data, Base64DataFactory
 from .pnf import BaseNetworkFile, BaseNetworkFileFactory
 
-from .coder import register_base_coders
-
-
-def register_data_coders():
-    register_base_coders()
-    # PNF
-    factory = BaseNetworkFileFactory()
-    PortableNetworkFile.register(factory=factory)
-    # TED
-    factory = Base64DataFactory()
-    TransportableData.register(algorithm=TransportableData.BASE_64, factory=factory)
-    # TransportableData.register(algorithm=TransportableData.DEFAULT, factory=factory)
-    TransportableData.register(algorithm='*', factory=factory)
-
 
 __all__ = [
 
+    'Base64Coder', 'Base58Coder', 'HexCoder',
+    'JSONCoder', 'UTF8Coder',
+
     'Base64Data', 'Base64DataFactory',
     'BaseNetworkFile', 'BaseNetworkFileFactory',
-
-    'register_data_coders',
 
 ]

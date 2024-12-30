@@ -25,13 +25,13 @@
 
 from typing import Dict, Any, Optional
 
-from mkm.format import json_encode
-from mkm.format import TransportableData
-from mkm.format import PortableNetworkFile, PortableNetworkFileFactory
-from mkm.types import Dictionary, URI
-from mkm.crypto import DecryptKey
-
-from dimp.crypto import BaseFileWrapper
+from dimp import URI, json_encode
+from dimp import DecryptKey
+from dimp import Dictionary
+from dimp import BaseFileWrapper
+from dimp import TransportableData
+from dimp import PortableNetworkFile
+from mkm.format import PortableNetworkFileFactory
 
 
 class BaseNetworkFile(Dictionary, PortableNetworkFile):

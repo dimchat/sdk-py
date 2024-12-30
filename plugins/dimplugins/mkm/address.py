@@ -31,71 +31,47 @@
 from abc import ABC
 from typing import Optional, Dict
 
-from mkm import Address, AddressFactory
-from mkm import ANYWHERE, EVERYWHERE
-from mkm import Meta
-
-from dimp.barrack import thanos
+from dimp import Address, AddressFactory
+from dimp import ANYWHERE, EVERYWHERE
+from dimp import Meta
 
 from .btc import BTCAddress
 from .eth import ETHAddress
 
 
-"""
-    Base Address Factory
-    ~~~~~~~~~~~~~~~~~~~~
-
-    abstractmethod:
-        - create_address(address)
-"""
-
-
-# noinspection PyAbstractClass
 class BaseAddressFactory(AddressFactory, ABC):
+    """
+        Base Address Factory
+        ~~~~~~~~~~~~~~~~~~~~
+    """
 
     def __init__(self):
         super().__init__()
-        self.__addresses: Dict[str, Address] = {}
+        self._addresses: Dict[str, Address] = {}
 
     # Override
     def generate_address(self, meta: Meta, network: int = None) -> Optional[Address]:
         address = meta.generate_address(network=network)
-        if address is not None:
-            self.__addresses[str(address)] = address
-        # else:
-        #     assert False, 'failed to generate address with meta: %s' % meta
+        if address is None:
+            assert False, 'failed to generate address with meta: %s' % meta
+        self._addresses[str(address)] = address
         return address
 
     # Override
     def parse_address(self, address: str) -> Optional[Address]:
-        add = self.__addresses.get(address)
+        add = self._addresses.get(address)
         if add is None:
-            add = Address.create(address=address)
+            add = self._parse(address=address)
             if add is not None:
-                self.__addresses[address] = add
+                self._addresses[address] = add
         return add
 
-    def reduce_memory(self) -> int:
-        """
-        Call it when received 'UIApplicationDidReceiveMemoryWarningNotification',
-        this will remove 50% of cached objects
-
-        :return: number of survivors
-        """
-        finger = 0
-        finger = thanos(self.__addresses, finger)
-        return finger >> 1
-
-
-class GeneralAddressFactory(BaseAddressFactory):
-
-    # Override
-    def create_address(self, address: str) -> Optional[Address]:
+    # noinspection PyMethodMayBeStatic
+    def _parse(self, address: str) -> Optional[Address]:
         size = len(address)
-        #
-        #  checking for broadcast address
-        #
-        if size == 8:
+        if size == 0:
+            assert False, 'address should not be empty'
+        elif size == 8:
             # "anywhere"
             if address.lower() == 'anywhere':
                 return ANYWHERE
@@ -115,7 +91,3 @@ class GeneralAddressFactory(BaseAddressFactory):
         # TODO: other types of address
         assert res is not None, 'invalid address: %s' % address
         return res
-
-
-def register_address_factory():
-    Address.register(factory=GeneralAddressFactory())
