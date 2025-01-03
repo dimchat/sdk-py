@@ -31,7 +31,7 @@ from dimp import Dictionary
 from dimp import BaseFileWrapper
 from dimp import TransportableData
 from dimp import PortableNetworkFile
-from mkm.format import PortableNetworkFileFactory
+from dimp import PortableNetworkFileFactory
 
 
 class BaseNetworkFile(Dictionary, PortableNetworkFile):

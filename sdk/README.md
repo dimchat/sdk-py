@@ -90,7 +90,6 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
         sender = r_msg.sender
         return await handler.handle_action(act, sender=sender, content=content, msg=r_msg)
 
-    # noinspection PyUnusedLocal
     def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[List[Content]]:
         # Override for your application
         """
@@ -109,7 +108,6 @@ class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler)
             }
         })
 
-    # noinspection PyUnusedLocal
     def _fetch(self, mod: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[CustomizedContentHandler]:
         """ Override for you module """
         # if the application has too many modules, I suggest you to

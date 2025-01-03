@@ -28,7 +28,7 @@ from typing import Dict, Any, Optional
 from dimp import Dictionary
 from dimp import BaseDataWrapper
 from dimp import TransportableData
-from mkm.format import TransportableDataFactory
+from dimp import TransportableDataFactory
 
 
 class Base64Data(Dictionary, TransportableData):

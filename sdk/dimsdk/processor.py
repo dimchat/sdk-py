@@ -46,7 +46,7 @@ class MessageProcessor(TwinsHelper, Processor):
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)
-        self.__factory = self._create_factory()
+        self.__factory = self._create_factory(facebook=facebook, messenger=messenger)
 
     @property  # private
     def factory(self) -> ContentProcessorFactory:
@@ -54,7 +54,7 @@ class MessageProcessor(TwinsHelper, Processor):
         return self.__factory
 
     @abstractmethod  # protected
-    def _create_factory(self) -> ContentProcessorFactory:
+    def _create_factory(self, facebook: Facebook, messenger: Messenger) -> ContentProcessorFactory:
         raise NotImplemented
 
     #

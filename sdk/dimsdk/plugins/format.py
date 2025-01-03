@@ -30,8 +30,8 @@ from dimp import DecryptKey
 from dimp import JSONMap
 from dimp import TransportableData
 from dimp import PortableNetworkFile
-from mkm.format import TransportableDataFactory
-from mkm.format import PortableNetworkFileFactory
+from dimp import TransportableDataFactory
+from dimp import PortableNetworkFileFactory
 
 from dimp.plugins import GeneralFormatHelper
 from dimp.plugins import PortableNetworkFileHelper

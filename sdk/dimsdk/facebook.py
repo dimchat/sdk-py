@@ -110,8 +110,8 @@ class Facebook(Barrack, UserDataSource, GroupDataSource, ABC):
             assert receiver.is_user, 'receiver error: %s' % receiver
         users = await self.archivist.local_users
         if users is None or len(users) == 0:
-            assert False, 'local users should not be empty'
-            # return None
+            # assert False, 'local users should not be empty'
+            return None
         elif receiver.is_broadcast:
             # broadcast message can decrypt by anyone, so just return current user
             return users[0]

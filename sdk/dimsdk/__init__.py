@@ -28,7 +28,6 @@
 # SOFTWARE.
 # ==============================================================================
 
-from mkm.format import TransportableDataFactory, PortableNetworkFileFactory
 from dimp import *
 
 from .mkm import *
