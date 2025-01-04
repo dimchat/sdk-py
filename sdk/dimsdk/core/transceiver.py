@@ -36,9 +36,9 @@ from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 from dimp import BaseMessage
 
+from ..dkd import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 from ..mkm import EntityDelegate
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIMP : Decentralized Instant Messaging Protocol
+#   Dao-Ke-Dao: Universal Message Module
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -28,24 +28,12 @@
 # SOFTWARE.
 # ==============================================================================
 
-import weakref
-from abc import abstractmethod
-from typing import Optional
+from abc import ABC, abstractmethod
 
-from dimp import SecureMessage, ReliableMessage
-
-from ..dkd import ReliableMessageDelegate
+from dimp import ReliableMessage
 
 
-class ReliableMessagePacker:
-
-    def __init__(self, messenger: ReliableMessageDelegate):
-        super().__init__()
-        self.__transceiver = weakref.ref(messenger)
-
-    @property
-    def delegate(self) -> ReliableMessageDelegate:
-        return self.__transceiver()
+class ReliableMessageDelegate(ABC):  # (SecureMessageDelegate, ABC):
 
     """
         Verify the Reliable Message to Secure Message
@@ -62,40 +50,25 @@ class ReliableMessagePacker:
             +----------+
     """
 
-    @abstractmethod
-    async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        """
-        Verify 'data' and 'signature' field with sender's public key
+    # @abstractmethod
+    # async def decode_signature(self, signature: Any, msg: ReliableMessage) -> Optional[bytes]:
+    #     """
+    #     1. Decode 'message.signature' from String (Base64)
+    #
+    #     :param signature: base64 string
+    #     :param msg:       reliable message
+    #     :return: signature data
+    #     """
+    #     raise NotImplemented
 
-        :param msg: network message
-        :return: SecureMessage object if signature matched
+    @abstractmethod
+    async def verify_data_signature(self, data: bytes, signature: bytes, msg: ReliableMessage) -> bool:
         """
-        transceiver = self.delegate
-        #
-        #   0. Decode 'message.data' to encrypted content data
-        #
-        ciphertext = msg.data
-        if len(ciphertext) == 0:
-            # assert False, 'failed to decode message data: %s => %s, %s'\
-            #               % (msg.sender, msg.receiver, msg.group)
-            return None
-        #
-        #   1. Decode 'message.signature' from String (Base64)
-        #
-        signature = msg.signature
-        if len(signature) == 0:
-            # assert False, 'failed to decode message signature: %s => %s, %s'\
-            #               % (msg.sender, msg.receiver, msg.group)
-            return None
-        #
-        #   2. Verify the message data and signature with sender's public key
-        #
-        ok = await transceiver.verify_data_signature(data=ciphertext, signature=signature, msg=msg)
-        if not ok:
-            # assert False, 'message signature not match: %s => %s, %s'\
-            #               % (msg.sender, msg.receiver, msg.group)
-            return None
-        # OK, pack message
-        info = msg.copy_dictionary(deep_copy=False)
-        info.pop('signature', None)
-        return SecureMessage.parse(msg=info)
+        2. Verify the message data and signature with sender's public key
+
+        :param data:      message content(encrypted) data
+        :param signature: signature of message content(encrypted) data
+        :param msg:       reliable message
+        :return: True on signature matched
+        """
+        raise NotImplemented

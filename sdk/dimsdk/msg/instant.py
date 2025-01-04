@@ -36,8 +36,9 @@ from dimp import TransportableData
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import InstantMessage, SecureMessage
-from dimp import InstantMessageDelegate
 from dimp import BaseMessage
+
+from ..dkd import InstantMessageDelegate
 
 
 class InstantMessagePacker:

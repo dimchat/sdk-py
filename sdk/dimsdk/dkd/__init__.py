@@ -37,6 +37,10 @@ from .cmd_fact import GeneralCommandFactory
 from .cmd_fact import HistoryCommandFactory
 from .cmd_fact import GroupCommandFactory
 
+from .instant import InstantMessageDelegate
+from .secure import SecureMessageDelegate
+from .reliable import ReliableMessageDelegate
+
 __all__ = [
 
     'ContentProcessor',
@@ -47,5 +51,9 @@ __all__ = [
     'GeneralCommandFactory',
     'HistoryCommandFactory',
     'GroupCommandFactory',
+
+    'InstantMessageDelegate',
+    'SecureMessageDelegate',
+    'ReliableMessageDelegate',
 
 ]

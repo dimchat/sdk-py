@@ -31,10 +31,9 @@
 from typing import Optional
 
 from dimp import utf8_encode, utf8_decode, json_encode, json_decode
-from dimp import InstantMessage, InstantMessageDelegate
-from dimp import SecureMessage, SecureMessageDelegate
-from dimp import ReliableMessage, ReliableMessageDelegate
+from dimp import InstantMessage, SecureMessage, ReliableMessage
 
+from .dkd import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
 from .msg import MessageUtils
 from .core import Packer
