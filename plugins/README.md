@@ -146,13 +146,13 @@ class CompatibleMetaFactory(BaseMetaFactory):
     def parse_meta(self, meta: dict) -> Optional[Meta]:
         ext = SharedAccountExtensions()
         version = ext.helper.get_meta_type(meta=meta, default='')
-        if version == 'MKM' or version == 'mkm' or version == '1':
+        if version in ['1', 'mkm', 'MKM']:
             # MKM
             out = DefaultMeta(meta=meta)
-        elif version == 'BTC' or version == 'btc' or version == '2':
+        elif version in ['2', 'btc', 'BTC']:
             # BTC
             out = BTCMeta(meta=meta)
-        elif version == 'ETH' or version == 'eth' or version == '4':
+        elif version in ['4', 'eth', 'ETH']:
             # ETH
             out = ETHMeta(meta=meta)
         else:
