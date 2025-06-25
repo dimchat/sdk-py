@@ -51,7 +51,7 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     @property
     @abstractmethod
-    def barrack(self) -> Optional[EntityDelegate]:
+    def facebook(self) -> Optional[EntityDelegate]:
         raise NotImplemented
 
     #
@@ -93,7 +93,7 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key: %s' % msg
         assert receiver.is_user, 'receiver error: %s' % receiver
         # TODO: make sure the receiver's public key exists
-        contact = await self.barrack.get_user(identifier=receiver)
+        contact = await self.facebook.get_user(identifier=receiver)
         if contact is None:
             assert False, 'failed to encrypt message key for receiver: %s' % receiver
         # encrypt with public key of the receiver (or group member)
@@ -121,7 +121,7 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         #         if it's a group message
         assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key'
         assert receiver.is_user, 'receiver error: %s' % receiver
-        user = await self.barrack.get_user(identifier=receiver)
+        user = await self.facebook.get_user(identifier=receiver)
         if user is None:
             assert False, 'failed to create local user: %s' % msg.receiver
         # decrypt with private key of the receiver (or group member)
@@ -179,12 +179,14 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         #       'W' -> 'time'
         #       'G' -> 'group'
         return Content.parse(content=dictionary)
+        # NOTICE: check attachment for File/Image/Audio/Video message content
+        #         after deserialize content, this job should be do in subclass
 
     # Override
     # noinspection PyUnusedLocal
     async def sign_data(self, data: bytes, msg: SecureMessage) -> bytes:
         sender = msg.sender
-        user = await self.barrack.get_user(identifier=sender)
+        user = await self.facebook.get_user(identifier=sender)
         if user is None:
             assert False, 'failed to sign message data for sender: %s' % sender
         return await user.sign(data)
@@ -204,7 +206,7 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     # Override
     async def verify_data_signature(self, data: bytes, signature: bytes, msg: ReliableMessage) -> bool:
         sender = msg.sender
-        contact = await self.barrack.get_user(identifier=sender)
+        contact = await self.facebook.get_user(identifier=sender)
         if contact is None:
             assert False, 'failed to verify signature for sender: %s' % sender
         return await contact.verify(data=data, signature=signature)

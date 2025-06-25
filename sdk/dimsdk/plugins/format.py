@@ -124,6 +124,8 @@ class FormatGeneralFactory(GeneralFormatHelper, PortableNetworkFileHelper, Trans
 
     # Override
     def get_transportable_data_factory(self, algorithm: str) -> Optional[TransportableDataFactory]:
+        if algorithm is None or len(algorithm) == 0:
+            return None
         return self.__ted_factories.get(algorithm)
 
     # Override
@@ -143,12 +145,15 @@ class FormatGeneralFactory(GeneralFormatHelper, PortableNetworkFileHelper, Trans
         if info is None:
             # assert False, 'TED error: %s' % ted
             return None
-        algorithm = self.get_format_algorithm(info, default='*')
+        algorithm = self.get_format_algorithm(info, default=None)
+        # assert algorithm is not None, 'TED error: %s' % key
         factory = self.get_transportable_data_factory(algorithm=algorithm)
         if factory is None:
-            assert algorithm != '*', 'TED factory not ready'
+            # unknown algorithm, get default factory
             factory = self.get_transportable_data_factory(algorithm='*')  # unknown
-            assert factory is not None, 'default TED factory not found'
+            if factory is None:
+                # assert False, 'default TED factory not found: %s' % ted
+                return None
         return factory.parse_transportable_data(info)
 
     #

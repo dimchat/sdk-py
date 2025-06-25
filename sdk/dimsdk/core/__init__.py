@@ -28,7 +28,6 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .barrack import thanos
 from .barrack import Barrack
 
 from .packer import Packer
@@ -39,8 +38,6 @@ from .delegate import CipherKeyDelegate
 
 
 __all__ = [
-
-    'thanos',
 
     'Barrack',
 

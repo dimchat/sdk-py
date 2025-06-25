@@ -63,15 +63,15 @@ class MessagePacker(TwinsHelper, Packer):
     def _create_reliable_message_packer(self, messenger: ReliableMessageDelegate):
         return ReliableMessagePacker(messenger=messenger)
 
-    @property
+    @property  # protected
     def instant_packer(self) -> InstantMessagePacker:
         return self.__instant_packer
 
-    @property
+    @property  # protected
     def secure_packer(self) -> SecureMessagePacker:
         return self.__secure_packer
 
-    @property
+    @property  # protected
     def reliable_packer(self) -> ReliableMessagePacker:
         return self.__reliablePacker
 
@@ -146,6 +146,7 @@ class MessagePacker(TwinsHelper, Packer):
     #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
     #
 
+    # Override
     async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
         js = utf8_decode(data=data)
         if js is None:
@@ -185,6 +186,7 @@ class MessagePacker(TwinsHelper, Packer):
         #
         return True
 
+    # Override
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         # make sure sender's meta exists before verifying message
         if not await self._check_attachments(msg=msg):
@@ -193,6 +195,7 @@ class MessagePacker(TwinsHelper, Packer):
         # verify 'data' with 'signature'
         return await self.reliable_packer.verify_message(msg=msg)
 
+    # Override
     async def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
         # TODO: check receiver before calling this, make sure you are the receiver,
         #       or you are a member of the group when this is a group message,

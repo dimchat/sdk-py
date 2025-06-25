@@ -31,6 +31,7 @@
 from abc import abstractmethod
 from typing import List
 
+from dimp import ContentType
 from dimp import Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 
@@ -167,7 +168,7 @@ class MessageProcessor(TwinsHelper, Processor):
         cpu = factory.get_content_processor(content=content)
         if cpu is None:
             # default content processor
-            cpu = factory.get_content_processor_for_type(0)
+            cpu = factory.get_content_processor_for_type(ContentType.ANY)
             assert cpu is not None, 'default CPU not defined'
         return await cpu.process_content(content=content, r_msg=r_msg)
         # TODO: override to filter the response

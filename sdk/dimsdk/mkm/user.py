@@ -242,8 +242,8 @@ class BaseUser(BaseEntity, User):
         return super().data_source
 
     # @data_source.setter  # Override
-    # def data_source(self, barrack: UserDataSource):
-    #     super(BaseUser, BaseUser).data_source.__set__(self, barrack)
+    # def data_source(self, facebook: UserDataSource):
+    #     super(BaseUser, BaseUser).data_source.__set__(self, facebook)
 
     @property  # Override
     async def visa(self) -> Optional[Visa]:
@@ -252,15 +252,15 @@ class BaseUser(BaseEntity, User):
 
     @property  # Override
     async def contacts(self) -> List[ID]:
-        barrack = self.data_source
-        assert isinstance(barrack, UserDataSource), 'user delegate error: %s' % barrack
-        return await barrack.get_contacts(identifier=self.identifier)
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        return await facebook.get_contacts(identifier=self.identifier)
 
     # Override
     async def verify(self, data: bytes, signature: bytes) -> bool:
-        barrack = self.data_source
-        assert isinstance(barrack, UserDataSource), 'user delegate error: %s' % barrack
-        keys = await barrack.public_keys_for_verification(identifier=self.identifier)
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        keys = await facebook.public_keys_for_verification(identifier=self.identifier)
         assert len(keys) > 0, 'failed to get verify keys: %s' % self.identifier
         for key in keys:
             if key.verify(data=data, signature=signature):
@@ -271,29 +271,29 @@ class BaseUser(BaseEntity, User):
 
     # Override
     async def encrypt(self, data: bytes) -> bytes:
-        barrack = self.data_source
-        assert isinstance(barrack, UserDataSource), 'user delegate error: %s' % barrack
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
         # NOTICE: meta.key will never changed, so use visa.key to encrypt message
         #         is the better way
-        key = await barrack.public_key_for_encryption(identifier=self.identifier)
+        key = await facebook.public_key_for_encryption(identifier=self.identifier)
         assert key is not None, 'failed to get encrypt key for user: %s' % self.identifier
         return key.encrypt(data=data, extra=None)
 
     # Override
     async def sign(self, data: bytes) -> bytes:
-        barrack = self.data_source
-        assert isinstance(barrack, UserDataSource), 'user delegate error: %s' % barrack
-        key = await barrack.private_key_for_signature(identifier=self.identifier)
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        key = await facebook.private_key_for_signature(identifier=self.identifier)
         assert key is not None, 'failed to get sign key for user: %s' % self.identifier
         return key.sign(data=data)
 
     # Override
     async def decrypt(self, data: bytes) -> Optional[bytes]:
-        barrack = self.data_source
-        assert isinstance(barrack, UserDataSource), 'user delegate error: %s' % barrack
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
         # NOTICE: if you provide a public key in visa document for encryption,
         #         here you should return the private key paired with visa.key
-        keys = await barrack.private_keys_for_decryption(identifier=self.identifier)
+        keys = await facebook.private_keys_for_decryption(identifier=self.identifier)
         assert len(keys) > 0, 'failed to get decrypt keys: %s' % self.identifier
         for key in keys:
             # try decrypting it with each private key
@@ -307,10 +307,10 @@ class BaseUser(BaseEntity, User):
     # Override
     async def sign_visa(self, visa: Visa) -> Optional[Visa]:
         assert self.identifier == visa.identifier, 'visa ID not match: %s, %s' % (self.identifier, visa)
-        barrack = self.data_source
-        assert isinstance(barrack, UserDataSource), 'user delegate error: %s' % barrack
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
         # NOTICE: only sign visa with the private key paired with your meta.key
-        key = await barrack.private_key_for_visa_signature(identifier=self.identifier)
+        key = await facebook.private_key_for_visa_signature(identifier=self.identifier)
         assert key is not None, 'failed to get sign key for visa: %s' % self.identifier
         if visa.sign(private_key=key) is None:
             assert False, 'failed to sign visa: %s, %s' % (self.identifier, visa)

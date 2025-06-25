@@ -35,8 +35,6 @@ from .dkd import *
 from .msg import *
 from .core import *
 
-from .ans import AddressNameService
-from .archivist import Archivist
 from .facebook import Facebook
 from .messenger import Messenger
 from .packer import MessagePacker
@@ -230,9 +228,6 @@ __all__ = [
     #
 
     'TwinsHelper',
-
-    'AddressNameService',
-    'Archivist',
     'Facebook', 'Messenger',
     'MessageProcessor', 'MessagePacker',
 

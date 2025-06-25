@@ -75,7 +75,7 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         # assert False, 'unsupported content: %s' % msg_type
 
     # Override
-    def create_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
+    def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
         # meta command
         if cmd == Command.META:
             return MetaCommandProcessor(facebook=self.facebook, messenger=self.messenger)

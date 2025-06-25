@@ -52,7 +52,7 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
     def __init__(self):
         super().__init__()
         # int(msg_type) -> content factory
-        self.__content_factories: Dict[int, ContentFactory] = {}
+        self.__content_factories: Dict[str, ContentFactory] = {}
         # envelope factory
         self.__envelope_factory: Optional[EnvelopeFactory] = None
         # message factories
@@ -61,20 +61,22 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
         self.__reliable_message_factory: Optional[ReliableMessageFactory] = None
 
     # Override
-    def get_content_type(self, content: Dict, default: Optional[int]) -> Optional[int]:
+    def get_content_type(self, content: Dict, default: Optional[str]) -> Optional[str]:
         value = content.get('type')
-        return Converter.get_int(value=value, default=default)
+        return Converter.get_str(value=value, default=default)
 
     #
     #   Content
     #
 
     # Override
-    def set_content_factory(self, msg_type: int, factory: ContentFactory):
+    def set_content_factory(self, msg_type: str, factory: ContentFactory):
         self.__content_factories[msg_type] = factory
 
     # Override
-    def get_content_factory(self, msg_type: int) -> Optional[ContentFactory]:
+    def get_content_factory(self, msg_type: str) -> Optional[ContentFactory]:
+        if msg_type is None or len(msg_type) == 0:
+            return None
         return self.__content_factories.get(msg_type)
 
     # Override
@@ -88,12 +90,15 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
             # assert False, 'message content error: %s' % content
             return None
         # get factory by content type
-        msg_type = self.get_content_type(content=info, default=0)
-        assert msg_type > 0, 'content error: %s' % content
+        msg_type = self.get_content_type(content=info, default=None)
+        # assert msg_type is not None, 'content error: %s' % content
         factory = self.get_content_factory(msg_type)
         if factory is None:
-            factory = self.get_content_factory(0)  # unknown
-            assert factory is not None, 'default content factory not found'
+            # unknown content type, get default content factory
+            factory = self.get_content_factory('*')  # unknown
+            if factory is None:
+                # assert False, 'default content factory not found: %s' % content
+                return None
         return factory.parse_content(content=info)
 
     #
@@ -161,7 +166,7 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
         return factory.parse_instant_message(msg=info)
 
     # Override
-    def generate_serial_number(self, msg_type: Optional[int], now: Optional[DateTime]) -> int:
+    def generate_serial_number(self, msg_type: Optional[str], now: Optional[DateTime]) -> int:
         factory = self.get_instant_message_factory()
         assert factory is not None, 'instant message factory not ready'
         return factory.generate_serial_number(msg_type, now)

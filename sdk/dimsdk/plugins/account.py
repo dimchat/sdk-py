@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Iterable, Any, List, Dict
+from typing import Optional, Any, Dict
 
 from dimp import Converter, Wrapper
 from dimp import TransportableData
@@ -38,6 +38,7 @@ from dimp import Address, AddressFactory
 from dimp import ID, IDFactory
 from dimp import Meta, MetaFactory
 from dimp import Document, DocumentFactory
+from dimp import DocumentType
 
 from dimp.plugins import AddressHelper, IdentifierHelper
 from dimp.plugins import MetaHelper, DocumentHelper
@@ -68,7 +69,21 @@ class AccountGeneralFactory(GeneralAccountHelper,
     # Override
     def get_document_type(self, document: Dict, default: Optional[str]) -> Optional[str]:
         value = document.get('type')
-        return Converter.get_str(value=value, default=default)
+        if value is not None:
+            return Converter.get_str(value=value, default=default)
+        elif default is not None:
+            return default
+        # get type for did
+        identifier = ID.parse(identifier=document.get('did'))
+        if identifier is None:
+            # assert False, 'document error: %s' % document
+            return None
+        elif identifier.is_user:
+            return DocumentType.VISA
+        elif identifier.is_group:
+            return DocumentType.BULLETIN
+        else:
+            return DocumentType.PROFILE
 
     #
     #   Address
@@ -95,7 +110,9 @@ class AccountGeneralFactory(GeneralAccountHelper,
         elif isinstance(address, Address):
             return address
         string = Wrapper.get_str(address)
-        assert string is not None, 'address error: %s' % address
+        if string is None:
+            # assert False, 'address error: %s' % address
+            return None
         factory = self.get_address_factory()
         assert factory is not None, 'address factory not set'
         return factory.parse_address(address=string)
@@ -131,28 +148,12 @@ class AccountGeneralFactory(GeneralAccountHelper,
         elif isinstance(identifier, ID):
             return identifier
         string = Wrapper.get_str(identifier)
-        assert string is not None, 'ID error: %s' % identifier
+        if string is None:
+            # assert False, 'ID error: %s' % identifier
+            return None
         factory = self.get_identifier_factory()
         assert factory is not None, 'ID factory not set'
         return factory.parse_identifier(identifier=string)
-
-    # Override
-    def convert_identifiers(self, array: Iterable) -> List[ID]:
-        result = []
-        for item in array:
-            identifier = self.parse_identifier(identifier=item)
-            if identifier is None:
-                # id error
-                continue
-            result.append(identifier)
-        return result
-
-    # Override
-    def revert_identifiers(self, array: Iterable[ID]) -> List[str]:
-        result = []
-        for item in array:
-            result.append(str(item))
-        return result
 
     #
     #   Meta
@@ -164,6 +165,8 @@ class AccountGeneralFactory(GeneralAccountHelper,
 
     # Override
     def get_meta_factory(self, version: str) -> Optional[MetaFactory]:
+        if version is None or len(version) == 0:
+            return None
         return self.__meta_factories.get(version)
 
     # Override
@@ -190,11 +193,15 @@ class AccountGeneralFactory(GeneralAccountHelper,
         if info is None:
             # assert False, 'meta error: %s' % meta
             return None
-        version = self.get_meta_type(meta=info, default='*')
+        version = self.get_meta_type(meta=info, default=None)
+        # assert version is not None, 'meta type error: %s' % meta
         factory = self.get_meta_factory(version)
         if factory is None:
+            # unknown meta type, get default meta factory
             factory = self.get_meta_factory('*')  # unknown
-            assert factory is not None, 'default meta factory not found'
+            if factory is None:
+                # assert False, 'default meta factory not found: %s' % meta
+                return None
         return factory.parse_meta(meta=info)
 
     #
@@ -207,6 +214,8 @@ class AccountGeneralFactory(GeneralAccountHelper,
 
     # Override
     def get_document_factory(self, doc_type: str) -> Optional[DocumentFactory]:
+        if doc_type is None or len(doc_type) == 0:
+            return None
         return self.__document_factories.get(doc_type)
 
     # Override
@@ -226,10 +235,13 @@ class AccountGeneralFactory(GeneralAccountHelper,
         if info is None:
             # assert False, 'document error: %s' % document
             return None
-        doc_type = self.get_document_type(document=info, default='*')
+        doc_type = self.get_document_type(document=info, default=None)
+        # assert doc_type is not None, 'document type error: %s' % document
         factory = self.get_document_factory(doc_type)
         if factory is None:
-            assert doc_type != '*', 'document factory not ready: %s' % document
+            # unknown document type, get default document factory
             factory = self.get_document_factory('*')  # unknown
-            assert factory is not None, 'default document factory not found'
+            if factory is None:
+                # assert False, 'default document factory not found: %s' % document
+                return None
         return factory.parse_document(document=info)

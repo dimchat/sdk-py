@@ -67,6 +67,22 @@ class Messenger(Transceiver, Packer, Processor, ABC):
         raise NotImplemented
 
     #
+    #   SecureMessageDelegate
+    #
+
+    # Override
+    async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
+        if data is None:
+            # get key from cache with direction: sender -> receiver(group)
+            return await self.get_decrypt_key(msg=msg)
+        # cache decrypt key when success
+        password = await super().deserialize_key(data=data, msg=msg)
+        if password is not None:
+            # cache the key with direction: sender -> receiver(group)
+            await self.cache_decrypt_key(key=password, msg=msg)
+        return password
+
+    #
     #   Interfaces for Cipher Key
     #
 
@@ -150,28 +166,3 @@ class Messenger(Transceiver, Packer, Processor, ABC):
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         delegate = self.processor
         return await delegate.process_content(content=content, r_msg=r_msg)
-
-    #
-    #   SecureMessageDelegate
-    #
-
-    # Override
-    async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
-        if data is None:
-            # get key from cache with direction: sender -> receiver(group)
-            return await self.get_decrypt_key(msg=msg)
-        else:
-            return await super().deserialize_key(data=data, msg=msg)
-
-    # Override
-    async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
-        content = await super().deserialize_content(data=data, key=key, msg=msg)
-        # cache decrypt key when success
-        if content is None:
-            assert False, 'content error: %d' % len(data)
-        else:
-            # cache the key with direction: sender -> receiver(group)
-            await self.cache_decrypt_key(key=key, msg=msg)
-        # NOTICE: check attachment for File/Image/Audio/Video message content
-        #         after deserialize content, this job should be do in subclass
-        return content

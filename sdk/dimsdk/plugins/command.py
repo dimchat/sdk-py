@@ -58,6 +58,8 @@ class CommandGeneralFactory(GeneralCommandHelper, CommandHelper):
 
     # Override
     def get_command_factory(self, cmd: str) -> Optional[CommandFactory]:
+        if cmd is None or len(cmd) == 0:
+            return None
         return self.__command_factories.get(cmd)
 
     # Override
@@ -71,20 +73,22 @@ class CommandGeneralFactory(GeneralCommandHelper, CommandHelper):
             # assert False, 'command content error: %s' % content
             return None
         # get factory by command name
-        cmd = self.get_cmd(content=info, default='')
-        assert len(cmd) > 0, 'command name not found: %s' % content
+        cmd = self.get_cmd(content=info, default=None)
+        # assert cmd is not None, 'command name not found: %s' % content
         factory = self.get_command_factory(cmd=cmd)
         if factory is None:
             # unknown command name, get base command factory
             factory = default_factory(info=info)
-            assert factory is not None, 'cannot parse command: %s' % content
-        if factory is not None:
-            return factory.parse_command(content=info)
+            if factory is None:
+                # assert False, 'cannot parse command: %s' % content
+                return None
+        return factory.parse_command(content=info)
 
 
 def default_factory(info: Dict[str, Any]) -> Optional[CommandFactory]:
     ext = SharedMessageExtensions()
-    msg_type = ext.helper.get_content_type(content=info, default=0)
+    msg_type = ext.helper.get_content_type(content=info, default=None)
+    # assert msg_type is not None, 'content type not found: %s' % info
     fact = ext.content_helper.get_content_factory(msg_type)
     if isinstance(fact, CommandFactory):
         return fact

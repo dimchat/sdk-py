@@ -88,7 +88,7 @@ class Entity(ABC):
 
     @data_source.setter
     @abstractmethod
-    def data_source(self, barrack: EntityDataSource):
+    def data_source(self, facebook: EntityDataSource):
         raise NotImplemented
 
     @property
@@ -125,7 +125,7 @@ class BaseEntity(Entity):
         """
         super().__init__()
         self.__id = identifier
-        self.__barrack = None
+        self.__facebook = None
 
     # Override
     def __str__(self):
@@ -163,13 +163,13 @@ class BaseEntity(Entity):
 
     @property  # Override
     def data_source(self) -> Optional[EntityDataSource]:
-        barrack = self.__barrack
-        if barrack is not None:
-            return barrack()
+        facebook = self.__facebook
+        if facebook is not None:
+            return facebook()
 
     @data_source.setter  # Override
-    def data_source(self, barrack: EntityDataSource):
-        self.__barrack = weakref.ref(barrack)
+    def data_source(self, facebook: EntityDataSource):
+        self.__facebook = weakref.ref(facebook)
 
     @property  # Override
     def identifier(self) -> ID:

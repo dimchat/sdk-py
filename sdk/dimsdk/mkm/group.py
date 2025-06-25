@@ -155,8 +155,8 @@ class BaseGroup(BaseEntity, Group):
         return super().data_source
 
     # @data_source.setter  # Override
-    # def data_source(self, delegate: GroupDataSource):
-    #     super(BaseGroup, BaseGroup).data_source.__set__(self, delegate)
+    # def data_source(self, facebook: GroupDataSource):
+    #     super(BaseGroup, BaseGroup).data_source.__set__(self, facebook)
 
     @property  # Override
     async def bulletin(self) -> Optional[Bulletin]:
@@ -166,25 +166,25 @@ class BaseGroup(BaseEntity, Group):
     @property  # Override
     async def founder(self) -> ID:
         if self.__founder is None:
-            barrack = self.data_source
-            assert isinstance(barrack, GroupDataSource), 'group delegate error: %s' % barrack
-            self.__founder = await barrack.get_founder(identifier=self.identifier)
+            facebook = self.data_source
+            assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
+            self.__founder = await facebook.get_founder(identifier=self.identifier)
         return self.__founder
 
     @property  # Override
     async def owner(self) -> ID:
-        barrack = self.data_source
-        assert isinstance(barrack, GroupDataSource), 'group delegate error: %s' % barrack
-        return await barrack.get_owner(identifier=self.identifier)
+        facebook = self.data_source
+        assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
+        return await facebook.get_owner(identifier=self.identifier)
 
     @property  # Override
     async def members(self) -> List[ID]:
-        barrack = self.data_source
-        assert isinstance(barrack, GroupDataSource), 'group delegate error: %s' % barrack
-        return await barrack.get_members(identifier=self.identifier)
+        facebook = self.data_source
+        assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
+        return await facebook.get_members(identifier=self.identifier)
 
     @property  # Override
     async def assistants(self) -> List[ID]:
-        barrack = self.data_source
-        assert isinstance(barrack, GroupDataSource), 'group delegate error: %s' % barrack
-        return await barrack.get_assistants(identifier=self.identifier)
+        facebook = self.data_source
+        assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
+        return await facebook.get_assistants(identifier=self.identifier)

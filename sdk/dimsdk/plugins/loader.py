@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Union, Any, Dict
+from typing import Optional, Any, Dict
 
 from dimp import *
 from dimp.plugins import *
@@ -138,57 +138,56 @@ class ExtensionLoader:
     def _register_content_factories(self):
         """ Core content factories """
         # Text
-        self._set_content_factory(msg_type=ContentType.TEXT, content_class=BaseTextContent)
+        self._set_content_factory(msg_type=ContentType.TEXT, alias='text', content_class=BaseTextContent)
 
         # File
-        self._set_content_factory(msg_type=ContentType.FILE, content_class=BaseFileContent)
+        self._set_content_factory(msg_type=ContentType.FILE, alias='file', content_class=BaseFileContent)
         # Image
-        self._set_content_factory(msg_type=ContentType.IMAGE, content_class=ImageFileContent)
+        self._set_content_factory(msg_type=ContentType.IMAGE, alias='image', content_class=ImageFileContent)
         # Audio
-        self._set_content_factory(msg_type=ContentType.AUDIO, content_class=AudioFileContent)
+        self._set_content_factory(msg_type=ContentType.AUDIO, alias='audio', content_class=AudioFileContent)
         # Video
-        self._set_content_factory(msg_type=ContentType.VIDEO, content_class=VideoFileContent)
+        self._set_content_factory(msg_type=ContentType.VIDEO, alias='video', content_class=VideoFileContent)
 
         # Web Page
-        self._set_content_factory(msg_type=ContentType.PAGE, content_class=WebPageContent)
+        self._set_content_factory(msg_type=ContentType.PAGE, alias='page', content_class=WebPageContent)
 
         # Name Card
-        self._set_content_factory(msg_type=ContentType.NAME_CARD, content_class=NameCardContent)
+        self._set_content_factory(msg_type=ContentType.NAME_CARD, alias='card', content_class=NameCardContent)
 
         # Quote
-        self._set_content_factory(msg_type=ContentType.QUOTE, content_class=BaseQuoteContent)
+        self._set_content_factory(msg_type=ContentType.QUOTE, alias='quote', content_class=BaseQuoteContent)
 
         # Money
-        self._set_content_factory(msg_type=ContentType.MONEY, content_class=BaseMoneyContent)
-        self._set_content_factory(msg_type=ContentType.TRANSFER, content_class=TransferMoneyContent)
+        self._set_content_factory(msg_type=ContentType.MONEY, alias='money', content_class=BaseMoneyContent)
+        self._set_content_factory(msg_type=ContentType.TRANSFER, alias='transfer', content_class=TransferMoneyContent)
         # ...
 
         # Command
-        self._set_content_factory(msg_type=ContentType.COMMAND, factory=GeneralCommandFactory())
+        self._set_content_factory(msg_type=ContentType.COMMAND, alias='command', factory=GeneralCommandFactory())
 
         # History Command
-        self._set_content_factory(msg_type=ContentType.HISTORY, factory=HistoryCommandFactory())
+        self._set_content_factory(msg_type=ContentType.HISTORY, alias='history', factory=HistoryCommandFactory())
 
         # Content Array
-        self._set_content_factory(msg_type=ContentType.ARRAY, content_class=ListContent)
+        self._set_content_factory(msg_type=ContentType.ARRAY, alias='array', content_class=ListContent)
 
         # Combine and Forward
-        self._set_content_factory(msg_type=ContentType.COMBINE_FORWARD, content_class=CombineForwardContent)
+        self._set_content_factory(ContentType.COMBINE_FORWARD, alias='combine', content_class=CombineForwardContent)
 
         # Top-Secret
-        self._set_content_factory(msg_type=ContentType.FORWARD, content_class=SecretContent)
+        self._set_content_factory(msg_type=ContentType.FORWARD, alias='forward', content_class=SecretContent)
 
         # Unknown Content Type
-        self._set_content_factory(msg_type=ContentType.ANY, content_class=BaseContent)
+        self._set_content_factory(msg_type=ContentType.ANY, alias='*', content_class=BaseContent)
 
     # noinspection PyMethodMayBeStatic
-    def _set_content_factory(self, msg_type: Union[int, ContentType],
+    def _set_content_factory(self, msg_type: str, alias: str,
                              content_class=None, factory: ContentFactory = None):
-        if isinstance(msg_type, ContentType):
-            msg_type = msg_type.value
         if factory is None:
             factory = ContentParser(content_class=content_class)
         Content.set_factory(msg_type, factory=factory)
+        Content.set_factory(alias, factory=factory)
 
     def _register_command_factories(self):
         """ Core command factories """
@@ -196,7 +195,7 @@ class ExtensionLoader:
         self._set_command_factory(cmd=Command.META, command_class=BaseMetaCommand)
 
         # Document Command
-        self._set_command_factory(cmd=Command.DOCUMENT, command_class=BaseDocumentCommand)
+        self._set_command_factory(cmd=Command.DOCUMENTS, command_class=BaseDocumentCommand)
 
         # Receipt Command
         self._set_command_factory(cmd=Command.RECEIPT, command_class=BaseReceiptCommand)

@@ -28,70 +28,88 @@
 # SOFTWARE.
 # ==============================================================================
 
-from abc import ABC
-from typing import Optional, Dict
+from abc import ABC, abstractmethod
+from typing import Optional, List
 
+from dimp import EntityType
 from dimp import ID
 
-from ..mkm import EntityDelegate
-from ..mkm import User, Group
+from ..mkm import User, BaseUser
+from ..mkm import Group, BaseGroup
+from ..mkm import Station, Bot, ServiceProvider
 
 
-class Barrack(EntityDelegate, ABC):
+class Barrack(ABC):
     """
         Entity Factory
         ~~~~~~~~~~~~~~
         Entity pool to manage User/Group instances
     """
 
-    def __init__(self):
-        super().__init__()
-        # memory caches
-        self.__users: Dict[ID, User] = {}    # ID -> User
-        self.__groups: Dict[ID, Group] = {}  # ID -> Group
-
-    # protected
+    @abstractmethod
     def cache_user(self, user: User):
-        self.__users[user.identifier] = user
+        raise NotImplemented
 
-    # protected
+    @abstractmethod
     def cache_group(self, group: Group):
-        self.__groups[group.identifier] = group
+        raise NotImplemented
 
     #
     #   Entity Delegate
     #
 
-    # Override
-    async def get_user(self, identifier: ID) -> Optional[User]:
-        return self.__users.get(identifier)
+    @abstractmethod
+    def get_user(self, identifier: ID) -> Optional[User]:
+        raise NotImplemented
 
-    # Override
-    async def get_group(self, identifier: ID) -> Optional[Group]:
-        return self.__groups.get(identifier)
+    @abstractmethod
+    def get_group(self, identifier: ID) -> Optional[Group]:
+        raise NotImplemented
 
     #
-    #   Garbage Collection
+    #   Archivist
     #
 
-    def reduce_memory(self) -> int:
+    @property
+    @abstractmethod
+    async def local_users(self) -> List[User]:
         """
-        Call it when received 'UIApplicationDidReceiveMemoryWarningNotification',
-        this will remove 50% of cached objects
+        Get all local users (for decrypting received message)
 
-        :return: number of survivors
+        :return: users with private key
         """
-        finger = 0
-        finger = thanos(self.__users, finger)
-        finger = thanos(self.__groups, finger)
-        return finger >> 1
+        raise NotImplemented
 
+    # noinspection PyMethodMayBeStatic
+    async def create_user(self, identifier: ID) -> Optional[User]:
+        """
+        Create user when visa.key exists
 
-def thanos(planet: dict, finger: int) -> int:
-    """ Thanos can kill half lives of a world with a snap of the finger """
-    people = planet.keys()
-    for anybody in people:
-        if (++finger & 1) == 1:
-            # kill it
-            planet.pop(anybody)
-    return finger
+        :param identifier: user ID
+        :return: user, None on not ready
+        """
+        assert identifier.is_user, 'user ID error: %s' % identifier
+        network = identifier.type
+        # check user type
+        if network == EntityType.STATION:
+            return Station(identifier=identifier)
+        elif network == EntityType.BOT:
+            return Bot(identifier=identifier)
+        # general user, or 'anyone@anywhere'
+        return BaseUser(identifier=identifier)
+
+    # noinspection PyMethodMayBeStatic
+    async def create_group(self, identifier: ID) -> Optional[Group]:
+        """
+        Create group when members exist
+
+        :param identifier: group ID
+        :return: group, None on not ready
+        """
+        assert identifier.is_group, 'group ID error: %s' % identifier
+        network = identifier.type
+        # check group type
+        if network == EntityType.ISP:
+            return ServiceProvider(identifier=identifier)
+        # general group, or 'everyone@everywhere'
+        return BaseGroup(identifier=identifier)
