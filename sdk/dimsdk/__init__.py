@@ -207,8 +207,6 @@ __all__ = [
 
     'ServiceProvider', 'Station', 'Bot',
 
-    'MemberType',
-
     'MetaUtils', 'DocumentUtils',
 
     #

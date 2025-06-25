@@ -72,7 +72,7 @@ class UserDataSource(EntityDataSource, ABC):
         :param identifier: user ID
         :return: contact ID list
         """
-        pass
+        raise NotImplemented
 
     @abstractmethod
     async def public_key_for_encryption(self, identifier: ID) -> Optional[EncryptKey]:
@@ -83,7 +83,7 @@ class UserDataSource(EntityDataSource, ABC):
         :param identifier: user ID
         :return: public key
         """
-        pass
+        raise NotImplemented
 
     @abstractmethod
     async def public_keys_for_verification(self, identifier: ID) -> List[VerifyKey]:
@@ -94,7 +94,7 @@ class UserDataSource(EntityDataSource, ABC):
         :param identifier: user ID
         :return: public keys
         """
-        pass
+        raise NotImplemented
 
     @abstractmethod
     async def private_keys_for_decryption(self, identifier: ID) -> List[DecryptKey]:
@@ -277,7 +277,7 @@ class BaseUser(BaseEntity, User):
         #         is the better way
         key = await barrack.public_key_for_encryption(identifier=self.identifier)
         assert key is not None, 'failed to get encrypt key for user: %s' % self.identifier
-        return key.encrypt(data=data, extra={})
+        return key.encrypt(data=data, extra=None)
 
     # Override
     async def sign(self, data: bytes) -> bytes:
@@ -297,7 +297,7 @@ class BaseUser(BaseEntity, User):
         assert len(keys) > 0, 'failed to get decrypt keys: %s' % self.identifier
         for key in keys:
             # try decrypting it with each private key
-            plaintext = key.decrypt(data=data, params={})
+            plaintext = key.decrypt(data=data, params=None)
             if plaintext is not None:
                 # OK!
                 return plaintext

@@ -53,7 +53,11 @@ class MetaCommandProcessor(BaseCommandProcessor):
         assert isinstance(content, MetaCommand), 'meta command error: %s' % content
         identifier = content.identifier
         meta = content.meta
-        if meta is None:
+        if identifier is None:
+            # assert False, 'meta ID cannot empty: %s' % content
+            text = 'Meta command error.'
+            return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope)
+        elif meta is None:
             # query meta for ID
             return await self._get_meta(identifier=identifier, content=content, envelope=r_msg.envelope)
         else:
@@ -66,9 +70,9 @@ class MetaCommandProcessor(BaseCommandProcessor):
         if meta is None:
             text = 'Meta not found.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                'template': 'Meta not found: ${ID}.',
+                'template': 'Meta not found: ${did}.',
                 'replacements': {
-                    'ID': str(identifier),
+                    'did': str(identifier),
                 }
             })
         # meta got
@@ -86,9 +90,9 @@ class MetaCommandProcessor(BaseCommandProcessor):
         # 2. success
         text = 'Meta received.'
         return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-            'template': 'Meta received: ${ID}.',
+            'template': 'Meta received: ${did}.',
             'replacements': {
-                'ID': str(identifier),
+                'did': str(identifier),
             }
         })
 
@@ -99,17 +103,17 @@ class MetaCommandProcessor(BaseCommandProcessor):
         if not await self._check_meta(meta=meta, identifier=identifier):
             text = 'Meta not valid.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                'template': 'Meta not valid: ${ID}.',
+                'template': 'Meta not valid: ${did}.',
                 'replacements': {
-                    'ID': str(identifier),
+                    'did': str(identifier),
                 }
             })
         elif not await self.facebook.save_meta(meta=meta, identifier=identifier):
             text = 'Meta not accepted.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                'template': 'Meta not accepted: ${ID}.',
+                'template': 'Meta not accepted: ${did}.',
                 'replacements': {
-                    'ID': str(identifier),
+                    'did': str(identifier),
                 }
             })
         # meta saved, return no error
@@ -130,21 +134,27 @@ class DocumentCommandProcessor(MetaCommandProcessor):
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, DocumentCommand), 'document command error: %s' % content
         identifier = content.identifier
-        doc = content.document
-        if doc is None:
+        docs = content.documents
+        if identifier is None:
+            # assert False, 'doc ID cannot be empty: %s' % content
+            text = 'Document command error.'
+            return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope)
+        elif docs is None:
             # query entity document for ID
             return await self._get_documents(identifier=identifier, content=content, envelope=r_msg.envelope)
-        elif identifier == doc.identifier:
-            # received a document for ID
-            return await self._put_doc(doc, identifier=identifier, content=content, envelope=r_msg.envelope)
-        # error
-        text = 'Document ID not match.'
-        return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope, extra={
-            'template': 'Document ID not match: ${ID}.',
-            'replacements': {
-                'ID': str(identifier),
-            }
-        })
+        # check document ID
+        for document in docs:
+            if identifier != document.identifier:
+                # error
+                text = 'Document ID not match.'
+                return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope, extra={
+                    'template': 'Document ID not match: ${did}.',
+                    'replacements': {
+                        'did': str(identifier),
+                    }
+                })
+        # received new documents
+        return await self._put_docs(documents=docs, identifier=identifier, content=content, envelope=r_msg.envelope)
 
     # private
     async def _get_documents(self, identifier: ID, content: DocumentCommand, envelope: Envelope) -> List[Content]:
@@ -154,9 +164,9 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         if count == 0:
             text = 'Document not found.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                'template': 'Document not found: ${ID}.',
+                'template': 'Document not found: ${did}.',
                 'replacements': {
-                    'ID': str(identifier),
+                    'did': str(identifier),
                 }
             })
         # document got
@@ -173,25 +183,26 @@ class DocumentCommandProcessor(MetaCommandProcessor):
                 # document not updated
                 text = 'Document not updated.'
                 return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                    'template': 'Document not updated: ${ID}, last time: ${time}.',
+                    'template': 'Document not updated: ${did}, last time: ${time}.',
                     'replacements': {
-                        'ID': str(identifier),
+                        'did': str(identifier),
                         'time': last_time.timestamp,
                     }
                 })
         meta = await facebook.get_meta(identifier=identifier)
         # respond first document with meta
-        command = DocumentCommand.response(identifier=identifier, meta=meta, document=documents[0])
+        command = DocumentCommand.response(identifier=identifier, meta=meta, documents=documents)
         responses = [command]
         for i in range(1, count):
             # respond other documents
-            command = DocumentCommand.response(identifier=identifier, meta=meta, document=documents[i])
+            doc = documents[i]
+            command = DocumentCommand.response(identifier=identifier, documents=[doc])
             responses.append(command)
         return responses
 
     # private
-    async def _put_doc(self, doc: Document, identifier: ID,
-                       content: DocumentCommand, envelope: Envelope) -> List[Content]:
+    async def _put_docs(self, documents: List[Document], identifier: ID,
+                        content: DocumentCommand, envelope: Envelope) -> List[Content]:
         facebook = self.facebook
         meta = content.meta
         # 0. check meta
@@ -200,9 +211,9 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             if meta is None:
                 text = 'Meta not found.'
                 return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                    'template': 'Meta not found: ${ID}.',
+                    'template': 'Meta not found: ${did}.',
                     'replacements': {
-                        'ID': str(identifier),
+                        'did': str(identifier),
                     }
                 })
         else:
@@ -211,17 +222,23 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             if errors is not None:
                 # failed
                 return errors
-        # 2. try to save document
-        errors = await self._save_document(doc, meta=meta, identifier=identifier, content=content, envelope=envelope)
-        if errors is not None:
+        # 2. try to save documents
+        errors = []
+        for doc in documents:
+            array = await self._save_document(doc, meta=meta, identifier=identifier, content=content, envelope=envelope)
+            if isinstance(array, List):
+                # failed
+                for item in array:
+                    errors.append(item)
+        if len(errors) > 0:
             # failed
             return errors
         # 3. success
         text = 'Document received.'
         return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-            'template': 'Document received: ${ID}.',
+            'template': 'Document received: ${did}.',
             'replacements': {
-                'ID': str(identifier),
+                'did': str(identifier),
             }
         })
 
@@ -230,21 +247,21 @@ class DocumentCommandProcessor(MetaCommandProcessor):
                              content: DocumentCommand, envelope: Envelope) -> Optional[List[Content]]:
         # check document
         if not await self._check_document(doc, meta=meta):
-            # document error
+            # document invalid
             text = 'Document not accepted.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                'template': 'Document not accepted: ${ID}.',
+                'template': 'Document not accepted: ${did}.',
                 'replacements': {
-                    'ID': str(identifier),
+                    'did': str(identifier),
                 }
             })
         elif not await self.facebook.save_document(document=doc):
             # document expired
             text = 'Document not changed.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
-                'template': 'Document not changed: ${ID}.',
+                'template': 'Document not changed: ${did}.',
                 'replacements': {
-                    'ID': str(identifier),
+                    'did': str(identifier),
                 }
             })
         # document saved, return no error

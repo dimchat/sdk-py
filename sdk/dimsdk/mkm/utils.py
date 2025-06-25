@@ -38,6 +38,8 @@ from dimp import VerifyKey
 from dimp import Address, ID, Meta
 from dimp import Document, Visa, Bulletin
 
+from dimp.plugins import SharedAccountExtensions
+
 
 class MetaUtils:
 
@@ -81,6 +83,11 @@ class MetaUtils:
 class DocumentUtils:
 
     @classmethod
+    def get_document_type(cls, document: Document) -> Optional[str]:
+        ext = SharedAccountExtensions()
+        return ext.helper.get_document_type(document=document.dictionary, default=None)
+
+    @classmethod
     def is_before(cls, old_time: Optional[DateTime], this_time: Optional[DateTime]) -> bool:
         """ Check whether this time is before old time """
         if old_time is not None and this_time is not None:
@@ -103,7 +110,7 @@ class DocumentUtils:
         for item in documents:
             # 1. check type
             if check_type:
-                item_type = item.type
+                item_type = cls.get_document_type(document=item)
                 if item_type is not None and len(item_type) > 0 and item_type != doc_type:
                     # type not matched, skip it
                     continue

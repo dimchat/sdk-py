@@ -56,21 +56,23 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
     """ Base ContentProcessor Creator """
 
     # Override
-    def create_content_processor(self, msg_type: int) -> Optional[ContentProcessor]:
+    def create_content_processor(self, msg_type: str) -> Optional[ContentProcessor]:
         # forward content
-        if msg_type == ContentType.FORWARD.value:
+        if msg_type == ContentType.FORWARD or msg_type == 'forward':
             return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # array content
-        if msg_type == ContentType.ARRAY.value:
+        if msg_type == ContentType.ARRAY or msg_type == 'array':
             return ArrayContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
         # default commands
-        if msg_type == ContentType.COMMAND.value:
+        if msg_type == ContentType.COMMAND or msg_type == 'command':
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
 
-        # default contents
-        if msg_type == 0:  # ContentType.ANY.value:
+        # unknown content
+        if msg_type == ContentType.ANY or msg_type == '*':
+            # must return a default processor for unknown type
             return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # assert False, 'unsupported content: %s' % msg_type
 
     # Override
     def create_command_processor(self, msg_type: int, cmd: str) -> Optional[ContentProcessor]:
@@ -78,5 +80,6 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         if cmd == Command.META:
             return MetaCommandProcessor(facebook=self.facebook, messenger=self.messenger)
         # document command
-        if cmd == Command.DOCUMENT:
+        if cmd == Command.DOCUMENTS:
             return DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
+        # assert False, 'unsupported command: %s' % cmd

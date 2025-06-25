@@ -41,8 +41,6 @@ from .user import User, BaseUser
 from .station import ServiceProvider, Station
 from .bot import Bot
 
-from .roles import MemberType
-
 from .utils import MetaUtils, DocumentUtils
 
 __all__ = [
@@ -60,8 +58,6 @@ __all__ = [
     'ServiceProvider',
     'Station',
     'Bot',
-
-    'MemberType',
 
     'MetaUtils', 'DocumentUtils',
 

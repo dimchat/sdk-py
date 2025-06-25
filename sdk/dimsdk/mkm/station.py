@@ -107,7 +107,7 @@ class Station(User):
             port = Converter.get_int(value=port, default=0)
             if port > 0:
                 self.__port = port
-            isp = doc.get_property(name='ISP')
+            isp = doc.get_property(name='provider')
             isp = ID.parse(identifier=isp)
             if isp is not None:
                 self.__isp = isp
@@ -225,7 +225,7 @@ class ServiceProvider(BaseGroup):
         doc = await self.profile
         if doc is not None:
             array = doc.get_property(name='stations')
-            if array is not None:
+            if isinstance(array, List):
                 return array
         # TODO: load from local storage
         return []

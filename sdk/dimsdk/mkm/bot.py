@@ -56,5 +56,5 @@ class Bot(BaseUser):
     async def provider(self) -> Optional[ID]:
         doc = await self.profile
         if doc is not None:
-            icp = doc.get_property(name='ICP')
+            icp = doc.get_property(name='provider')
             return ID.parse(identifier=icp)

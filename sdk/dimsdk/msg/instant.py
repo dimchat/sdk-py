@@ -32,6 +32,7 @@ import weakref
 from typing import Optional, List
 
 from dimp import utf8_decode
+from dimp import EncodeAlgorithms
 from dimp import TransportableData
 from dimp import SymmetricKey
 from dimp import ID
@@ -99,7 +100,7 @@ class InstantMessagePacker:
         else:
             # message content had been encrypted by a symmetric key,
             # so the data should be encoded here (with algorithm 'base64' as default).
-            encoded_data = TransportableData.encode(data=ciphertext)
+            encoded_data = TransportableData.encode(data=ciphertext, algorithm=EncodeAlgorithms.DEFAULT)
         assert encoded_data is not None, 'failed to encode content data: %s' % ciphertext
         # replace 'content' with encrypted 'data
         info = msg.copy_dictionary(deep_copy=False)
@@ -129,7 +130,7 @@ class InstantMessagePacker:
             #
             #   6. Encode message key to String (Base64)
             #
-            encoded_key = TransportableData.encode(data=encrypted_key)
+            encoded_key = TransportableData.encode(data=encrypted_key, algorithm=EncodeAlgorithms.DEFAULT)
             # insert as 'key'
             info['key'] = encoded_key
         else:
@@ -147,7 +148,7 @@ class InstantMessagePacker:
                 #
                 #   6. Encode message key to String (Base64)
                 #
-                encoded_key = TransportableData.encode(data=encrypted_key)
+                encoded_key = TransportableData.encode(data=encrypted_key, algorithm=EncodeAlgorithms.DEFAULT)
                 # insert to 'message.keys' with member ID
                 keys[str(receiver)] = encoded_key
             if len(keys) == 0:
