@@ -32,6 +32,7 @@ from typing import Optional, Any, Dict
 
 from dimp import TransportableData
 from dimp import ID
+from dimp import DocumentType
 from dimp import Document, DocumentFactory
 from dimp import BaseDocument, BaseVisa, BaseBulletin
 from dimp.plugins import SharedAccountExtensions
@@ -51,9 +52,9 @@ class GeneralDocumentFactory(DocumentFactory):
     # Override
     def create_document(self, identifier: ID, data: Optional[str], signature: Optional[TransportableData]) -> Document:
         doc_type = get_doc_type(doc_type=self.type, identifier=identifier)
-        if doc_type == Document.VISA:
+        if doc_type == DocumentType.VISA:
             return BaseVisa(identifier=identifier, data=data, signature=signature)
-        elif doc_type == Document.BULLETIN:
+        elif doc_type == DocumentType.BULLETIN:
             return BaseBulletin(identifier=identifier, data=data, signature=signature)
         else:
             return BaseDocument(doc_type=doc_type, identifier=identifier, data=data, signature=signature)
@@ -70,9 +71,9 @@ class GeneralDocumentFactory(DocumentFactory):
         if doc_type is None:
             doc_type = get_doc_type(doc_type='*', identifier=identifier)
         # create with document type
-        if doc_type == Document.VISA:
+        if doc_type == DocumentType.VISA:
             return BaseVisa(document=document)
-        elif doc_type == Document.BULLETIN:
+        elif doc_type == DocumentType.BULLETIN:
             return BaseBulletin(document=document)
         else:
             return BaseDocument(document=document)
@@ -82,8 +83,8 @@ def get_doc_type(doc_type: str, identifier: ID) -> str:
     if doc_type != '*':
         return doc_type
     elif identifier.is_group:
-        return Document.BULLETIN
+        return DocumentType.BULLETIN
     elif identifier.is_user:
-        return Document.VISA
+        return DocumentType.VISA
     else:
-        return Document.PROFILE
+        return DocumentType.PROFILE

@@ -30,7 +30,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_PKCS1_v1_5
 from Crypto.Signature import PKCS1_v1_5 as Signature_PKCS1_v1_5
 
-from dimp import AsymmetricKey, EncryptKey, DecryptKey
+from dimp import AsymmetricAlgorithms
+from dimp import EncryptKey, DecryptKey
 from dimp import PublicKey, PublicKeyFactory
 from dimp import PrivateKey, PrivateKeyFactory
 from dimp import BaseKey, BasePublicKey, BasePrivateKey
@@ -152,7 +153,7 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
         pub = self.rsa_key.publickey()
         pem = pub.exportKey().decode('utf-8')
         info = {
-            'algorithm': PublicKey.RSA,
+            'algorithm': AsymmetricAlgorithms.RSA,
             'data': pem,
             'mode': 'ECB',
             'padding': 'PKCS1',
@@ -202,7 +203,7 @@ class RSAPrivateKeyFactory(PrivateKeyFactory):
 
     # Override
     def generate_private_key(self) -> Optional[PrivateKey]:
-        key = {'algorithm': AsymmetricKey.RSA}
+        key = {'algorithm': AsymmetricAlgorithms.RSA}
         return RSAPrivateKey(key)
 
     # Override

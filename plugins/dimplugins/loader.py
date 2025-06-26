@@ -100,8 +100,8 @@ class PluginLoader:
     def _register_ted_factory(self):
         # TED
         factory = Base64DataFactory()
-        TransportableData.set_factory(algorithm=TransportableData.BASE_64, factory=factory)
-        # TransportableData.register(algorithm=TransportableData.DEFAULT, factory=factory)
+        TransportableData.set_factory(algorithm=EncodeAlgorithms.BASE_64, factory=factory)
+        # TransportableData.register(algorithm=EncodeAlgorithms.DEFAULT, factory=factory)
         TransportableData.set_factory(algorithm='*', factory=factory)
 
     def _register_data_digesters(self):
@@ -140,13 +140,13 @@ class PluginLoader:
     def _register_aes_key_factory(self):
         # Symmetric Key: AES
         factory = AESKeyFactory()
-        SymmetricKey.set_factory(algorithm=SymmetricKey.AES, factory=factory)
+        SymmetricKey.set_factory(algorithm=SymmetricAlgorithms.AES, factory=factory)
         SymmetricKey.set_factory(algorithm='AES/CBC/PKCS7Padding', factory=factory)
 
     def _register_plain_key_factory(self):
         # Symmetric Key: Plain
         factory = PlainKeyFactory()
-        SymmetricKey.set_factory(algorithm=PlainKey.PLAIN, factory=factory)
+        SymmetricKey.set_factory(algorithm=SymmetricAlgorithms.PLAIN, factory=factory)
 
     def _register_asymmetric_key_factories(self):
         """ Asymmetric key parsers """
@@ -156,23 +156,23 @@ class PluginLoader:
     def _register_rsa_key_factories(self):
         # Public Key: RSA
         rsa_pub = RSAPublicKeyFactory()
-        PublicKey.set_factory(algorithm=AsymmetricKey.RSA, factory=rsa_pub)
+        PublicKey.set_factory(algorithm=AsymmetricAlgorithms.RSA, factory=rsa_pub)
         PublicKey.set_factory(algorithm='SHA256withRSA', factory=rsa_pub)
         PublicKey.set_factory(algorithm='RSA/ECB/PKCS1Padding', factory=rsa_pub)
         # Private Key: RSA
         rsa_pri = RSAPrivateKeyFactory()
-        PrivateKey.set_factory(algorithm=AsymmetricKey.RSA, factory=rsa_pri)
+        PrivateKey.set_factory(algorithm=AsymmetricAlgorithms.RSA, factory=rsa_pri)
         PrivateKey.set_factory(algorithm='SHA256withRSA', factory=rsa_pri)
         PrivateKey.set_factory(algorithm='RSA/ECB/PKCS1Padding', factory=rsa_pri)
 
     def _register_ecc_key_factories(self):
         # Public Key: ECC
         ecc_pub = ECCPublicKeyFactory()
-        PublicKey.set_factory(algorithm=AsymmetricKey.ECC, factory=ecc_pub)
+        PublicKey.set_factory(algorithm=AsymmetricAlgorithms.ECC, factory=ecc_pub)
         PublicKey.set_factory(algorithm='SHA256withECDSA', factory=ecc_pub)
         # Private Key: ECC
         ecc_pri = ECCPrivateKeyFactory()
-        PrivateKey.set_factory(algorithm=AsymmetricKey.ECC, factory=ecc_pri)
+        PrivateKey.set_factory(algorithm=AsymmetricAlgorithms.ECC, factory=ecc_pri)
         PrivateKey.set_factory(algorithm='SHA256withECDSA', factory=ecc_pri)
 
     def _register_id_factory(self):
@@ -185,13 +185,12 @@ class PluginLoader:
 
     def _register_meta_factories(self):
         """ Meta factories """
-        Meta.set_factory(version=Meta.MKM, factory=BaseMetaFactory(version=Meta.MKM))
-        Meta.set_factory(version=Meta.BTC, factory=BaseMetaFactory(version=Meta.BTC))
-        Meta.set_factory(version=Meta.ETH, factory=BaseMetaFactory(version=Meta.ETH))
+        array = [MetaType.MKM, MetaType.BTC, MetaType.ETH]
+        for version in array:
+            Meta.set_factory(version=version, factory=BaseMetaFactory(version=version))
 
     def _register_document_factories(self):
         """ Document factories """
-        Document.set_factory(doc_type='*', factory=GeneralDocumentFactory(doc_type='*'))
-        Document.set_factory(doc_type=Document.VISA, factory=GeneralDocumentFactory(doc_type=Document.VISA))
-        Document.set_factory(doc_type=Document.PROFILE, factory=GeneralDocumentFactory(doc_type=Document.PROFILE))
-        Document.set_factory(doc_type=Document.BULLETIN, factory=GeneralDocumentFactory(doc_type=Document.BULLETIN))
+        array = ['*', DocumentType.VISA, DocumentType.PROFILE, DocumentType.BULLETIN]
+        for doc_type in array:
+            Document.set_factory(doc_type=doc_type, factory=GeneralDocumentFactory(doc_type=doc_type))

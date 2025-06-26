@@ -12,7 +12,7 @@ import io
 
 from setuptools import setup, find_packages
 
-__version__ = '2.2.2'
+__version__ = '2.3.0'
 __author__ = 'Albert Moky'
 __contact__ = 'albert.moky@gmail.com'
 
@@ -39,7 +39,7 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=2.2.2',
+        'dimp>=2.3.0',
 
         'pycryptodome',  # 3.14.1
         'base58',  # 1.0.3

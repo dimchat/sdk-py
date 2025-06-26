@@ -28,7 +28,7 @@ from typing import Optional, Union, Any, Dict
 
 import ecdsa
 
-from dimp import AsymmetricKey
+from dimp import AsymmetricAlgorithms
 from dimp import PublicKey, PublicKeyFactory
 from dimp import PrivateKey, PrivateKeyFactory
 from dimp import BasePublicKey, BasePrivateKey
@@ -179,7 +179,7 @@ class ECCPrivateKey(BasePrivateKey):
         pem = pub.to_pem().decode('utf-8')
         # pem = key.to_string(encoding='uncompressed').hex()
         info = {
-            'algorithm': PublicKey.ECC,
+            'algorithm': AsymmetricAlgorithms.ECC,
             'data': pem,
             'curve': 'SECP256k1',
             'digest': 'SHA256'
@@ -214,7 +214,7 @@ class ECCPrivateKeyFactory(PrivateKeyFactory):
 
     # Override
     def generate_private_key(self) -> Optional[PrivateKey]:
-        key = {'algorithm': AsymmetricKey.ECC}
+        key = {'algorithm': AsymmetricAlgorithms.ECC}
         return ECCPrivateKey(key)
 
     # Override

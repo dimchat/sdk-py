@@ -31,9 +31,11 @@
 from typing import Optional, Any, Dict
 
 from dimp import utf8_encode
+from dimp import EncodeAlgorithms
 from dimp import TransportableData
 from dimp import VerifyKey, SignKey, PrivateKey
 from dimp import EntityType, Address
+from dimp import MetaType
 from dimp import Meta, MetaFactory
 from dimp import BaseMeta
 from dimp.plugins import SharedAccountExtensions
@@ -189,7 +191,7 @@ class BaseMetaFactory(MetaFactory):
             fingerprint = None
         else:
             sig = private_key.sign(data=utf8_encode(string=seed))
-            fingerprint = TransportableData.create(data=sig)
+            fingerprint = TransportableData.create(data=sig, algorithm=EncodeAlgorithms.DEFAULT)
         assert isinstance(private_key, PrivateKey), 'private key error: %s' % private_key
         public_key = private_key.public_key
         return self.create_meta(public_key=public_key, seed=seed, fingerprint=fingerprint)
@@ -197,13 +199,13 @@ class BaseMetaFactory(MetaFactory):
     # Override
     def create_meta(self, public_key: VerifyKey, seed: Optional[str], fingerprint: Optional[TransportableData]) -> Meta:
         version = self.type
-        if version == Meta.MKM:
+        if version == MetaType.MKM:
             # MKM
             out = DefaultMeta(version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
-        elif version == Meta.BTC:
+        elif version == MetaType.BTC:
             # BTC
             out = BTCMeta(version=version, public_key=public_key)
-        elif version == Meta.ETH:
+        elif version == MetaType.ETH:
             # ETH
             out = ETHMeta(version=version, public_key=public_key)
         else:
@@ -215,13 +217,13 @@ class BaseMetaFactory(MetaFactory):
     def parse_meta(self, meta: dict) -> Optional[Meta]:
         ext = SharedAccountExtensions()
         version = ext.helper.get_meta_type(meta=meta, default='')
-        if version == Meta.MKM:
+        if version == MetaType.MKM:
             # MKM
             out = DefaultMeta(meta=meta)
-        elif version == Meta.BTC:
+        elif version == MetaType.BTC:
             # BTC
             out = BTCMeta(meta=meta)
-        elif version == Meta.ETH:
+        elif version == MetaType.ETH:
             # ETH
             out = ETHMeta(meta=meta)
         else:

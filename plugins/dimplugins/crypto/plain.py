@@ -25,6 +25,7 @@
 
 from typing import Optional, Dict
 
+from dimp import SymmetricAlgorithms
 from dimp import SymmetricKey, SymmetricKeyFactory
 from dimp import BaseSymmetricKey
 
@@ -34,10 +35,9 @@ class PlainKey(BaseSymmetricKey):
         Symmetric key for broadcast message,
         which will do nothing when en/decoding message data
     """
-    PLAIN = 'PLAIN'
 
     def __init__(self):
-        key = {'algorithm': self.PLAIN}
+        key = {'algorithm': SymmetricAlgorithms.PLAIN}
         super().__init__(key)
 
     @property

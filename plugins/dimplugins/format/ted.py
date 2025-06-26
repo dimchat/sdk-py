@@ -29,6 +29,7 @@ from dimp import Dictionary
 from dimp import BaseDataWrapper
 from dimp import TransportableData
 from dimp import TransportableDataFactory
+from dimp import EncodeAlgorithms
 
 
 class Base64Data(Dictionary, TransportableData):
@@ -38,7 +39,7 @@ class Base64Data(Dictionary, TransportableData):
         wrapper = BaseDataWrapper(dictionary=self.dictionary)
         if dictionary is None:
             # encode binary data with algorithm
-            wrapper.algorithm = TransportableData.BASE_64
+            wrapper.algorithm = EncodeAlgorithms.BASE_64
             wrapper.data = data
         self.__wrapper = wrapper
 
@@ -66,7 +67,7 @@ class Base64Data(Dictionary, TransportableData):
         # 1. "base64,{BASE64_ENCODE}"
         return self.__wrapper.__str__()
 
-    def encode(self, mime_type: str) -> str:
+    def to_string(self, mime_type: str) -> str:
         # 2. "data:image/png;base64,{BASE64_ENCODE}"
         return self.__wrapper.encode(mime_type=mime_type)
 
