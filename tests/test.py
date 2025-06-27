@@ -226,7 +226,7 @@ class CryptoTestCase(unittest.TestCase):
 
         pub = Hex.encode(data=p_key.data)
         meta = Meta.parse(meta={
-            'type': Meta.ETH,
+            'type': MetaType.ETH,
             'key': {
                 'algorithm': 'ECC',
                 'data': pub
@@ -283,7 +283,7 @@ dTGP+WYLof56xNhMyOgZO8ltxem9izK/V9N9cnc5UQ==\n\
         print('\n---------------- %s' % self)
         extra = {}
         key = SymmetricKey.parse(key={
-            'algorithm': SymmetricKey.AES,
+            'algorithm': SymmetricAlgorithms.AES,
         })
         data = 'moky'.encode('utf-8')
         ciphertext = key.encrypt(data=data, extra=extra)
@@ -345,6 +345,11 @@ dTGP+WYLof56xNhMyOgZO8ltxem9izK/V9N9cnc5UQ==\n\
         # plaintext = key.decrypt(data=ciphertext, params=extra)
         # aes = UTF8.decode(data=plaintext)
         # print('RSA decrypt: %s' % aes)
+
+        array = ['123', '123a', 'abc']
+        for item in array:
+            value = Converter.get_int(value=item, default=None)
+            print('convert: %s -> %s' % (item, value))
 
 
 if __name__ == '__main__':

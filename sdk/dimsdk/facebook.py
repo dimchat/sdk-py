@@ -116,7 +116,8 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
             # assert False, 'local users should not be empty'
             return None
         elif receiver.is_broadcast:
-            # broadcast message can decrypt by anyone, so just return current user
+            # broadcast message can decrypt by anyone, so
+            # just return current user
             return users[0]
         # 1. personal message
         # 2. split group message

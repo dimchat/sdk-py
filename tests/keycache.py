@@ -10,9 +10,9 @@
 from abc import abstractmethod
 from typing import Optional
 
-from dimsdk import SymmetricKey, ID
+from dimsdk import ID
+from dimsdk import SymmetricKey, SymmetricAlgorithms
 from dimsdk import CipherKeyDelegate
-from plugins.dimplugins import PlainKey
 
 
 class KeyCache(CipherKeyDelegate):
@@ -112,11 +112,11 @@ class KeyCache(CipherKeyDelegate):
     # TODO: override to check whether key expired for sending message
     def get_cipher_key(self, sender: ID, receiver: ID, generate: bool = False) -> Optional[SymmetricKey]:
         if receiver.is_broadcast:
-            return SymmetricKey.generate(algorithm=PlainKey.PLAIN)
+            return SymmetricKey.generate(algorithm=SymmetricAlgorithms.PLAIN)
         # get key from cache
         key = self.__cipher_key(sender, receiver)
         if key is None and generate:
-            key = SymmetricKey.generate(algorithm=SymmetricKey.AES)
+            key = SymmetricKey.generate(algorithm=SymmetricAlgorithms.AES)
             self.__cache_cipher_key(key=key, sender=sender, receiver=receiver)
         return key
 

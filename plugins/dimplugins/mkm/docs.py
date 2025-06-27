@@ -61,7 +61,7 @@ class GeneralDocumentFactory(DocumentFactory):
 
     # Override
     def parse_document(self, document: Dict[str, Any]) -> Optional[Document]:
-        identifier = ID.parse(identifier=document.get('ID'))
+        identifier = ID.parse(identifier=document.get('did'))
         if identifier is None:
             # assert False, 'document ID not found: %s' % document
             return None

@@ -4,14 +4,30 @@ from typing import Optional, List
 from dimsdk import Group
 from dimsdk import SignKey, DecryptKey
 from dimsdk import ID, User, Meta, Document
-from dimsdk import Archivist, Facebook
+from dimsdk import Barrack, Facebook
 from dimsdk import EncryptKey, VerifyKey
 
 
-class Database(Archivist):
+class Database(Barrack):
 
     def __init__(self):
         super().__init__()
+
+    # Override
+    def cache_user(self, user: User):
+        pass
+
+    # Override
+    def cache_group(self, group: Group):
+        pass
+
+    # Override
+    def get_user(self, identifier: ID) -> Optional[User]:
+        pass
+
+    # Override
+    def get_group(self, identifier: ID) -> Optional[Group]:
+        pass
 
     # Override
     async def create_user(self, identifier: ID) -> Optional[User]:
@@ -25,14 +41,6 @@ class Database(Archivist):
     async def local_users(self) -> List[User]:
         return []
 
-    # Override
-    async def get_meta_key(self, identifier: ID) -> Optional[VerifyKey]:
-        pass
-
-    # Override
-    async def get_visa_key(self, identifier: ID) -> Optional[EncryptKey]:
-        pass
-
 
 g_database = Database()
 
@@ -40,8 +48,16 @@ g_database = Database()
 class CommonFacebook(Facebook):
 
     @property  # Override
-    def archivist(self) -> Archivist:
+    def barrack(self) -> Barrack:
         return g_database
+
+    # Override
+    async def get_meta_key(self, identifier: ID) -> Optional[VerifyKey]:
+        pass
+
+    # Override
+    async def get_visa_key(self, identifier: ID) -> Optional[EncryptKey]:
+        pass
 
     # Override
     async def save_meta(self, meta: Meta, identifier: ID) -> bool:
