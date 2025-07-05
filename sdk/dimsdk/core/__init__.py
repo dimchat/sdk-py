@@ -28,7 +28,11 @@
 # SOFTWARE.
 # ==============================================================================
 
+from .barrack import Archivist
 from .barrack import Barrack
+
+from .compress_keys import MessageShortener
+from .compressor import Compressor, MessageCompressor
 
 from .packer import Packer
 from .processor import Processor
@@ -39,7 +43,11 @@ from .delegate import CipherKeyDelegate
 
 __all__ = [
 
+    'Archivist',
     'Barrack',
+
+    'MessageShortener',
+    'Compressor', 'MessageCompressor',
 
     'Packer',
     'Processor',

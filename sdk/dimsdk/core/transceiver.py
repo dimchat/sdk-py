@@ -31,7 +31,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from dimp import utf8_encode, utf8_decode, json_encode, json_decode
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
@@ -40,6 +39,8 @@ from dimp import BaseMessage
 
 from ..dkd import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 from ..mkm import EntityDelegate
+
+from .compressor import Compressor
 
 
 class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate, ABC):
@@ -51,7 +52,12 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     @property
     @abstractmethod
-    def facebook(self) -> Optional[EntityDelegate]:
+    def facebook(self) -> EntityDelegate:
+        raise NotImplemented
+
+    @property
+    @abstractmethod
+    def compressor(self) -> Compressor:
         raise NotImplemented
 
     #
@@ -62,8 +68,7 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     async def serialize_content(self, content: Content, key: SymmetricKey, msg: InstantMessage) -> bytes:
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         before serialize content, this job should be do in subclass
-        js = json_encode(obj=content.dictionary)
-        return utf8_encode(string=js)
+        return self.compressor.compress_content(content=content.dictionary, key=key.dictionary)
 
     # Override
     async def encrypt_content(self, data: bytes, key: SymmetricKey, msg: InstantMessage) -> bytes:
@@ -85,8 +90,8 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         if BaseMessage.is_broadcast(msg=msg):
             # broadcast message has no key
             return None
-        js = json_encode(obj=key.dictionary)
-        return utf8_encode(string=js)
+        else:
+            return self.compressor.compress_symmetric_key(key=key.dictionary)
 
     # Override
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[bytes]:
@@ -133,18 +138,9 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         if data is None:
             # assert False, 'reused key? get it from cache: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
             return None
-        js = utf8_decode(data=data)
-        if js is None:
-            # assert False, 'message key data error: %s' % data
-            return None
-        dictionary = json_decode(string=js)
-        # TODO: translate short keys
-        #       'A' -> 'algorithm'
-        #       'D' -> 'data'
-        #       'V' -> 'iv'
-        #       'M' -> 'mode'
-        #       'P' -> 'padding'
-        return SymmetricKey.parse(key=dictionary)
+        else:
+            key = self.compressor.extract_symmetric_key(data=data)
+            return SymmetricKey.parse(key=key)
 
     # # Override
     # async def decode_data(self, data: Any, msg: SecureMessage) -> Optional[bytes]:
@@ -168,17 +164,8 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
-        js = utf8_decode(data=data)
-        if js is None:
-            # assert False, 'content data error: %s' % data
-            return None
-        dictionary = json_decode(string=js)
-        # TODO: translate short keys
-        #       'T' -> 'type'
-        #       'N' -> 'sn'
-        #       'W' -> 'time'
-        #       'G' -> 'group'
-        return Content.parse(content=dictionary)
+        info = self.compressor.extract_content(data=data, key=key.dictionary)
+        return Content.parse(content=info)
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         after deserialize content, this job should be do in subclass
 
