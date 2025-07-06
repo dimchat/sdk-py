@@ -9,6 +9,8 @@
 """
 import os
 import sys
+from typing import Optional, Any
+
 path = os.path.abspath(__file__)
 path = os.path.dirname(path)
 path = os.path.dirname(path)
@@ -24,6 +26,18 @@ from plugins.dimplugins import *
 
 from tests.database import CommonFacebook
 
+
+class SafeConverter(BaseConverter):
+
+    # Override
+    def get_int(self, value: Any, default: Optional[int]) -> Optional[int]:
+        try:
+            return super().get_int(value=value, default=default)
+        except ValueError:
+            pass
+
+
+Converter.converter = SafeConverter()
 
 ExtensionLoader().run()
 PluginLoader().run()

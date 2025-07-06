@@ -75,8 +75,6 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
 
     # Override
     def get_content_factory(self, msg_type: str) -> Optional[ContentFactory]:
-        if msg_type is None or len(msg_type) == 0:
-            return None
         return self.__content_factories.get(msg_type)
 
     # Override
@@ -92,7 +90,7 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
         # get factory by content type
         msg_type = self.get_content_type(content=info, default=None)
         # assert msg_type is not None, 'content error: %s' % content
-        factory = self.get_content_factory(msg_type)
+        factory = None if msg_type is None else self.get_content_factory(msg_type)
         if factory is None:
             # unknown content type, get default content factory
             factory = self.get_content_factory('*')  # unknown

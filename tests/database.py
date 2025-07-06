@@ -4,11 +4,11 @@ from typing import Optional, List
 from dimsdk import Group
 from dimsdk import SignKey, DecryptKey
 from dimsdk import ID, User, Meta, Document
-from dimsdk import Barrack, Facebook
+from dimsdk import Archivist, Barrack, Facebook
 from dimsdk import EncryptKey, VerifyKey
 
 
-class Database(Barrack):
+class Database(Barrack, Archivist):
 
     def __init__(self):
         super().__init__()
@@ -29,16 +29,28 @@ class Database(Barrack):
     def get_group(self, identifier: ID) -> Optional[Group]:
         pass
 
+    #
+    #   Archivist
+    #
+
     # Override
-    async def create_user(self, identifier: ID) -> Optional[User]:
+    async def save_meta(self, meta: Meta, identifier: ID) -> bool:
+        return True
+
+    # Override
+    async def save_document(self, document: Document) -> bool:
+        return True
+
+    # Override
+    async def get_meta_key(self, identifier: ID) -> Optional[VerifyKey]:
         pass
 
     # Override
-    async def create_group(self, identifier: ID) -> Optional[Group]:
+    async def get_visa_key(self, identifier: ID) -> Optional[EncryptKey]:
         pass
 
     @property  # Override
-    async def local_users(self) -> List[User]:
+    async def local_users(self) -> List[ID]:
         return []
 
 
@@ -51,21 +63,9 @@ class CommonFacebook(Facebook):
     def barrack(self) -> Barrack:
         return g_database
 
-    # Override
-    async def get_meta_key(self, identifier: ID) -> Optional[VerifyKey]:
-        pass
-
-    # Override
-    async def get_visa_key(self, identifier: ID) -> Optional[EncryptKey]:
-        pass
-
-    # Override
-    async def save_meta(self, meta: Meta, identifier: ID) -> bool:
-        pass
-
-    # Override
-    async def save_document(self, document: Document) -> bool:
-        pass
+    @property  # Override
+    def archivist(self) -> Archivist:
+        return g_database
 
     #
     #   EntityDataSource

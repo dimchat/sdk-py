@@ -50,19 +50,19 @@ class Messenger(Transceiver, Packer, Processor, ABC):
 
     @property
     @abstractmethod
-    def key_cache(self) -> CipherKeyDelegate:
+    def key_cache(self) -> Optional[CipherKeyDelegate]:
         """ Delegate for Cipher Key """
         raise NotImplemented
 
     @property
     @abstractmethod
-    def packer(self) -> Packer:
+    def packer(self) -> Optional[Packer]:
         """ Delegate for Packing Message """
         raise NotImplemented
 
     @property
     @abstractmethod
-    def processor(self) -> Processor:
+    def processor(self) -> Optional[Processor]:
         """ Delegate for Processing Message """
         raise NotImplemented
 
@@ -110,33 +110,33 @@ class Messenger(Transceiver, Packer, Processor, ABC):
 
     # Override
     async def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
-        delegate = self.packer
-        return await delegate.encrypt_message(msg=msg)
+        packer = self.packer
+        return await packer.encrypt_message(msg=msg)
 
     # Override
     async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
-        delegate = self.packer
-        return await delegate.sign_message(msg=msg)
+        packer = self.packer
+        return await packer.sign_message(msg=msg)
 
     # Override
     async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
-        delegate = self.packer
-        return await delegate.serialize_message(msg=msg)
+        packer = self.packer
+        return await packer.serialize_message(msg=msg)
 
     # Override
     async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        delegate = self.packer
-        return await delegate.deserialize_message(data=data)
+        packer = self.packer
+        return await packer.deserialize_message(data=data)
 
     # Override
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        delegate = self.packer
-        return await delegate.verify_message(msg=msg)
+        packer = self.packer
+        return await packer.verify_message(msg=msg)
 
     # Override
     async def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
-        delegate = self.packer
-        return await delegate.decrypt_message(msg=msg)
+        packer = self.packer
+        return await packer.decrypt_message(msg=msg)
 
     #
     #   Interfaces for Processing Message
@@ -144,25 +144,25 @@ class Messenger(Transceiver, Packer, Processor, ABC):
 
     # Override
     async def process_package(self, data: bytes) -> List[bytes]:
-        delegate = self.processor
-        return await delegate.process_package(data=data)
+        processor = self.processor
+        return await processor.process_package(data=data)
 
     # Override
     async def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
-        delegate = self.processor
-        return await delegate.process_reliable_message(msg=msg)
+        processor = self.processor
+        return await processor.process_reliable_message(msg=msg)
 
     # Override
     async def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
-        delegate = self.processor
-        return await delegate.process_secure_message(msg=msg, r_msg=r_msg)
+        processor = self.processor
+        return await processor.process_secure_message(msg=msg, r_msg=r_msg)
 
     # Override
     async def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
-        delegate = self.processor
-        return await delegate.process_instant_message(msg=msg, r_msg=r_msg)
+        processor = self.processor
+        return await processor.process_instant_message(msg=msg, r_msg=r_msg)
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        delegate = self.processor
-        return await delegate.process_content(content=content, r_msg=r_msg)
+        processor = self.processor
+        return await processor.process_content(content=content, r_msg=r_msg)

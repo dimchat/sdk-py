@@ -165,8 +165,6 @@ class AccountGeneralFactory(GeneralAccountHelper,
 
     # Override
     def get_meta_factory(self, version: str) -> Optional[MetaFactory]:
-        if version is None or len(version) == 0:
-            return None
         return self.__meta_factories.get(version)
 
     # Override
@@ -195,7 +193,7 @@ class AccountGeneralFactory(GeneralAccountHelper,
             return None
         version = self.get_meta_type(meta=info, default=None)
         # assert version is not None, 'meta type error: %s' % meta
-        factory = self.get_meta_factory(version)
+        factory = None if version is None else self.get_meta_factory(version)
         if factory is None:
             # unknown meta type, get default meta factory
             factory = self.get_meta_factory('*')  # unknown
@@ -214,8 +212,6 @@ class AccountGeneralFactory(GeneralAccountHelper,
 
     # Override
     def get_document_factory(self, doc_type: str) -> Optional[DocumentFactory]:
-        if doc_type is None or len(doc_type) == 0:
-            return None
         return self.__document_factories.get(doc_type)
 
     # Override
@@ -237,7 +233,7 @@ class AccountGeneralFactory(GeneralAccountHelper,
             return None
         doc_type = self.get_document_type(document=info, default=None)
         # assert doc_type is not None, 'document type error: %s' % document
-        factory = self.get_document_factory(doc_type)
+        factory = None if doc_type is None else self.get_document_factory(doc_type)
         if factory is None:
             # unknown document type, get default document factory
             factory = self.get_document_factory('*')  # unknown

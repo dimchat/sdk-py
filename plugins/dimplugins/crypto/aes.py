@@ -28,7 +28,7 @@ from typing import Optional, Any, Dict
 
 from Crypto.Cipher import AES
 
-from dimp import EncodeAlgorithms, SymmetricAlgorithms
+from dimp import SymmetricAlgorithms
 from dimp import TransportableData
 from dimp import SymmetricKey, SymmetricKeyFactory
 from dimp import BaseSymmetricKey
@@ -63,7 +63,7 @@ class AESKey(BaseSymmetricKey):
     def _generate(self) -> TransportableData:
         # random key data
         pwd = random_bytes(size=self.size)
-        ted = TransportableData.create(data=pwd, algorithm=EncodeAlgorithms.DEFAULT)
+        ted = TransportableData.create(data=pwd)
         self['data'] = ted.object  # base64_encode()
         # self['mode'] = 'CBC'
         # self['padding'] = 'PKCS7'
@@ -128,7 +128,7 @@ class AESKey(BaseSymmetricKey):
         if extra is None:
             assert False, 'extra dict must provided to store IV for AES'
         else:
-            ted = TransportableData.create(data=iv, algorithm=EncodeAlgorithms.DEFAULT)
+            ted = TransportableData.create(data=iv)
             extra['IV'] = ted.object
         # OK
         return iv

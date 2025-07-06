@@ -64,7 +64,7 @@ class Barrack(ABC):
         raise NotImplemented
 
     # noinspection PyMethodMayBeStatic
-    async def create_user(self, identifier: ID) -> Optional[User]:
+    def create_user(self, identifier: ID) -> Optional[User]:
         """
         Create user when visa.key exists
 
@@ -82,7 +82,7 @@ class Barrack(ABC):
         return BaseUser(identifier=identifier)
 
     # noinspection PyMethodMayBeStatic
-    async def create_group(self, identifier: ID) -> Optional[Group]:
+    def create_group(self, identifier: ID) -> Optional[Group]:
         """
         Create group when members exist
 

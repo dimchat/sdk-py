@@ -184,10 +184,13 @@ class ExtensionLoader:
     # noinspection PyMethodMayBeStatic
     def _set_content_factory(self, msg_type: str, alias: str,
                              content_class=None, factory: ContentFactory = None):
-        if factory is None:
+        if factory is not None:
+            Content.set_factory(msg_type, factory=factory)
+            Content.set_factory(alias, factory=factory)
+        if content_class is not None:
             factory = ContentParser(content_class=content_class)
-        Content.set_factory(msg_type, factory=factory)
-        Content.set_factory(alias, factory=factory)
+            Content.set_factory(msg_type, factory=factory)
+            Content.set_factory(alias, factory=factory)
 
     def _register_command_factories(self):
         """ Core command factories """
@@ -217,9 +220,11 @@ class ExtensionLoader:
     # noinspection PyMethodMayBeStatic
     def _set_command_factory(self, cmd: str,
                              command_class=None, factory: CommandFactory = None):
-        if factory is None:
+        if factory is not None:
+            Command.set_factory(cmd=cmd, factory=factory)
+        if command_class is not None:
             factory = CommandParser(command_class=command_class)
-        Command.set_factory(cmd=cmd, factory=factory)
+            Command.set_factory(cmd=cmd, factory=factory)
 
 
 class ContentParser(ContentFactory):

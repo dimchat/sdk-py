@@ -37,6 +37,7 @@ from dimp import Envelope, Content
 from dimp import MetaCommand, DocumentCommand
 
 from ..mkm import MetaUtils, DocumentUtils
+from ..core import Archivist
 
 from .base import BaseCommandProcessor
 
@@ -47,6 +48,12 @@ class MetaCommandProcessor(BaseCommandProcessor):
         ~~~~~~~~~~~~~~~~~~~~~~
 
     """
+
+    @property  # protected
+    def archivist(self) -> Optional[Archivist]:
+        facebook = self.facebook
+        if facebook is not None:
+            return facebook.archivist
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
@@ -108,7 +115,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
                     'did': str(identifier),
                 }
             })
-        elif not await self.facebook.save_meta(meta=meta, identifier=identifier):
+        elif not await self.archivist.save_meta(meta=meta, identifier=identifier):
             text = 'Meta not accepted.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Meta not accepted: ${did}.',
@@ -190,15 +197,9 @@ class DocumentCommandProcessor(MetaCommandProcessor):
                     }
                 })
         meta = await facebook.get_meta(identifier=identifier)
-        # respond first document with meta
-        command = DocumentCommand.response(identifier=identifier, meta=meta, documents=documents)
-        responses = [command]
-        for i in range(1, count):
-            # respond other documents
-            doc = documents[i]
-            command = DocumentCommand.response(identifier=identifier, documents=[doc])
-            responses.append(command)
-        return responses
+        return [
+            DocumentCommand.response(identifier=identifier, meta=meta, documents=documents)
+        ]
 
     # private
     async def _put_docs(self, documents: List[Document], identifier: ID,
@@ -255,7 +256,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
                     'did': str(identifier),
                 }
             })
-        elif not await self.facebook.save_document(document=doc):
+        elif not await self.archivist.save_document(document=doc):
             # document expired
             text = 'Document not changed.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={

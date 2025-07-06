@@ -185,12 +185,23 @@ class PluginLoader:
 
     def _register_meta_factories(self):
         """ Meta factories """
-        array = [MetaType.MKM, MetaType.BTC, MetaType.ETH]
-        for version in array:
-            Meta.set_factory(version=version, factory=BaseMetaFactory(version=version))
+        self._set_meta_factory(version=MetaType.MKM, alias='mkm')
+        self._set_meta_factory(version=MetaType.BTC, alias='btc')
+        self._set_meta_factory(version=MetaType.ETH, alias='eth')
+
+    def _set_meta_factory(self, version: str, alias: str, factory: MetaFactory = None):
+        if factory is None:
+            factory = BaseMetaFactory(version=version)
+        Meta.set_factory(version=version, factory=factory)
+        Meta.set_factory(version=alias, factory=factory)
 
     def _register_document_factories(self):
         """ Document factories """
-        array = ['*', DocumentType.VISA, DocumentType.PROFILE, DocumentType.BULLETIN]
-        for doc_type in array:
-            Document.set_factory(doc_type=doc_type, factory=GeneralDocumentFactory(doc_type=doc_type))
+        self._set_document_factory(doc_type=DocumentType.VISA)
+        self._set_document_factory(doc_type=DocumentType.PROFILE)
+        self._set_document_factory(doc_type=DocumentType.BULLETIN)
+
+    def _set_document_factory(self, doc_type: str, factory: DocumentFactory = None):
+        if factory is None:
+            factory = GeneralDocumentFactory(doc_type=doc_type)
+        Document.set_factory(doc_type=doc_type, factory=factory)

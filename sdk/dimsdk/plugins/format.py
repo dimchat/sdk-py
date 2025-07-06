@@ -28,6 +28,7 @@ from typing import Optional, Any, List, Dict
 from dimp import URI, Converter, Mapper
 from dimp import DecryptKey
 from dimp import JSONMap
+from dimp import EncodeAlgorithms
 from dimp import TransportableData
 from dimp import PortableNetworkFile
 from dimp import TransportableDataFactory
@@ -124,12 +125,12 @@ class FormatGeneralFactory(GeneralFormatHelper, PortableNetworkFileHelper, Trans
 
     # Override
     def get_transportable_data_factory(self, algorithm: str) -> Optional[TransportableDataFactory]:
-        if algorithm is None or len(algorithm) == 0:
-            return None
         return self.__ted_factories.get(algorithm)
 
     # Override
     def create_transportable_data(self, algorithm: str, data: bytes) -> TransportableData:
+        if algorithm is None:  # or len(algorithm) == 0:
+            algorithm = EncodeAlgorithms.DEFAULT
         factory = self.get_transportable_data_factory(algorithm=algorithm)
         assert factory is not None, 'data algorithm not support: %s' % algorithm
         return factory.create_transportable_data(data=data)
@@ -147,7 +148,7 @@ class FormatGeneralFactory(GeneralFormatHelper, PortableNetworkFileHelper, Trans
             return None
         algorithm = self.get_format_algorithm(info, default=None)
         # assert algorithm is not None, 'TED error: %s' % key
-        factory = self.get_transportable_data_factory(algorithm=algorithm)
+        factory = None if algorithm is None else self.get_transportable_data_factory(algorithm=algorithm)
         if factory is None:
             # unknown algorithm, get default factory
             factory = self.get_transportable_data_factory(algorithm='*')  # unknown

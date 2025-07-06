@@ -51,11 +51,11 @@ class GeneralCommandFactory(ContentFactory, CommandFactory):
     def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
         ext = SharedCommandExtensions()
         # get factory by command name
-        name = ext.helper.get_cmd(content=content, default='*')
-        factory = ext.cmd_helper.get_command_factory(cmd=name)
+        cmd = ext.helper.get_cmd(content=content, default=None)
+        factory = None if cmd is None else ext.cmd_helper.get_command_factory(cmd=cmd)
         if factory is None:
             # check for group command
-            if 'group' in content:  # and name != 'group':
+            if 'group' in content:  # and cmd != 'group':
                 factory = ext.cmd_helper.get_command_factory(cmd='group')
             if factory is None:
                 factory = self
@@ -63,6 +63,11 @@ class GeneralCommandFactory(ContentFactory, CommandFactory):
 
     # Override
     def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
+        # check 'sn', 'command'
+        if content.get('sn') is None or content.get('command') is None:
+            # content.sn should not be empty
+            # content.command should not be empty
+            return None
         return BaseCommand(content=content)
 
 
@@ -70,6 +75,11 @@ class HistoryCommandFactory(GeneralCommandFactory):
 
     # Override
     def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
+        # check 'sn', 'command'
+        if content.get('sn') is None or content.get('command') is None:
+            # content.sn should not be empty
+            # content.command should not be empty
+            return None
         return BaseHistoryCommand(content=content)
 
 
@@ -87,4 +97,10 @@ class GroupCommandFactory(HistoryCommandFactory):
 
     # Override
     def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
+        # check 'sn', 'command', 'group
+        if content.get('sn') is None or content.get('command') is None or content.get('group') is None:
+            # content.sn should not be empty
+            # content.command should not be empty
+            # content.group should not be empty
+            return None
         return BaseGroupCommand(content=content)

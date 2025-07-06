@@ -31,7 +31,7 @@
 from .barrack import Archivist
 from .barrack import Barrack
 
-from .compress_keys import MessageShortener
+from .compress_keys import Shortener, MessageShortener
 from .compressor import Compressor, MessageCompressor
 
 from .packer import Packer
@@ -46,7 +46,7 @@ __all__ = [
     'Archivist',
     'Barrack',
 
-    'MessageShortener',
+    'Shortener', 'MessageShortener',
     'Compressor', 'MessageCompressor',
 
     'Packer',

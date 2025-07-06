@@ -32,7 +32,6 @@ import weakref
 from abc import abstractmethod
 from typing import Optional
 
-from dimp import EncodeAlgorithms
 from dimp import TransportableData
 from dimp import ID
 from dimp import InstantMessage, SecureMessage, ReliableMessage
@@ -187,7 +186,7 @@ class SecureMessagePacker:
         #
         #   2. Encode 'message.signature' to String (Base64)
         #
-        base64 = TransportableData.encode(data=signature, algorithm=EncodeAlgorithms.DEFAULT)
+        base64 = TransportableData.encode(data=signature)
         assert base64 is not None, 'failed to encode signature: %d byte(s) %s => %s, %s'\
                                    % (len(signature), msg.sender, msg.receiver, msg.group)
         # OK, pack message

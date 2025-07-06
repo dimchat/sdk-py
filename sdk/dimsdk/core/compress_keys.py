@@ -28,10 +28,50 @@
 # SOFTWARE.
 # ==============================================================================
 
+from abc import ABC, abstractmethod
 from typing import List, Dict
 
 
-class MessageShortener:
+class Shortener(ABC):
+
+    #
+    #   Compress Content
+    #
+
+    @abstractmethod
+    def compress_content(self, content: Dict) -> Dict:
+        raise NotImplemented
+
+    @abstractmethod
+    def extract_content(self, content: Dict) -> Dict:
+        raise NotImplemented
+
+    #
+    #   Compress SymmetricKey
+    #
+
+    @abstractmethod
+    def compress_symmetric_key(self, key: Dict) -> Dict:
+        raise NotImplemented
+
+    @abstractmethod
+    def extract_symmetric_keys(self, key: Dict) -> Dict:
+        raise NotImplemented
+
+    #
+    #   Compress ReliableMessage
+    #
+
+    @abstractmethod
+    def compress_reliable_message(self, msg: Dict) -> Dict:
+        raise NotImplemented
+
+    @abstractmethod
+    def extract_reliable_message(self, msg: Dict) -> Dict:
+        raise NotImplemented
+
+
+class MessageShortener(Shortener):
 
     def __init__(self):
         super().__init__()
@@ -97,10 +137,12 @@ class MessageShortener:
     def content_short_keys(self, keys: List[str]):
         self.__content_short_keys = keys
 
+    # Override
     def compress_content(self, content: Dict) -> Dict:
         self._shorten_keys(keys=self.content_short_keys, info=content)
         return content
 
+    # Override
     def extract_content(self, content: Dict) -> Dict:
         self._restore_keys(keys=self.content_short_keys, info=content)
         return content
@@ -117,10 +159,12 @@ class MessageShortener:
     def crypto_short_keys(self, keys: List[str]):
         self.__crypto_short_keys = keys
 
+    # Override
     def compress_symmetric_key(self, key: Dict) -> Dict:
         self._shorten_keys(keys=self.crypto_short_keys, info=key)
         return key
 
+    # Override
     def extract_symmetric_keys(self, key: Dict) -> Dict:
         self._restore_keys(keys=self.crypto_short_keys, info=key)
         return key
@@ -137,11 +181,13 @@ class MessageShortener:
     def message_short_keys(self, keys: List[str]):
         self.__message_short_keys = keys
 
+    # Override
     def compress_reliable_message(self, msg: Dict) -> Dict:
         self._move_key(from_key='keys', to_key='K', info=msg)
         self._shorten_keys(keys=self.message_short_keys, info=msg)
         return msg
 
+    # Override
     def extract_reliable_message(self, msg: Dict) -> Dict:
         keys = msg.get('K')
         if keys is None:

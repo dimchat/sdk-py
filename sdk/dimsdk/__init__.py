@@ -200,7 +200,11 @@ __all__ = [
     #   Core
     #
 
-    'Barrack', 'Transceiver', 'Packer', 'Processor',
+    'Archivist', 'Barrack',
+    'Shortener', 'MessageShortener',
+    'Compressor', 'MessageCompressor',
+
+    'Transceiver', 'Packer', 'Processor',
     'CipherKeyDelegate',
 
     #

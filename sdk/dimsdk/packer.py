@@ -28,22 +28,23 @@
 # SOFTWARE.
 # ==============================================================================
 
+from abc import ABC, abstractmethod
 from typing import Optional
 
-from dimp import utf8_encode, utf8_decode, json_encode, json_decode
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 
 from .dkd import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
 from .msg import MessageUtils
 from .core import Packer
+from .core import Archivist, Compressor
 
 from .facebook import Facebook
 from .messenger import Messenger
 from .twins import TwinsHelper
 
 
-class MessagePacker(TwinsHelper, Packer):
+class MessagePacker(TwinsHelper, Packer, ABC):
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)
@@ -74,6 +75,17 @@ class MessagePacker(TwinsHelper, Packer):
     @property  # protected
     def reliable_packer(self) -> ReliableMessagePacker:
         return self.__reliablePacker
+
+    @property  # protected
+    @abstractmethod
+    def compressor(self) -> Compressor:
+        raise NotImplemented
+
+    @property  # protected
+    def archivist(self) -> Optional[Archivist]:
+        facebook = self.facebook
+        if facebook is not None:
+            return facebook.archivist
 
     #
     #   InstantMessage -> SecureMessage -> ReliableMessage -> Data
@@ -139,8 +151,8 @@ class MessagePacker(TwinsHelper, Packer):
 
     # Override
     async def serialize_message(self, msg: ReliableMessage) -> bytes:
-        js = json_encode(obj=msg.dictionary)
-        return utf8_encode(string=js)
+        compressor = self.compressor
+        return compressor.compress_reliable_message(msg=msg.dictionary)
 
     #
     #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
@@ -148,25 +160,9 @@ class MessagePacker(TwinsHelper, Packer):
 
     # Override
     async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        js = utf8_decode(data=data)
-        if js is None:
-            # assert False, 'message data error: %d' % len(data)
-            return None
-        dictionary = json_decode(string=js)
-        # TODO: translate short keys
-        #       'S' -> 'sender'
-        #       'R' -> 'receiver'
-        #       'W' -> 'time'
-        #       'T' -> 'type'
-        #       'G' -> 'group'
-        #       ------------------
-        #       'D' -> 'data'
-        #       'V' -> 'signature'
-        #       'K' -> 'key'
-        #       ------------------
-        #       'M' -> 'meta'
-        #       'P' -> 'visa'
-        return ReliableMessage.parse(msg=dictionary)
+        compressor = self.compressor
+        info = compressor.extract_reliable_message(data=data)
+        return ReliableMessage.parse(msg=info)
 
     async def _check_attachments(self, msg: ReliableMessage) -> bool:
         """ Check meta & visa """
@@ -174,11 +170,11 @@ class MessagePacker(TwinsHelper, Packer):
         # [Meta Protocol]
         meta = MessageUtils.get_meta(msg=msg)
         if meta is not None:
-            await self.facebook.save_meta(meta=meta, identifier=sender)
+            await self.archivist.save_meta(meta=meta, identifier=sender)
         # [Visa Protocol]
         visa = MessageUtils.get_visa(msg=msg)
         if visa is not None:
-            await self.facebook.save_document(document=visa)
+            await self.archivist.save_document(document=visa)
         #
         # NOTICE: check [Visa Protocol] before calling this
         #         make sure the sender's meta(visa) exists
@@ -201,12 +197,12 @@ class MessagePacker(TwinsHelper, Packer):
         #       or you are a member of the group when this is a group message,
         #       so that you will have a private key (decrypt key) to decrypt it.
         receiver = msg.receiver
-        user = await self.facebook.select_user(receiver=receiver)
-        if user is None:
+        me = await self.facebook.select_local_user(receiver=receiver)
+        if me is None:
             # not for you?
             raise LookupError('receiver error: %s, from %s, %s' % (receiver, msg.sender, msg.group))
         assert len(msg.data) > 0, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
         # decrypt 'data' to 'content'
-        return await self.secure_packer.decrypt_message(msg=msg, receiver=user.identifier)
+        return await self.secure_packer.decrypt_message(msg=msg, receiver=me)
         # TODO: check top-secret message
         #       (do it by application)

@@ -146,11 +146,10 @@ class MessageProcessor(TwinsHelper, Processor):
         sender = msg.sender
         receiver = msg.receiver
         facebook = self.facebook
-        user = await facebook.select_user(receiver=receiver)
-        if user is None:
+        me = await facebook.select_local_user(receiver=receiver)
+        if me is None:
             # assert False, 'receiver error: %s' % receiver
             return []
-        me = user.identifier
         # 3. package messages
         messages = []
         for res in responses:

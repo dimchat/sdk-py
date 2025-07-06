@@ -31,7 +31,6 @@
 from typing import Optional, Any, Dict
 
 from dimp import utf8_encode
-from dimp import EncodeAlgorithms
 from dimp import TransportableData
 from dimp import VerifyKey, SignKey, PrivateKey
 from dimp import EntityType, Address
@@ -191,7 +190,7 @@ class BaseMetaFactory(MetaFactory):
             fingerprint = None
         else:
             sig = private_key.sign(data=utf8_encode(string=seed))
-            fingerprint = TransportableData.create(data=sig, algorithm=EncodeAlgorithms.DEFAULT)
+            fingerprint = TransportableData.create(data=sig)
         assert isinstance(private_key, PrivateKey), 'private key error: %s' % private_key
         public_key = private_key.public_key
         return self.create_meta(public_key=public_key, seed=seed, fingerprint=fingerprint)
@@ -199,14 +198,11 @@ class BaseMetaFactory(MetaFactory):
     # Override
     def create_meta(self, public_key: VerifyKey, seed: Optional[str], fingerprint: Optional[TransportableData]) -> Meta:
         version = self.type
-        if version == MetaType.MKM:
-            # MKM
+        if version == MetaType.MKM or version == 'mkm':
             out = DefaultMeta(version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
-        elif version == MetaType.BTC:
-            # BTC
+        elif version == MetaType.BTC or version == 'btc':
             out = BTCMeta(version=version, public_key=public_key)
-        elif version == MetaType.ETH:
-            # ETH
+        elif version == MetaType.ETH or version == 'eth':
             out = ETHMeta(version=version, public_key=public_key)
         else:
             raise TypeError('unknown meta type: %d' % version)
@@ -215,16 +211,23 @@ class BaseMetaFactory(MetaFactory):
 
     # Override
     def parse_meta(self, meta: dict) -> Optional[Meta]:
+        # # check 'type', 'key', 'seed', 'fingerprint'
+        # if 'type' not in meta or 'key' not in meta:
+        #     # meta.type should not be empty
+        #     # meta.key should not be empty
+        #     return None
+        # elif 'seed' not in meta:
+        #     if 'fingerprint' in meta:
+        #         assert False, 'meta error: %s' % meta
+        # elif 'fingerprint' not in meta:
+        #     assert False, 'meta error: %s' % meta
         ext = SharedAccountExtensions()
         version = ext.helper.get_meta_type(meta=meta, default='')
-        if version == MetaType.MKM:
-            # MKM
+        if version == MetaType.MKM or version == 'mkm':
             out = DefaultMeta(meta=meta)
-        elif version == MetaType.BTC:
-            # BTC
+        elif version == MetaType.BTC or version == 'btc':
             out = BTCMeta(meta=meta)
-        elif version == MetaType.ETH:
-            # ETH
+        elif version == MetaType.ETH or version == 'eth':
             out = ETHMeta(meta=meta)
         else:
             raise TypeError('unknown meta type: %d' % version)
