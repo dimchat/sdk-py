@@ -171,14 +171,14 @@ class AccountGeneralFactory(GeneralAccountHelper,
     def generate_meta(self, version: str, private_key: SignKey,
                       seed: Optional[str]) -> Meta:
         factory = self.get_meta_factory(version)
-        assert factory is not None, 'failed to get meta factory: %d' % version
+        assert factory is not None, 'failed to get meta factory: %s' % version
         return factory.generate_meta(private_key, seed=seed)
 
     # Override
     def create_meta(self, version: str, public_key: VerifyKey,
                     seed: Optional[str], fingerprint: Optional[TransportableData]) -> Meta:
         factory = self.get_meta_factory(version)
-        assert factory is not None, 'failed to get meta factory: %d' % version
+        assert factory is not None, 'failed to get meta factory: %s' % version
         return factory.create_meta(public_key, seed=seed, fingerprint=fingerprint)
 
     # Override

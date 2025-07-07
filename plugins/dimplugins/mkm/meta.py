@@ -73,7 +73,7 @@ class DefaultMeta(BaseMeta):
 
     # Override
     def generate_address(self, network: int = None) -> Address:
-        # assert self.type == 'MKM' or self.type == '1', 'meta version error: %d' % self.type
+        # assert self.type == 'MKM' or self.type == '1', 'meta version error: %s' % self.type
         assert network is not None, 'address type should not be empty'
         # check caches
         cached = self.__addresses.get(network)
@@ -116,7 +116,7 @@ class BTCMeta(BaseMeta):
 
     # Override
     def generate_address(self, network: int = None) -> Address:
-        # assert self.type == 'BTC' or self.type == '2', 'meta version error: %d' % self.type
+        # assert self.type == 'BTC' or self.type == '2', 'meta version error: %s' % self.type
         assert network is not None, 'address type should not be empty'
         # check caches
         cached = self.__addresses.get(network)
@@ -160,7 +160,7 @@ class ETHMeta(BaseMeta):
 
     # Override
     def generate_address(self, network: int = None) -> Address:
-        # assert self.type == 'ETH' or self.type == '4', 'meta version error: %d' % self.type
+        # assert self.type == 'ETH' or self.type == '4', 'meta version error: %s' % self.type
         assert network == EntityType.USER, 'ETH address type error: %d' % network
         # check cache
         cached = self.__address
@@ -205,7 +205,7 @@ class BaseMetaFactory(MetaFactory):
         elif version == MetaType.ETH or version == 'eth':
             out = ETHMeta(version=version, public_key=public_key)
         else:
-            raise TypeError('unknown meta type: %d' % version)
+            raise TypeError('unknown meta type: %s' % version)
         assert out.valid, 'meta error: %s' % out
         return out
 
@@ -230,6 +230,6 @@ class BaseMetaFactory(MetaFactory):
         elif version == MetaType.ETH or version == 'eth':
             out = ETHMeta(meta=meta)
         else:
-            raise TypeError('unknown meta type: %d' % version)
+            raise TypeError('unknown meta type: %s' % version)
         if out.valid:
             return out

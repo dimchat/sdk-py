@@ -34,7 +34,7 @@ from typing import Optional, Dict
 from dimp import json_encode, json_decode
 from dimp import utf8_encode, utf8_decode
 
-from .compress_keys import MessageShortener
+from .compress_keys import Shortener
 
 
 class Compressor(ABC):
@@ -66,17 +66,13 @@ class Compressor(ABC):
 
 class MessageCompressor(Compressor):
 
-    def __init__(self):
+    def __init__(self, shortener: Shortener):
         super().__init__()
-        self.__shortener = self._create_shortener()
+        self.__shortener = shortener
 
-    @property
-    def shortener(self) -> MessageShortener:
+    @property  # protected
+    def shortener(self) -> Shortener:
         return self.__shortener
-
-    # noinspection PyMethodMayBeStatic
-    def _create_shortener(self) -> MessageShortener:
-        return MessageShortener()
 
     #
     #   Compress Content
