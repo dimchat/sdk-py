@@ -119,16 +119,6 @@ class Messenger(Transceiver, Packer, Processor, ABC):
         return await packer.sign_message(msg=msg)
 
     # Override
-    async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
-        packer = self.packer
-        return await packer.serialize_message(msg=msg)
-
-    # Override
-    async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        packer = self.packer
-        return await packer.deserialize_message(data=data)
-
-    # Override
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         packer = self.packer
         return await packer.verify_message(msg=msg)

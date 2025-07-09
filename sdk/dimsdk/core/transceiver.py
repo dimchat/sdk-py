@@ -60,6 +60,27 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     def compressor(self) -> Compressor:
         raise NotImplemented
 
+    async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
+        """
+        Serialize network message
+
+        :param msg: network message
+        :return: data package
+        """
+        compressor = self.compressor
+        return compressor.compress_reliable_message(msg=msg.dictionary)
+
+    async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
+        """
+        Deserialize network message
+
+        :param data: data package
+        :return: network message
+        """
+        compressor = self.compressor
+        info = compressor.extract_reliable_message(data=data)
+        return ReliableMessage.parse(msg=info)
+
     #
     #   InstantMessageDelegate
     #
@@ -68,7 +89,8 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     async def serialize_content(self, content: Content, key: SymmetricKey, msg: InstantMessage) -> bytes:
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         before serialize content, this job should be do in subclass
-        return self.compressor.compress_content(content=content.dictionary, key=key.dictionary)
+        compressor = self.compressor
+        return compressor.compress_content(content=content.dictionary, key=key.dictionary)
 
     # Override
     async def encrypt_content(self, data: bytes, key: SymmetricKey, msg: InstantMessage) -> bytes:
@@ -90,15 +112,16 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         if BaseMessage.is_broadcast(msg=msg):
             # broadcast message has no key
             return None
-        else:
-            return self.compressor.compress_symmetric_key(key=key.dictionary)
+        compressor = self.compressor
+        return compressor.compress_symmetric_key(key=key.dictionary)
 
     # Override
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[bytes]:
         assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key: %s' % msg
         assert receiver.is_user, 'receiver error: %s' % receiver
         # TODO: make sure the receiver's public key exists
-        contact = await self.facebook.get_user(identifier=receiver)
+        facebook = self.facebook
+        contact = await facebook.get_user(identifier=receiver)
         if contact is None:
             assert False, 'failed to encrypt message key for receiver: %s' % receiver
         # encrypt with public key of the receiver (or group member)
@@ -126,7 +149,8 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         #         if it's a group message
         assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key'
         assert receiver.is_user, 'receiver error: %s' % receiver
-        user = await self.facebook.get_user(identifier=receiver)
+        facebook = self.facebook
+        user = await facebook.get_user(identifier=receiver)
         if user is None:
             assert False, 'failed to create local user: %s' % msg.receiver
         # decrypt with private key of the receiver (or group member)
@@ -138,9 +162,9 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         if data is None:
             # assert False, 'reused key? get it from cache: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
             return None
-        else:
-            key = self.compressor.extract_symmetric_key(data=data)
-            return SymmetricKey.parse(key=key)
+        compressor = self.compressor
+        key = compressor.extract_symmetric_key(data=data)
+        return SymmetricKey.parse(key=key)
 
     # # Override
     # async def decode_data(self, data: Any, msg: SecureMessage) -> Optional[bytes]:
@@ -164,7 +188,9 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
-        info = self.compressor.extract_content(data=data, key=key.dictionary)
+        # assert len(msg.data) > 0, 'message data empty: %s' % msg.dictionary
+        compressor = self.compressor
+        info = compressor.extract_content(data=data, key=key.dictionary)
         return Content.parse(content=info)
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         after deserialize content, this job should be do in subclass
@@ -173,7 +199,8 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     # noinspection PyUnusedLocal
     async def sign_data(self, data: bytes, msg: SecureMessage) -> bytes:
         sender = msg.sender
-        user = await self.facebook.get_user(identifier=sender)
+        facebook = self.facebook
+        user = await facebook.get_user(identifier=sender)
         if user is None:
             assert False, 'failed to sign message data for sender: %s' % sender
         return await user.sign(data)
@@ -193,7 +220,8 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     # Override
     async def verify_data_signature(self, data: bytes, signature: bytes, msg: ReliableMessage) -> bool:
         sender = msg.sender
-        contact = await self.facebook.get_user(identifier=sender)
+        facebook = self.facebook
+        contact = await facebook.get_user(identifier=sender)
         if contact is None:
             assert False, 'failed to verify signature for sender: %s' % sender
         return await contact.verify(data=data, signature=signature)

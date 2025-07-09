@@ -41,7 +41,7 @@ class Packer(ABC):
     """
 
     #
-    #   InstantMessage -> SecureMessage -> ReliableMessage -> Data
+    #   InstantMessage -> SecureMessage -> ReliableMessage
     #
 
     @abstractmethod
@@ -64,29 +64,9 @@ class Packer(ABC):
         """
         raise NotImplemented
 
-    @abstractmethod
-    async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
-        """
-        Serialize network message
-
-        :param msg: network message
-        :return: data package
-        """
-        raise NotImplemented
-
     #
-    #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
+    #   ReliableMessage -> SecureMessage -> InstantMessage
     #
-
-    @abstractmethod
-    async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        """
-        Deserialize network message
-
-        :param data: data package
-        :return: network message
-        """
-        raise NotImplemented
 
     @abstractmethod
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:

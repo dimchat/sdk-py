@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Optional
 
 from dimp import InstantMessage, SecureMessage, ReliableMessage
@@ -37,7 +37,7 @@ from .dkd import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageD
 from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
 from .msg import MessageUtils
 from .core import Packer
-from .core import Archivist, Compressor
+from .core import Archivist
 
 from .facebook import Facebook
 from .messenger import Messenger
@@ -77,18 +77,13 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         return self.__reliablePacker
 
     @property  # protected
-    @abstractmethod
-    def compressor(self) -> Compressor:
-        raise NotImplemented
-
-    @property  # protected
     def archivist(self) -> Optional[Archivist]:
         facebook = self.facebook
         if facebook is not None:
             return facebook.archivist
 
     #
-    #   InstantMessage -> SecureMessage -> ReliableMessage -> Data
+    #   InstantMessage -> SecureMessage -> ReliableMessage
     #
 
     # Override
@@ -149,20 +144,9 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         # sign 'data' by sender
         return await self.secure_packer.sign_message(msg=msg)
 
-    # Override
-    async def serialize_message(self, msg: ReliableMessage) -> bytes:
-        compressor = self.compressor
-        return compressor.compress_reliable_message(msg=msg.dictionary)
-
     #
-    #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
+    #   ReliableMessage -> SecureMessage -> InstantMessage
     #
-
-    # Override
-    async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
-        compressor = self.compressor
-        info = compressor.extract_reliable_message(data=data)
-        return ReliableMessage.parse(msg=info)
 
     async def _check_attachments(self, msg: ReliableMessage) -> bool:
         """ Check meta & visa """
