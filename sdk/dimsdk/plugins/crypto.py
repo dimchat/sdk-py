@@ -79,11 +79,11 @@ class CryptographyKeyGeneralFactory(GeneralCryptoHelper, SymmetricKeyHelper,
             return key
         info = Wrapper.get_dict(key)
         if info is None:
-            # assert False, 'key error: %s' % key
+            # assert False, 'symmetric key error: %s' % key
             return None
-        algorithm = self.get_key_algorithm(key=info, default=None)
-        # assert algorithm is not None, 'symmetric key error: %s' % key
-        factory = None if algorithm is None else self.get_symmetric_key_factory(algorithm=algorithm)
+        alg = self.get_key_algorithm(key=info, default=None)
+        assert alg is not None, 'symmetric key error: %s' % key
+        factory = None if alg is None else self.get_symmetric_key_factory(algorithm=alg)
         if factory is None:
             # unknown algorithm, get default key factory
             factory = self.get_symmetric_key_factory(algorithm='*')  # unknown
@@ -112,11 +112,11 @@ class CryptographyKeyGeneralFactory(GeneralCryptoHelper, SymmetricKeyHelper,
             return key
         info = Wrapper.get_dict(key)
         if info is None:
-            # assert False, 'key error: %s' % key
+            # assert False, 'public key error: %s' % key
             return None
-        algorithm = self.get_key_algorithm(key=info, default=None)
-        # assert algorithm is not None, 'public key error: %s' % key
-        factory = None if algorithm is None else self.get_public_key_factory(algorithm=algorithm)
+        alg = self.get_key_algorithm(key=info, default=None)
+        assert alg is not None, 'public key error: %s' % key
+        factory = None if alg is None else self.get_public_key_factory(algorithm=alg)
         if factory is None:
             # unknown algorithm, get default key factory
             factory = self.get_public_key_factory(algorithm='*')  # unknown
@@ -151,11 +151,11 @@ class CryptographyKeyGeneralFactory(GeneralCryptoHelper, SymmetricKeyHelper,
             return key
         info = Wrapper.get_dict(key)
         if info is None:
-            # assert False, 'key error: %s' % key
+            # assert False, 'private key error: %s' % key
             return None
-        algorithm = self.get_key_algorithm(key=info, default=None)
-        # assert algorithm is not None, 'private key error: %s' % key
-        factory = None if algorithm is None else self.get_private_key_factory(algorithm=algorithm)
+        alg = self.get_key_algorithm(key=info, default=None)
+        assert alg is not None, 'private key error: %s' % key
+        factory = None if alg is None else self.get_private_key_factory(algorithm=alg)
         if factory is None:
             # unknown algorithm, get default key factory
             factory = self.get_private_key_factory(algorithm='*')  # unknown

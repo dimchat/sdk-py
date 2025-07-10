@@ -48,6 +48,7 @@ from dimp.plugins import GeneralAccountHelper
 class AccountGeneralFactory(GeneralAccountHelper,
                             AddressHelper, IdentifierHelper,
                             MetaHelper, DocumentHelper):
+    """ Account GeneralFactory """
 
     def __init__(self):
         super().__init__()
@@ -58,7 +59,7 @@ class AccountGeneralFactory(GeneralAccountHelper,
         # str(type) -> MetaFactory
         self.__meta_factories: Dict[str, MetaFactory] = {}
         # str(type) -> DocumentFactory
-        self.__document_factories: Dict[str, DocumentFactory] = {}
+        self.__docs_factories: Dict[str, DocumentFactory] = {}
 
     # Override
     def get_meta_type(self, meta: Dict, default: Optional[str]) -> Optional[str]:
@@ -76,8 +77,8 @@ class AccountGeneralFactory(GeneralAccountHelper,
         # get type for did
         identifier = ID.parse(identifier=document.get('did'))
         if identifier is None:
-            # assert False, 'document error: %s' % document
-            return None
+            assert False, 'document error: %s' % document
+            # return None
         elif identifier.is_user:
             return DocumentType.VISA
         elif identifier.is_group:
@@ -192,7 +193,7 @@ class AccountGeneralFactory(GeneralAccountHelper,
             # assert False, 'meta error: %s' % meta
             return None
         version = self.get_meta_type(meta=info, default=None)
-        # assert version is not None, 'meta type error: %s' % meta
+        assert version is not None, 'meta type error: %s' % meta
         factory = None if version is None else self.get_meta_factory(version)
         if factory is None:
             # unknown meta type, get default meta factory
@@ -208,11 +209,11 @@ class AccountGeneralFactory(GeneralAccountHelper,
 
     # Override
     def set_document_factory(self, doc_type: str, factory: DocumentFactory):
-        self.__document_factories[doc_type] = factory
+        self.__docs_factories[doc_type] = factory
 
     # Override
     def get_document_factory(self, doc_type: str) -> Optional[DocumentFactory]:
-        return self.__document_factories.get(doc_type)
+        return self.__docs_factories.get(doc_type)
 
     # Override
     def create_document(self, doc_type: str, identifier: ID,

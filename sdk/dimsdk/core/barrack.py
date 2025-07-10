@@ -130,7 +130,7 @@ class Archivist(ABC):
         """
         Get meta.key
 
-        :param identifier: user ID
+        :param identifier: entity ID
         :return: None on not found
         """
         raise NotImplemented
@@ -140,7 +140,7 @@ class Archivist(ABC):
         """
         Get visa.key
 
-        :param identifier: user ID
+        :param identifier: entity ID
         :return: None on not found
         """
         raise NotImplemented

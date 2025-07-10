@@ -47,10 +47,7 @@ from ..twins import TwinsHelper
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):
-    """
-        Content Processing Unit
-        ~~~~~~~~~~~~~~~~~~~~~~~
-    """
+    """ CPU - Content Processing Unit """
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
@@ -94,10 +91,7 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
 
 
 class BaseCommandProcessor(BaseContentProcessor):
-    """
-        Command Processing Unit
-        ~~~~~~~~~~~~~~~~~~~~~~~
-    """
+    """ CPU - Command Processing Unit """
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:

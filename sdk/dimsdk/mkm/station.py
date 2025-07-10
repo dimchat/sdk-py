@@ -104,8 +104,9 @@ class Station(User):
             if host is not None:
                 self.__host = host
             port = doc.get_property(name='port')
-            port = Converter.get_int(value=port, default=0)
-            if port > 0:
+            port = Converter.get_int(value=port, default=None)
+            if port is not None and port > 0:
+                assert 16 < port < 65536, 'station port error: %d' % port
                 self.__port = port
             isp = doc.get_property(name='provider')
             isp = ID.parse(identifier=isp)
@@ -123,7 +124,7 @@ class Station(User):
     #
 
     @property
-    def host(self) -> str:
+    def host(self) -> Optional[str]:
         """ Station IP """
         return self.__host
 

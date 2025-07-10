@@ -146,9 +146,9 @@ class FormatGeneralFactory(GeneralFormatHelper, PortableNetworkFileHelper, Trans
         if info is None:
             # assert False, 'TED error: %s' % ted
             return None
-        algorithm = self.get_format_algorithm(info, default=None)
-        # assert algorithm is not None, 'TED error: %s' % key
-        factory = None if algorithm is None else self.get_transportable_data_factory(algorithm=algorithm)
+        alg = self.get_format_algorithm(info, default=None)
+        # assert alg is not None, 'TED error: %s' % key
+        factory = None if alg is None else self.get_transportable_data_factory(algorithm=alg)
         if factory is None:
             # unknown algorithm, get default factory
             factory = self.get_transportable_data_factory(algorithm='*')  # unknown

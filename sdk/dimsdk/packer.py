@@ -83,7 +83,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
             return facebook.archivist
 
     #
-    #   InstantMessage -> SecureMessage -> ReliableMessage
+    #   InstantMessage -> SecureMessage -> ReliableMessage -> Data
     #
 
     # Override
@@ -91,6 +91,9 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         # TODO: check receiver before calling this, make sure the visa.key exists;
         #       otherwise, suspend this message for waiting receiver's visa/meta;
         #       if receiver is a group, query all members' visa too!
+        facebook = self.facebook
+        messenger = self.messenger
+        assert facebook != enumerate and messenger != enumerate, 'twins not ready'
 
         # NOTICE: before sending group message, you can decide whether expose the group ID
         #       (A) if you don't want to expose the group ID,
@@ -108,7 +111,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         #
         #   1. get message key with direction (sender -> receiver) or (sender -> group)
         #
-        password = await self.messenger.get_encrypt_key(msg=msg)
+        password = await messenger.get_encrypt_key(msg=msg)
         assert password is not None, 'failed to get msg key: %s => %s, %s' % (msg.sender, receiver, msg.get('group'))
 
         #
@@ -116,7 +119,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         #
         if receiver.is_group:
             # group message
-            members = await self.facebook.get_members(identifier=receiver)
+            members = await facebook.get_members(identifier=receiver)
             assert len(members) > 0, 'group not ready: %s' % receiver
             # a station will never send group message, so here must be a client;
             # the client messenger should check the group's meta & members before encrypting,
@@ -144,21 +147,37 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         # sign 'data' by sender
         return await self.secure_packer.sign_message(msg=msg)
 
+    # # Override
+    # async def serialize_message(self, msg: ReliableMessage) -> bytes:
+    #     compressor = self.compressor
+    #     return compressor.compress_reliable_message(msg=msg.dictionary)
+
     #
-    #   ReliableMessage -> SecureMessage -> InstantMessage
+    #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
     #
+
+    # # Override
+    # async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
+    #     compressor = self.compressor
+    #     info = compressor.extract_reliable_message(data=data)
+    #     return ReliableMessage.parse(msg=info)
 
     async def _check_attachments(self, msg: ReliableMessage) -> bool:
         """ Check meta & visa """
-        sender = msg.sender
+        archivist = self.archivist
+        if archivist is None:
+            assert False, 'archivist not ready'
+            # return False
+        else:
+            sender = msg.sender
         # [Meta Protocol]
         meta = MessageUtils.get_meta(msg=msg)
         if meta is not None:
-            await self.archivist.save_meta(meta=meta, identifier=sender)
+            await archivist.save_meta(meta=meta, identifier=sender)
         # [Visa Protocol]
         visa = MessageUtils.get_visa(msg=msg)
         if visa is not None:
-            await self.archivist.save_document(document=visa)
+            await archivist.save_document(document=visa)
         #
         # NOTICE: check [Visa Protocol] before calling this
         #         make sure the sender's meta(visa) exists

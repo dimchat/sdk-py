@@ -46,7 +46,7 @@ class SecureMessagePacker:
         self.__transceiver = weakref.ref(messenger)
 
     @property
-    def delegate(self) -> SecureMessageDelegate:
+    def delegate(self) -> Optional[SecureMessageDelegate]:
         return self.__transceiver()
 
     """
@@ -74,6 +74,7 @@ class SecureMessagePacker:
         """
         assert receiver.is_user, 'receiver error: %s' % receiver
         transceiver = self.delegate
+        assert transceiver is not None, 'should not happen'
         #
         #   1. Decode 'message.key' to encrypted symmetric key data
         #
@@ -171,6 +172,7 @@ class SecureMessagePacker:
         :return: ReliableMessage object
         """
         transceiver = self.delegate
+        assert transceiver is not None, 'should not happen'
         #
         #   0. decode message data
         #

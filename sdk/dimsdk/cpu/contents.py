@@ -38,11 +38,6 @@ from .base import BaseContentProcessor
 
 
 class ForwardContentProcessor(BaseContentProcessor):
-    """
-        Forward Content Processor
-        ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    """
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
@@ -62,11 +57,6 @@ class ForwardContentProcessor(BaseContentProcessor):
 
 
 class ArrayContentProcessor(BaseContentProcessor):
-    """
-        Array Content Processor
-        ~~~~~~~~~~~~~~~~~~~~~~~
-
-    """
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:

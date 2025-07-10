@@ -50,12 +50,12 @@ class Transceiver(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         Converting message format between PlainMessage and NetworkMessage
     """
 
-    @property
+    @property  # protected
     @abstractmethod
     def facebook(self) -> EntityDelegate:
         raise NotImplemented
 
-    @property
+    @property  # protected
     @abstractmethod
     def compressor(self) -> Compressor:
         raise NotImplemented

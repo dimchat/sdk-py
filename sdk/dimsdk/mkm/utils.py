@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, List
+from typing import Optional, Iterable
 
 from dimp import utf8_encode
 from dimp import DateTime
@@ -90,7 +90,9 @@ class DocumentUtils:
     @classmethod
     def is_before(cls, old_time: Optional[DateTime], this_time: Optional[DateTime]) -> bool:
         """ Check whether this time is before old time """
-        if old_time is not None and this_time is not None:
+        if old_time is None or this_time is None:
+            return False
+        else:
             return this_time.before(old_time)
 
     @classmethod
@@ -99,9 +101,9 @@ class DocumentUtils:
         return cls.is_before(old_time=old_doc.time, this_time=this_doc.time)
 
     @classmethod
-    def last_document(cls, documents: List[Document], doc_type: str = None) -> Optional[Document]:
+    def last_document(cls, documents: Iterable[Document], doc_type: str = None) -> Optional[Document]:
         """ Select last document matched the type """
-        if documents is None or len(documents) == 0:
+        if documents is None:
             return None
         elif doc_type is None or doc_type == '*':
             doc_type = ''
@@ -123,9 +125,9 @@ class DocumentUtils:
         return last
 
     @classmethod
-    def last_visa(cls, documents: List[Document]) -> Optional[Visa]:
+    def last_visa(cls, documents: Iterable[Document]) -> Optional[Visa]:
         """ Select last visa document """
-        if documents is None or len(documents) == 0:
+        if documents is None:
             return None
         last: Optional[Visa] = None
         for item in documents:
@@ -142,9 +144,9 @@ class DocumentUtils:
         return last
 
     @classmethod
-    def last_bulletin(cls, documents: List[Document]) -> Optional[Bulletin]:
+    def last_bulletin(cls, documents: Iterable[Document]) -> Optional[Bulletin]:
         """ Select last bulletin document """
-        if documents is None or len(documents) == 0:
+        if documents is None:
             return None
         last: Optional[Bulletin] = None
         for item in documents:

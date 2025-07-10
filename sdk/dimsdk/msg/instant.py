@@ -48,7 +48,7 @@ class InstantMessagePacker:
         self.__transceiver = weakref.ref(messenger)
 
     @property
-    def delegate(self) -> InstantMessageDelegate:
+    def delegate(self) -> Optional[InstantMessageDelegate]:
         return self.__transceiver()
 
     """
@@ -79,6 +79,7 @@ class InstantMessagePacker:
         # TODO: check attachment for File/Image/Audio/Video message content
         #       (do it by application)
         transceiver = self.delegate
+        assert transceiver is not None, 'should not happen'
         #
         #   1. Serialize 'message.content' to data (JsON / ProtoBuf / ...)
         #

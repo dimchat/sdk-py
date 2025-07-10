@@ -89,7 +89,7 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
             return None
         # get factory by content type
         msg_type = self.get_content_type(content=info, default=None)
-        # assert msg_type is not None, 'content error: %s' % content
+        assert msg_type is not None, 'content error: %s' % content
         factory = None if msg_type is None else self.get_content_factory(msg_type)
         if factory is None:
             # unknown content type, get default content factory

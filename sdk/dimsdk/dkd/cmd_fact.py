@@ -75,10 +75,11 @@ class HistoryCommandFactory(GeneralCommandFactory):
 
     # Override
     def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
-        # check 'sn', 'command'
-        if content.get('sn') is None or content.get('command') is None:
+        # check 'sn', 'command', 'time'
+        if content.get('sn') is None or content.get('command') is None or content.get('time') is None:
             # content.sn should not be empty
             # content.command should not be empty
+            # content.time should not be empty
             return None
         return BaseHistoryCommand(content=content)
 

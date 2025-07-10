@@ -72,7 +72,7 @@ class CommandGeneralFactory(GeneralCommandHelper, CommandHelper):
             return None
         # get factory by command name
         cmd = self.get_cmd(content=info, default=None)
-        # assert cmd is not None, 'command name not found: %s' % content
+        assert cmd is not None, 'command name not found: %s' % content
         factory = None if cmd is None else self.get_command_factory(cmd=cmd)
         if factory is None:
             # unknown command name, get base command factory
@@ -86,8 +86,8 @@ class CommandGeneralFactory(GeneralCommandHelper, CommandHelper):
 def default_factory(info: Dict[str, Any]) -> Optional[CommandFactory]:
     ext = SharedMessageExtensions()
     msg_type = ext.helper.get_content_type(content=info, default=None)
-    # assert msg_type is not None, 'content type not found: %s' % info
-    fact = None if msg_type is None else ext.content_helper.get_content_factory(msg_type)
-    if isinstance(fact, CommandFactory):
-        return fact
-    # assert False, 'cannot parse command: %s' % info
+    if msg_type is not None:
+        fact = ext.content_helper.get_content_factory(msg_type)
+        if isinstance(fact, CommandFactory):
+            return fact
+    assert False, 'cannot parse command: %s' % info

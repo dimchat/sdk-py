@@ -44,11 +44,12 @@ class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactor
 
     def __init__(self):
         super().__init__()
-        self.__sn = random.randint(1, 0x7fffffff)
+        self.__sn = random.randint(0, 0x7fffffff)  # 0 ~ 0x7fffffff
         self.__lock = threading.Lock()
 
     def __next(self) -> int:
         """ return 1 ~ 2^31-1 """
+        assert self.__sn >= 0, 'serial number error: %d' % self.__sn
         with self.__lock:
             if self.__sn < 0x7fffffff:  # 2 ** 31 - 1
                 self.__sn += 1

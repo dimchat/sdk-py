@@ -44,7 +44,7 @@ class ReliableMessagePacker:
         self.__transceiver = weakref.ref(messenger)
 
     @property
-    def delegate(self) -> ReliableMessageDelegate:
+    def delegate(self) -> Optional[ReliableMessageDelegate]:
         return self.__transceiver()
 
     """
@@ -71,6 +71,7 @@ class ReliableMessagePacker:
         :return: SecureMessage object if signature matched
         """
         transceiver = self.delegate
+        assert transceiver is not None, 'should not happen'
         #
         #   0. Decode 'message.data' to encrypted content data
         #

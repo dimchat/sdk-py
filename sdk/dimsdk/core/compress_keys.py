@@ -33,6 +33,31 @@ from typing import List, Dict
 
 
 class Shortener(ABC):
+    """ Short Keys
+
+    ======+==================================================+==================
+          |   Message        Content        Symmetric Key    |    Description
+    ------+--------------------------------------------------+------------------
+    "A"   |                                 "algorithm"      |
+    "C"   |   "content"      "command"                       |
+    "D"   |   "data"                        "data"           |
+    "F"   |   "sender"                                       |   (From)
+    "G"   |   "group"        "group"                         |
+    "I"   |                                 "iv"             |
+    "K"   |   "key", "keys"                                  |
+    "M"   |   "meta"                                         |
+    "N"   |                  "sn"                            |   (Number)
+    "P"   |   "visa"                                         |   (Profile)
+    "R"   |   "receiver"                                     |
+    "S"   |   ...                                            |
+    "T"   |   "type"         "type"                          |
+    "V"   |   "signature"                                    |   (Verification)
+    "W"   |   "time"         "time"                          |   (When)
+    ======+==================================================+==================
+
+    Note:
+        "S" - deprecated (ambiguous for "sender" and "signature")
+    """
 
     #
     #   Compress Content
@@ -81,6 +106,7 @@ class MessageShortener(Shortener):
             "N", "sn",
             "W", "time",       # When
             "G", "group",
+            "C", "command",
         ]
         # Compress SymmetricKey
         self.__crypto_short_keys = [
@@ -98,7 +124,7 @@ class MessageShortener(Shortener):
             # ------------------
             "K", "key",        # or "keys"
             "D", "data",
-            "V", "signature",  # Verify
+            "V", "signature",  # Verification
             # ------------------
             "M", "meta",
             "P", "visa",       # Profile

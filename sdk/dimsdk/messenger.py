@@ -48,19 +48,19 @@ from .core import CipherKeyDelegate
 
 class Messenger(Transceiver, Packer, Processor, ABC):
 
-    @property
+    @property  # protected
     @abstractmethod
     def key_cache(self) -> Optional[CipherKeyDelegate]:
         """ Delegate for Cipher Key """
         raise NotImplemented
 
-    @property
+    @property  # protected
     @abstractmethod
     def packer(self) -> Optional[Packer]:
         """ Delegate for Packing Message """
         raise NotImplemented
 
-    @property
+    @property  # protected
     @abstractmethod
     def processor(self) -> Optional[Processor]:
         """ Delegate for Processing Message """
@@ -117,6 +117,16 @@ class Messenger(Transceiver, Packer, Processor, ABC):
     async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
         packer = self.packer
         return await packer.sign_message(msg=msg)
+
+    # # Override
+    # async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
+    #     packer = self.packer
+    #     return await packer.serialize_message(msg=msg)
+    #
+    # # Override
+    # async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
+    #     packer = self.packer
+    #     return await packer.deserialize_message(data=data)
 
     # Override
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:

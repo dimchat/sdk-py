@@ -48,7 +48,7 @@ from .mkm import UserDataSource, GroupDataSource
 
 class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
 
-    @property
+    @property  # protected
     @abstractmethod
     def barrack(self) -> Optional[Barrack]:
         raise NotImplemented

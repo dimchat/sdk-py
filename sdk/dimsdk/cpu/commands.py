@@ -43,11 +43,6 @@ from .base import BaseCommandProcessor
 
 
 class MetaCommandProcessor(BaseCommandProcessor):
-    """
-        Meta Command Processor
-        ~~~~~~~~~~~~~~~~~~~~~~
-
-    """
 
     @property  # protected
     def archivist(self) -> Optional[Archivist]:
@@ -131,11 +126,6 @@ class MetaCommandProcessor(BaseCommandProcessor):
 
 
 class DocumentCommandProcessor(MetaCommandProcessor):
-    """
-        Document Command Processor
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    """
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
