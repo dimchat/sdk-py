@@ -148,4 +148,8 @@ class BaseNetworkFileFactory(PortableNetworkFileFactory):
 
     # Override
     def parse_portable_network_file(self, pnf: Dict[str, Any]) -> Optional[PortableNetworkFile]:
+        # check 'data', 'URL'
+        if pnf.get('data') is None and pnf.get('URL') is None:
+            # pnf.data and pnf.URL should not be empty at the same time
+            return None
         return BaseNetworkFile(pnf)

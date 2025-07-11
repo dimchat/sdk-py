@@ -233,3 +233,4 @@ class BaseMetaFactory(MetaFactory):
             raise TypeError('unknown meta type: %s' % version)
         if out.valid:
             return out
+        # assert False, 'meta error: %s' % meta

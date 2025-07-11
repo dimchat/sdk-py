@@ -207,6 +207,10 @@ class ECCPublicKeyFactory(PublicKeyFactory):
 
     # Override
     def parse_public_key(self, key: dict) -> Optional[PublicKey]:
+        # check 'data'
+        if key.get('data') is None:
+            # key.data should not be empty
+            return None
         return ECCPublicKey(key)
 
 
@@ -219,4 +223,8 @@ class ECCPrivateKeyFactory(PrivateKeyFactory):
 
     # Override
     def parse_private_key(self, key: dict) -> Optional[PrivateKey]:
+        # check 'data'
+        if key.get('data') is None:
+            # key.data should not be empty
+            return None
         return ECCPrivateKey(key)

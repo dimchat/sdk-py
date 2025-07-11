@@ -51,20 +51,20 @@ class GeneralIdentifierFactory(IDFactory):
     # Override
     def create_identifier(self, name: Optional[str], address: Address, terminal: Optional[str]) -> ID:
         identifier = Identifier.concat(address=address, name=name, terminal=terminal)
-        cid = self._identifiers.get(identifier)
-        if cid is None:
-            cid = self._new_id(identifier=identifier, name=name, address=address, terminal=terminal)
-            self._identifiers[identifier] = cid
-        return cid
+        did = self._identifiers.get(identifier)
+        if did is None:
+            did = self._new_id(identifier=identifier, name=name, address=address, terminal=terminal)
+            self._identifiers[identifier] = did
+        return did
 
     # Override
     def parse_identifier(self, identifier: str) -> Optional[ID]:
-        cid = self._identifiers.get(identifier)
-        if cid is None:
-            cid = self._parse(identifier=identifier)
-            if cid is not None:
-                self._identifiers[identifier] = cid
-        return cid
+        did = self._identifiers.get(identifier)
+        if did is None:
+            did = self._parse(identifier=identifier)
+            if did is not None:
+                self._identifiers[identifier] = did
+        return did
 
     # noinspection PyMethodMayBeStatic
     def _new_id(self, identifier: str, name: Optional[str], address: Address, terminal: Optional[str]) -> ID:

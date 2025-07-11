@@ -45,12 +45,12 @@ class Base64Data(Dictionary, TransportableData):
 
     @property  # Override
     def algorithm(self) -> Optional[str]:
-        """ encode algorithm """
+        """ Encode Algorithm """
         return self.__wrapper.algorithm
 
     @property  # Override
     def data(self) -> Optional[bytes]:
-        """ binary data """
+        """ Binary Data """
         return self.__wrapper.data
 
     #
@@ -59,6 +59,7 @@ class Base64Data(Dictionary, TransportableData):
 
     @property  # Override
     def object(self) -> Any:
+        """ Encoding """
         return self.__str__()
 
     # Override
@@ -68,6 +69,7 @@ class Base64Data(Dictionary, TransportableData):
         return self.__wrapper.__str__()
 
     def to_string(self, mime_type: str) -> str:
+        """ Encode with 'Content-Type' """
         # 2. "data:image/png;base64,{BASE64_ENCODE}"
         return self.__wrapper.encode(mime_type=mime_type)
 
@@ -80,6 +82,10 @@ class Base64DataFactory(TransportableDataFactory):
 
     # Override
     def parse_transportable_data(self, ted: Dict[str, Any]) -> Optional[TransportableData]:
+        # check 'data'
+        if ted.get('data') is None:
+            # ted.data should not be empty
+            return None
         # TODO: 1. check algorithm
         #       2. check data format
         return Base64Data(dictionary=ted)

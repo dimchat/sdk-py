@@ -190,8 +190,12 @@ class AESKeyFactory(SymmetricKeyFactory):
     # Override
     def generate_symmetric_key(self) -> Optional[SymmetricKey]:
         key = {'algorithm': SymmetricAlgorithms.AES}
-        return AESKey(key)
+        return AESKey(key=key)
 
     # Override
     def parse_symmetric_key(self, key: dict) -> Optional[SymmetricKey]:
-        return AESKey(key)
+        # check 'data'
+        if key.get('data') is None:
+            # key.data should not be empty
+            return None
+        return AESKey(key=key)

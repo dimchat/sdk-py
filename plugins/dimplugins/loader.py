@@ -141,7 +141,8 @@ class PluginLoader:
         # Symmetric Key: AES
         factory = AESKeyFactory()
         SymmetricKey.set_factory(algorithm=SymmetricAlgorithms.AES, factory=factory)
-        SymmetricKey.set_factory(algorithm='AES/CBC/PKCS7Padding', factory=factory)
+        SymmetricKey.set_factory(algorithm=AESKey.AES_CBC_PKCS7, factory=factory)
+        # SymmetricKey.set_factory(algorithm='AES/CBC/PKCS7Padding', factory=factory)
 
     def _register_plain_key_factory(self):
         # Symmetric Key: Plain
