@@ -61,7 +61,7 @@ class MessageGeneralFactory(GeneralMessageHelper, ContentHelper, EnvelopeHelper,
         self.__reliable_message_factory: Optional[ReliableMessageFactory] = None
 
     # Override
-    def get_content_type(self, content: Dict, default: Optional[str]) -> Optional[str]:
+    def get_content_type(self, content: Dict, default: Optional[str] = None) -> Optional[str]:
         value = content.get('type')
         return Converter.get_str(value=value, default=default)
 

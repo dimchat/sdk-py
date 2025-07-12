@@ -123,7 +123,7 @@ class BaseNetworkFile(Dictionary, PortableNetworkFile):
             return self.dictionary
 
     def __get_url(self) -> Optional[str]:
-        url = self.get_str(key='URL', default=None)
+        url = self.get_str(key='URL')
         if url is None:
             return None
         elif url.startswith('data:'):

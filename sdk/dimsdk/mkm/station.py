@@ -100,11 +100,11 @@ class Station(User):
         doc = await self.profile
         if doc is not None:
             host = doc.get_property(name='host')
-            host = Converter.get_str(value=host, default=None)
+            host = Converter.get_str(value=host)
             if host is not None:
                 self.__host = host
             port = doc.get_property(name='port')
-            port = Converter.get_int(value=port, default=None)
+            port = Converter.get_int(value=port)
             if port is not None and port > 0:
                 assert 16 < port < 65536, 'station port error: %d' % port
                 self.__port = port

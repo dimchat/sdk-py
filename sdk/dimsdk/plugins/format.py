@@ -111,7 +111,7 @@ class FormatGeneralFactory(GeneralFormatHelper, PortableNetworkFileHelper, Trans
         return info
 
     # Override
-    def get_format_algorithm(self, ted: Dict[str, Any], default: Optional[str]) -> Optional[str]:
+    def get_format_algorithm(self, ted: Dict[str, Any], default: Optional[str] = None) -> Optional[str]:
         value = ted.get('algorithm')
         return Converter.get_str(value=value, default=default)
 

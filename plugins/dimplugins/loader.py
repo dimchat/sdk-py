@@ -198,6 +198,7 @@ class PluginLoader:
 
     def _register_document_factories(self):
         """ Document factories """
+        self._set_document_factory(doc_type='*')
         self._set_document_factory(doc_type=DocumentType.VISA)
         self._set_document_factory(doc_type=DocumentType.PROFILE)
         self._set_document_factory(doc_type=DocumentType.BULLETIN)

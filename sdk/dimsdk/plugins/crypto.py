@@ -48,7 +48,7 @@ class CryptographyKeyGeneralFactory(GeneralCryptoHelper, SymmetricKeyHelper,
         self.__private_key_factories: Dict[str, PrivateKeyFactory] = {}
 
     # Override
-    def get_key_algorithm(self, key: Dict[str, Any], default: Optional[str]) -> Optional[str]:
+    def get_key_algorithm(self, key: Dict[str, Any], default: Optional[str] = None) -> Optional[str]:
         """ get key algorithm name """
         value = key.get('algorithm')
         return Converter.get_str(value=value, default=default)

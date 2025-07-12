@@ -62,13 +62,13 @@ class AccountGeneralFactory(GeneralAccountHelper,
         self.__docs_factories: Dict[str, DocumentFactory] = {}
 
     # Override
-    def get_meta_type(self, meta: Dict, default: Optional[str]) -> Optional[str]:
+    def get_meta_type(self, meta: Dict, default: Optional[str] = None) -> Optional[str]:
         """ get meta type(version) """
         value = meta.get('type')
         return Converter.get_str(value=value, default=default)
 
     # Override
-    def get_document_type(self, document: Dict, default: Optional[str]) -> Optional[str]:
+    def get_document_type(self, document: Dict, default: Optional[str] = None) -> Optional[str]:
         value = document.get('type')
         if value is not None:
             return Converter.get_str(value=value, default=default)

@@ -72,17 +72,28 @@ class AESKey(BaseSymmetricKey):
     @property
     def size(self) -> int:
         # TODO: get from key data
-        count = self.get_int(key='keySize', default=None)
-        return self.bits >> 3 if count is None else count
+        count = self.get_int(key='keySize')
+        if count is None:
+            return self.bits >> 3  # 32
+        else:
+            return count
 
     @property
     def bits(self) -> int:
-        return self.get_int(key='sizeInBits', default=256)  # AES-256
+        count = self.get_int(key='sizeInBits')
+        if count is None:
+            return 256  # AES-256
+        else:
+            return count
 
     @property
     def block_size(self) -> int:
         # TODO: get from iv data
-        return self.get(key='blockSize', default=AES.block_size)  # 16
+        count = self.get(key='blockSize')
+        if count is None:
+            return AES.block_size  # 16
+        else:
+            return count
 
     @property  # Override
     def data(self) -> bytes:
@@ -105,9 +116,9 @@ class AESKey(BaseSymmetricKey):
                 base64 = params.get('iv')
         if base64 is None:
             # compatible with old version
-            base64 = self.get_str(key='iv', default=None)
+            base64 = self.get_str(key='iv')
             if base64 is None:
-                base64 = self.get_str(key='IV', default=None)
+                base64 = self.get_str(key='IV')
         # decode IV data
         ted = TransportableData.parse(base64)
         if ted is not None:

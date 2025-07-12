@@ -44,7 +44,7 @@ class CommandGeneralFactory(GeneralCommandHelper, CommandHelper):
         self.__command_factories: Dict[str, CommandFactory] = {}
 
     # Override
-    def get_cmd(self, content: Dict, default: Optional[str]) -> Optional[str]:
+    def get_cmd(self, content: Dict, default: Optional[str] = None) -> Optional[str]:
         cmd = content.get('command')
         return Converter.get_str(value=cmd, default=default)
 
