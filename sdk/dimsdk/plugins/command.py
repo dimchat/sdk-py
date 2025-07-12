@@ -83,7 +83,7 @@ class CommandGeneralFactory(GeneralCommandHelper, CommandHelper):
         return factory.parse_command(content=info)
 
 
-def default_factory(info: Dict[str, Any]) -> Optional[CommandFactory]:
+def default_factory(info: Dict) -> Optional[CommandFactory]:
     ext = SharedMessageExtensions()
     msg_type = ext.helper.get_content_type(content=info, default=None)
     if msg_type is not None:

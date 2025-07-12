@@ -134,6 +134,7 @@ class MessageShortener(Shortener):
     def _move_key(self, from_key: str, to_key: str, info: Dict):
         value = info.get(from_key)
         if value is not None:
+            assert to_key not in info, 'keys conflicted: "%s" -> "%s", %s' % (from_key, to_key, info)
             info.pop(from_key, None)
             info[to_key] = value
 

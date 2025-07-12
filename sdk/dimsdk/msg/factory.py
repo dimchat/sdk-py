@@ -30,7 +30,7 @@
 
 import random
 import threading
-from typing import Optional, Any, Dict
+from typing import Optional, Dict
 
 from dimp import DateTime
 from dimp import ID
@@ -66,7 +66,7 @@ class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactor
         return MessageEnvelope(sender=sender, receiver=receiver, time=time)
 
     # Override
-    def parse_envelope(self, envelope: Dict[str, Any]) -> Optional[Envelope]:
+    def parse_envelope(self, envelope: Dict) -> Optional[Envelope]:
         # check 'sender'
         if envelope.get('sender') is None:
             # env.sender should not empty
@@ -89,7 +89,7 @@ class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactor
         return PlainMessage(head=head, body=body)
 
     # Override
-    def parse_instant_message(self, msg: Dict[str, Any]) -> Optional[InstantMessage]:
+    def parse_instant_message(self, msg: Dict) -> Optional[InstantMessage]:
         # check 'sender', 'content'
         if msg.get('sender') is None or msg.get('content') is None:
             # msg.sender should not be empty
@@ -102,7 +102,7 @@ class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactor
     #
 
     # Override
-    def parse_secure_message(self, msg: Dict[str, Any]) -> Optional[SecureMessage]:
+    def parse_secure_message(self, msg: Dict) -> Optional[SecureMessage]:
         # check 'sender', 'data'
         if msg.get('sender') is None or msg.get('data') is None:
             # msg.sender should not be empty
@@ -118,7 +118,7 @@ class MessageFactory(EnvelopeFactory, InstantMessageFactory, SecureMessageFactor
     #
 
     # Override
-    def parse_reliable_message(self, msg: Dict[str, Any]) -> Optional[ReliableMessage]:
+    def parse_reliable_message(self, msg: Dict) -> Optional[ReliableMessage]:
         # check 'sender', 'data', 'signature'
         if msg.get('sender') is None or msg.get('data') is None or msg.get('signature') is None:
             # msg.sender should not be empty

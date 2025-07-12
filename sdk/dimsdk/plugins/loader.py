@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Any, Dict
+from typing import Optional, Dict
 
 from dimp import *
 from dimp.plugins import *
@@ -234,7 +234,7 @@ class ContentParser(ContentFactory):
         self.__class = content_class
 
     # Override
-    def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
+    def parse_content(self, content: Dict) -> Optional[Content]:
         # return self.__class(content=content)
         return self.__class(content)
 
@@ -246,6 +246,6 @@ class CommandParser(CommandFactory):
         self.__class = command_class
 
     # Override
-    def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
+    def parse_command(self, content: Dict) -> Optional[Command]:
         # return self.__class(content=content)
         return self.__class(content)

@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Any, Dict
+from typing import Optional, Dict
 
 from dimp import utf8_encode
 from dimp import TransportableData
@@ -60,7 +60,7 @@ from .eth import ETHAddress
 
 class DefaultMeta(BaseMeta):
 
-    def __init__(self, meta: Dict[str, Any] = None,
+    def __init__(self, meta: Dict = None,
                  version: str = None, public_key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
@@ -103,7 +103,7 @@ class DefaultMeta(BaseMeta):
 
 class BTCMeta(BaseMeta):
 
-    def __init__(self, meta: Dict[str, Any] = None,
+    def __init__(self, meta: Dict = None,
                  version: str = None, public_key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)
@@ -147,7 +147,7 @@ class BTCMeta(BaseMeta):
 
 class ETHMeta(BaseMeta):
 
-    def __init__(self, meta: Dict[str, Any] = None,
+    def __init__(self, meta: Dict = None,
                  version: str = None, public_key: VerifyKey = None,
                  seed: Optional[str] = None, fingerprint: Optional[TransportableData] = None):
         super().__init__(meta=meta, version=version, public_key=public_key, seed=seed, fingerprint=fingerprint)

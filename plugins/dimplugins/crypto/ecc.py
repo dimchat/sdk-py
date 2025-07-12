@@ -24,7 +24,7 @@
 # ==============================================================================
 
 import hashlib
-from typing import Optional, Union, Any, Dict
+from typing import Optional, Union, Dict
 
 import ecdsa
 
@@ -37,7 +37,7 @@ from dimp import BasePublicKey, BasePrivateKey
 class ECCPublicKey(BasePublicKey):
     """ ECC Public Key """
 
-    def __init__(self, key: Dict[str, Any]):
+    def __init__(self, key: Dict):
         super().__init__(key)
         self.__key = None
         self.__data = None
@@ -108,7 +108,7 @@ class ECCPublicKey(BasePublicKey):
 class ECCPrivateKey(BasePrivateKey):
     """ ECC Private Key """
 
-    def __init__(self, key: Dict[str, Any]):
+    def __init__(self, key: Dict):
         super().__init__(key)
         # check key data
         pem: str = key.get('data')

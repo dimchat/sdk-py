@@ -23,7 +23,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Union, Any, Dict
+from typing import Optional, Union, Dict
 
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
@@ -40,7 +40,7 @@ from dimp import BaseKey, BasePublicKey, BasePrivateKey
 class RSAPublicKey(BasePublicKey, EncryptKey):
     """ RSA Public Key """
 
-    def __init__(self, key: Dict[str, Any]):
+    def __init__(self, key: Dict):
         super().__init__(key)
         self.__key = None
         self.__data = None
@@ -94,7 +94,7 @@ class RSAPublicKey(BasePublicKey, EncryptKey):
 class RSAPrivateKey(BasePrivateKey, DecryptKey):
     """ RSA Private Key """
 
-    def __init__(self, key: Dict[str, Any]):
+    def __init__(self, key: Dict):
         super().__init__(key)
         # check key data
         pem: str = key.get('data')

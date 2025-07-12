@@ -24,7 +24,7 @@
 # ==============================================================================
 
 import random
-from typing import Optional, Any, Dict
+from typing import Optional, Dict
 
 from Crypto.Cipher import AES
 
@@ -45,7 +45,7 @@ class AESKey(BaseSymmetricKey):
 
     AES_CBC_PKCS7 = "AES/CBC/PKCS7Padding"
 
-    def __init__(self, key: Dict[str, Any]):
+    def __init__(self, key: Dict):
         super().__init__(key)
         # TODO: check algorithm parameters
         #   1. check mode = 'CBC'

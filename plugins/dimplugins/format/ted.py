@@ -81,7 +81,7 @@ class Base64DataFactory(TransportableDataFactory):
         return Base64Data(data=data)
 
     # Override
-    def parse_transportable_data(self, ted: Dict[str, Any]) -> Optional[TransportableData]:
+    def parse_transportable_data(self, ted: Dict) -> Optional[TransportableData]:
         # check 'data'
         if ted.get('data') is None:
             # ted.data should not be empty

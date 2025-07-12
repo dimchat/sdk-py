@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Any, Dict
+from typing import Optional, Dict
 
 from dimp import TransportableData
 from dimp import ID
@@ -72,7 +72,7 @@ class GeneralDocumentFactory(DocumentFactory):
                 return BaseDocument(doc_type=doc_type, identifier=identifier, data=data, signature=signature)
 
     # Override
-    def parse_document(self, document: Dict[str, Any]) -> Optional[Document]:
+    def parse_document(self, document: Dict) -> Optional[Document]:
         # check 'did', 'data', 'signature'
         identifier = ID.parse(identifier=document.get('did'))
         if identifier is None:

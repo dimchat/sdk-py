@@ -296,9 +296,10 @@ dTGP+WYLof56xNhMyOgZO8ltxem9izK/V9N9cnc5UQ==\n\
     def test3_aes(self):
         print('\n---------------- %s' % self)
         extra = {}
-        key = SymmetricKey.parse(key={
-            'algorithm': SymmetricAlgorithms.AES,
-        })
+        # key = SymmetricKey.parse(key={
+        #     'algorithm': SymmetricAlgorithms.AES,
+        # })
+        key = SymmetricKey.generate(algorithm=SymmetricAlgorithms.AES)
         data = 'moky'.encode('utf-8')
         ciphertext = key.encrypt(data=data, extra=extra)
         plaintext = key.decrypt(data=ciphertext, params=extra)

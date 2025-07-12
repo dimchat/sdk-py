@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, Any, Dict
+from typing import Optional, Dict
 
 from dimp import Content, ContentFactory
 from dimp import Command, CommandFactory
@@ -48,7 +48,7 @@ class GeneralCommandFactory(ContentFactory, CommandFactory):
         super().__init__()
 
     # Override
-    def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
+    def parse_content(self, content: Dict) -> Optional[Content]:
         ext = SharedCommandExtensions()
         # get factory by command name
         cmd = ext.helper.get_cmd(content=content, default=None)
@@ -62,7 +62,7 @@ class GeneralCommandFactory(ContentFactory, CommandFactory):
         return factory.parse_command(content=content)
 
     # Override
-    def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
+    def parse_command(self, content: Dict) -> Optional[Command]:
         # check 'sn', 'command'
         if content.get('sn') is None or content.get('command') is None:
             # content.sn should not be empty
@@ -74,7 +74,7 @@ class GeneralCommandFactory(ContentFactory, CommandFactory):
 class HistoryCommandFactory(GeneralCommandFactory):
 
     # Override
-    def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
+    def parse_command(self, content: Dict) -> Optional[Command]:
         # check 'sn', 'command', 'time'
         if content.get('sn') is None or content.get('command') is None or content.get('time') is None:
             # content.sn should not be empty
@@ -87,7 +87,7 @@ class HistoryCommandFactory(GeneralCommandFactory):
 class GroupCommandFactory(HistoryCommandFactory):
 
     # Override
-    def parse_content(self, content: Dict[str, Any]) -> Optional[Content]:
+    def parse_content(self, content: Dict) -> Optional[Content]:
         ext = SharedCommandExtensions()
         # get factory by command name
         name = ext.helper.get_cmd(content=content, default='*')
@@ -97,7 +97,7 @@ class GroupCommandFactory(HistoryCommandFactory):
         return factory.parse_command(content=content)
 
     # Override
-    def parse_command(self, content: Dict[str, Any]) -> Optional[Command]:
+    def parse_command(self, content: Dict) -> Optional[Command]:
         # check 'sn', 'command', 'group
         if content.get('sn') is None or content.get('command') is None or content.get('group') is None:
             # content.sn should not be empty
