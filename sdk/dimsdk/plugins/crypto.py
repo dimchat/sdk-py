@@ -81,7 +81,7 @@ class CryptographyKeyGeneralFactory(GeneralCryptoHelper, SymmetricKeyHelper,
         if info is None:
             # assert False, 'symmetric key error: %s' % key
             return None
-        alg = self.get_key_algorithm(key=info, default=None)
+        alg = self.get_key_algorithm(key=info)
         assert alg is not None, 'symmetric key error: %s' % key
         factory = None if alg is None else self.get_symmetric_key_factory(algorithm=alg)
         if factory is None:
@@ -114,7 +114,7 @@ class CryptographyKeyGeneralFactory(GeneralCryptoHelper, SymmetricKeyHelper,
         if info is None:
             # assert False, 'public key error: %s' % key
             return None
-        alg = self.get_key_algorithm(key=info, default=None)
+        alg = self.get_key_algorithm(key=info)
         assert alg is not None, 'public key error: %s' % key
         factory = None if alg is None else self.get_public_key_factory(algorithm=alg)
         if factory is None:
@@ -153,7 +153,7 @@ class CryptographyKeyGeneralFactory(GeneralCryptoHelper, SymmetricKeyHelper,
         if info is None:
             # assert False, 'private key error: %s' % key
             return None
-        alg = self.get_key_algorithm(key=info, default=None)
+        alg = self.get_key_algorithm(key=info)
         assert alg is not None, 'private key error: %s' % key
         factory = None if alg is None else self.get_private_key_factory(algorithm=alg)
         if factory is None:

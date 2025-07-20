@@ -48,6 +48,9 @@ from .contents import ForwardContentProcessor
 from .commands import MetaCommandProcessor
 from .commands import DocumentCommandProcessor
 
+from .customized import CustomizedContentHandler, BaseCustomizedHandler
+from .customized import CustomizedContentProcessor
+
 from .creator import BaseContentProcessorCreator
 
 
@@ -66,6 +69,9 @@ __all__ = [
 
     'MetaCommandProcessor',
     'DocumentCommandProcessor',
+
+    'CustomizedContentHandler', 'BaseCustomizedHandler',
+    'CustomizedContentProcessor',
 
     'BaseContentProcessorCreator',
 

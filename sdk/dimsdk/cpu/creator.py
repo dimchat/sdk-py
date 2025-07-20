@@ -50,6 +50,7 @@ from .contents import ForwardContentProcessor
 from .contents import ArrayContentProcessor
 from .commands import MetaCommandProcessor
 from .commands import DocumentCommandProcessor
+# from .customized import CustomizedContentProcessor
 
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
@@ -57,6 +58,11 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
 
     # Override
     def create_content_processor(self, msg_type: str) -> Optional[ContentProcessor]:
+        # # application customized
+        # if msg_type == ContentType.APPLICATION or msg_type == 'application':
+        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # if msg_type == ContentType.CUSTOMIZED or msg_type == 'customized':
+        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # forward content
         if msg_type == ContentType.FORWARD or msg_type == 'forward':
             return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)

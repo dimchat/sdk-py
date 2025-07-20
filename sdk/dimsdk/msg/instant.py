@@ -103,7 +103,7 @@ class InstantMessagePacker:
             encoded_data = TransportableData.encode(data=ciphertext)
         assert encoded_data is not None, 'failed to encode content data: %s' % ciphertext
         # replace 'content' with encrypted 'data
-        info = msg.copy_dictionary(deep_copy=False)
+        info = msg.copy_dictionary()
         info.pop('content', None)
         info['data'] = encoded_data
         #

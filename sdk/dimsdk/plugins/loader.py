@@ -181,6 +181,15 @@ class ExtensionLoader:
         # Unknown Content Type
         self._set_content_factory(msg_type=ContentType.ANY, alias='*', content_class=BaseContent)
 
+        # Application Customized Content
+        self._register_customized_factories()
+
+    def _register_customized_factories(self):
+        """ Customized content factories """
+        # Application Customized
+        self._set_content_factory(ContentType.CUSTOMIZED, alias='customized', content_class=AppCustomizedContent)
+        # self._set_content_factory(ContentType.APPLICATION, alias='application', content_class=AppCustomizedContent)
+
     # noinspection PyMethodMayBeStatic
     def _set_content_factory(self, msg_type: str, alias: str,
                              content_class=None, factory: ContentFactory = None):

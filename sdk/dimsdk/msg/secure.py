@@ -142,7 +142,7 @@ class SecureMessagePacker:
         #      (do it by application)
         #
         # OK, pack message
-        info = msg.copy_dictionary(deep_copy=False)
+        info = msg.copy_dictionary()
         info.pop('key', None)
         info.pop('keys', None)
         info.pop('data', None)
@@ -192,6 +192,6 @@ class SecureMessagePacker:
         assert base64 is not None, 'failed to encode signature: %d byte(s) %s => %s, %s'\
                                    % (len(signature), msg.sender, msg.receiver, msg.group)
         # OK, pack message
-        info = msg.copy_dictionary(deep_copy=False)
+        info = msg.copy_dictionary()
         info['signature'] = base64
         return ReliableMessage.parse(msg=info)

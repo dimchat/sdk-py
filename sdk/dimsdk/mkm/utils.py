@@ -85,7 +85,7 @@ class DocumentUtils:
     @classmethod
     def get_document_type(cls, document: Document) -> Optional[str]:
         ext = SharedAccountExtensions()
-        return ext.helper.get_document_type(document=document.dictionary, default=None)
+        return ext.helper.get_document_type(document=document.dictionary)
 
     @classmethod
     def is_before(cls, old_time: Optional[DateTime], this_time: Optional[DateTime]) -> bool:

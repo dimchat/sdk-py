@@ -192,7 +192,7 @@ class AccountGeneralFactory(GeneralAccountHelper,
         if info is None:
             # assert False, 'meta error: %s' % meta
             return None
-        version = self.get_meta_type(meta=info, default=None)
+        version = self.get_meta_type(meta=info)
         assert version is not None, 'meta type error: %s' % meta
         factory = None if version is None else self.get_meta_factory(version)
         if factory is None:
@@ -232,7 +232,7 @@ class AccountGeneralFactory(GeneralAccountHelper,
         if info is None:
             # assert False, 'document error: %s' % document
             return None
-        doc_type = self.get_document_type(document=info, default=None)
+        doc_type = self.get_document_type(document=info)
         # assert doc_type is not None, 'document type error: %s' % document
         factory = None if doc_type is None else self.get_document_factory(doc_type)
         if factory is None:
