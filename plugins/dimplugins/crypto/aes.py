@@ -145,7 +145,7 @@ class AESKey(BaseSymmetricKey):
         return iv
 
     # Override
-    def encrypt(self, data: bytes, extra: Optional[Dict]) -> bytes:
+    def encrypt(self, data: bytes, extra: Optional[Dict] = None) -> bytes:
         # 1. if 'IV' not found in extra params, new a random 'IV'
         key_iv = self._get_init_vector(params=extra)
         if key_iv is None:
@@ -158,7 +158,7 @@ class AESKey(BaseSymmetricKey):
         return key.encrypt(data)
 
     # Override
-    def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
+    def decrypt(self, data: bytes, params: Optional[Dict] = None) -> Optional[bytes]:
         # 1. if 'IV' not found in extra params, use an empty 'IV'
         key_iv = self._get_init_vector(params=params)
         if key_iv is None:

@@ -75,7 +75,7 @@ class RSAPublicKey(BasePublicKey, EncryptKey):
             return int(bits)
 
     # Override
-    def encrypt(self, data: bytes, extra: Optional[Dict]) -> bytes:
+    def encrypt(self, data: bytes, extra: Optional[Dict] = None) -> bytes:
         cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)
         return cipher.encrypt(data)
 
@@ -162,7 +162,7 @@ class RSAPrivateKey(BasePrivateKey, DecryptKey):
         return RSAPublicKey(info)
 
     # Override
-    def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
+    def decrypt(self, data: bytes, params: Optional[Dict] = None) -> Optional[bytes]:
         sentinel: Optional[bytes] = None
         try:
             cipher = Cipher_PKCS1_v1_5.new(self.rsa_key)

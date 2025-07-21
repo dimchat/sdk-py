@@ -84,7 +84,7 @@ class GeneralDocumentFactory(DocumentFactory):
             return None
         # check document type
         ext = SharedAccountExtensions()
-        doc_type = ext.helper.get_document_type(document=document, default=None)
+        doc_type = ext.helper.get_document_type(document=document)
         if doc_type is None:
             doc_type = get_doc_type(doc_type='*', identifier=identifier)
         # create with document type

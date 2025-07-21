@@ -277,7 +277,7 @@ class BaseUser(BaseEntity, User):
         #         is the better way
         key = await facebook.public_key_for_encryption(identifier=self.identifier)
         assert key is not None, 'failed to get encrypt key for user: %s' % self.identifier
-        return key.encrypt(data=data, extra=None)
+        return key.encrypt(data=data)
 
     # Override
     async def sign(self, data: bytes) -> bytes:
@@ -297,7 +297,7 @@ class BaseUser(BaseEntity, User):
         assert len(keys) > 0, 'failed to get decrypt keys: %s' % self.identifier
         for key in keys:
             # try decrypting it with each private key
-            plaintext = key.decrypt(data=data, params=None)
+            plaintext = key.decrypt(data=data)
             if plaintext is not None:
                 # OK!
                 return plaintext

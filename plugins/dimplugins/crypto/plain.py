@@ -49,11 +49,11 @@ class PlainKey(BaseSymmetricKey):
         return b''
 
     # Override
-    def encrypt(self, data: bytes, extra: Optional[Dict]) -> bytes:
+    def encrypt(self, data: bytes, extra: Optional[Dict] = None) -> bytes:
         return data
 
     # Override
-    def decrypt(self, data: bytes, params: Optional[Dict]) -> Optional[bytes]:
+    def decrypt(self, data: bytes, params: Optional[Dict] = None) -> Optional[bytes]:
         return data
 
 

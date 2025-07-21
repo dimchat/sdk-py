@@ -363,7 +363,7 @@ dTGP+WYLof56xNhMyOgZO8ltxem9izK/V9N9cnc5UQ==\n\
 
         array = ['123', '123a', 'abc']
         for item in array:
-            value = Converter.get_int(value=item, default=None)
+            value = Converter.get_int(value=item)
             print('convert: %s -> %s' % (item, value))
 
 
