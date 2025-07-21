@@ -72,7 +72,7 @@ class CommandGeneralFactory(GeneralCommandHelper, CommandHelper):
             return None
         # get factory by command name
         cmd = self.get_cmd(content=info)
-        assert cmd is not None, 'command name not found: %s' % content
+        # assert cmd is not None, 'command name not found: %s' % content
         factory = None if cmd is None else self.get_command_factory(cmd=cmd)
         if factory is None:
             # unknown command name, get base command factory

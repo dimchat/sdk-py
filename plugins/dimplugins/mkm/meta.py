@@ -222,7 +222,7 @@ class BaseMetaFactory(MetaFactory):
         # elif 'fingerprint' not in meta:
         #     assert False, 'meta error: %s' % meta
         ext = SharedAccountExtensions()
-        version = ext.helper.get_meta_type(meta=meta, default='')
+        version = ext.helper.get_meta_type(meta=meta)
         if version == MetaType.MKM or version == 'mkm':
             out = DefaultMeta(meta=meta)
         elif version == MetaType.BTC or version == 'btc':

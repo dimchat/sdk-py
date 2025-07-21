@@ -193,7 +193,7 @@ class AccountGeneralFactory(GeneralAccountHelper,
             # assert False, 'meta error: %s' % meta
             return None
         version = self.get_meta_type(meta=info)
-        assert version is not None, 'meta type error: %s' % meta
+        # assert version is not None, 'meta type error: %s' % meta
         factory = None if version is None else self.get_meta_factory(version)
         if factory is None:
             # unknown meta type, get default meta factory

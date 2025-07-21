@@ -25,139 +25,155 @@
 
 ## Extensions
 
-### 1. extends Content
+### Content
 
 extends [CustomizedContent](https://github.com/dimchat/core-py#extends-content)
 
-### 2. extends ContentProcessor
+### ContentProcessor
 
 ```python
-from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import List
 
-from dimsdk import ID
-from dimsdk import ReliableMessage
-from dimsdk import Content
-from dimsdk.cpu import BaseContentProcessor
+from dimsdk import *
+from dimsdk.cpu import *
 
-from ...common import CustomizedContent
+from ...common import GroupHistory
 
 
-class CustomizedContentHandler(ABC):
+class GroupHistoryHandler(BaseCustomizedHandler):
+    """ Command Transform:
+
+        +===============================+===============================+
+        |      Customized Content       |      Group Query Command      |
+        +-------------------------------+-------------------------------+
+        |   "type" : i2s(0xCC)          |   "type" : i2s(0x88)          |
+        |   "sn"   : 123                |   "sn"   : 123                |
+        |   "time" : 123.456            |   "time" : 123.456            |
+        |   "app"  : "chat.dim.group"   |                               |
+        |   "mod"  : "history"          |                               |
+        |   "act"  : "query"            |                               |
+        |                               |   "command"   : "query"       |
+        |   "group"     : "{GROUP_ID}"  |   "group"     : "{GROUP_ID}"  |
+        |   "last_time" : 0             |   "last_time" : 0             |
+        +===============================+===============================+
     """
-        Handler for Customized Content
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    """
 
-    @abstractmethod
-    async def handle_action(self, act: str, sender: ID,
-                            content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
-        """
-        Do your job
+    # noinspection PyMethodMayBeStatic
+    def matches(self, app: str, mod: str) -> bool:
+        return app == GroupHistory.APP and mod == GroupHistory.MOD
 
-        @param act:     action
-        @param sender:  user ID
-        @param content: customized content
-        @param msg:     network message
-        @return contents
-        """
-        raise NotImplemented
+    # Override
+    async def handle_action(self, act: str, sender: ID, content: CustomizedContent,
+                            msg: ReliableMessage) -> List[Content]:
+        messenger = self.messenger
+        if messenger is None:
+            assert False, 'messenger lost'
+            # return []
+        elif act == GroupHistory.ACT_QUERY:
+            assert GroupHistory.APP == content.application
+            assert GroupHistory.MOD == content.module
+            assert content.group is not None, 'group command error: %s, sender: %s' % (content, sender)
+        else:
+            # assert False, 'unknown action: %s, %s, sender: %s' % (act, content, sender)
+            return await super().handle_action(act=act, sender=sender, content=content, msg=msg)
+        info = content.copy_dictionary()
+        info['type'] = ContentType.COMMAND
+        info['command'] = GroupCommand.QUERY
+        query = Content.parse(content=info)
+        if isinstance(query, QueryCommand):
+            return await messenger.process_content(content=query, r_msg=msg)
+        # else:
+        #     assert False, 'query command error: %s, %s, sender: %s' % (query, content, sender)
+        text = 'Query command error.'
+        return self._respond_receipt(text=text, envelope=msg.envelope, content=content)
 
 
-class CustomizedContentProcessor(BaseContentProcessor, CustomizedContentHandler):
+class AppCustomizedContentProcessor(CustomizedContentProcessor):
     """
         Customized Content Processing Unit
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Handle content for application customized
     """
 
-    # Override
-    async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        assert isinstance(content, CustomizedContent), 'customized content error: %s' % content
-        # 1. check app id
-        app = content.application
-        responses = self._filter(app, content=content, msg=r_msg)
-        if responses is not None:
-            # app id not found
-            return responses
-        # 2. get handler with module name
-        mod = content.module
-        handler = self._fetch(mod, content=content, msg=r_msg)
-        if handler is None:
-            # module not support
-            return []
-        # 3. do the job
-        act = content.action
-        sender = r_msg.sender
-        return await handler.handle_action(act, sender=sender, content=content, msg=r_msg)
+    def __init__(self, facebook: Facebook, messenger: Messenger):
+        super().__init__(facebook=facebook, messenger=messenger)
+        self.__group_history_handler = self._create_group_history_handler(facebook=facebook, messenger=messenger)
 
-    def _filter(self, app: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[List[Content]]:
-        # Override for your application
-        """
-        Check for application
+    # noinspection PyMethodMayBeStatic
+    def _create_group_history_handler(self, facebook: Facebook, messenger: Messenger) -> GroupHistoryHandler:
+        return GroupHistoryHandler(facebook=facebook, messenger=messenger)
 
-        :param app:     app ID
-        :param content: customized content
-        :param msg:     received message
-        :return: None on app ID matched
-        """
-        text = 'Content not support.'
-        return self._respond_receipt(text=text, content=content, envelope=msg.envelope, extra={
-            'template': 'Customized content (app: ${app}) not support yet!',
-            'replacements': {
-                'app': app,
-            }
-        })
+    @property  # protected
+    def group_history_handler(self) -> GroupHistoryHandler:
+        return self.__group_history_handler
 
-    def _fetch(self, mod: str, content: CustomizedContent, msg: ReliableMessage) -> Optional[CustomizedContentHandler]:
-        """ Override for you module """
-        # if the application has too many modules, I suggest you to
-        # use different handler to do the job for each module.
-        return self
-
-    # Override
-    async def handle_action(self, act: str, sender: ID,
-                            content: CustomizedContent, msg: ReliableMessage) -> List[Content]:
-        """ Override for customized actions """
-        app = content.application
-        mod = content.module
-        text = 'Content not support.'
-        return self._respond_receipt(text=text, content=content, envelope=msg.envelope, extra={
-            'template': 'Customized content (app: ${app}, mod: ${mod}, act: ${act}) not support yet!',
-            'replacements': {
-                'app': app,
-                'mod': mod,
-                'act': act,
-            }
-        })
+    # noinspection PyUnusedLocal
+    def _filter(self, app: str, mod: str, content: CustomizedContent, msg: ReliableMessage) -> CustomizedContentHandler:
+        """ Override for your handler """
+        if content.group is not None:
+            handler = self.group_history_handler
+            if handler.matches(app=app, mod=mod):
+                return handler
+        # default handler
+        return super()._filter(app=app, mod=mod, content=content, msg=msg)
 ```
 
-### 3. extends ExtensionLoader
+### ContentProcessorCreator
+
+```python
+from typing import Optional
+
+from dimsdk import *
+from dimsdk.cpu import *
+
+from .handshake import *
+from .customized import *
+
+
+class ClientContentProcessorCreator(BaseContentProcessorCreator):
+
+    # Override
+    def create_content_processor(self, msg_type: str) -> Optional[ContentProcessor]:
+        # application customized
+        if msg_type == ContentType.APPLICATION or msg_type == 'application':
+            return AppCustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        if msg_type == ContentType.CUSTOMIZED or msg_type == 'customized':
+            return AppCustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
+        # others
+        return super().create_content_processor(msg_type=msg_type)
+
+    # Override
+    def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
+        # handshake
+        if cmd == HandshakeCommand.HANDSHAKE:
+            return HandshakeCommandProcessor(facebook=self.facebook, messenger=self.messenger)
+        # others
+        return super().create_command_processor(msg_type=msg_type, cmd=cmd)
+```
+
+### ExtensionLoader
 
 ```python
 from dimsdk import ContentType
 from dimsdk.plugins import ExtensionLoader
 
-from ..protocol import HandshakeCommand
+from ..protocol import HandshakeCommand, BaseHandshakeCommand
 from ..protocol import AppCustomizedContent
 
 
-class CommonLoader(ExtensionLoader):
+class CommonExtensionLoader(ExtensionLoader):
 
+    # Override
     def _register_customized_factories(self):
         # Application Customized
         self._set_content_factory(msg_type=ContentType.APPLICATION, content_class=AppCustomizedContent)
         self._set_content_factory(msg_type=ContentType.CUSTOMIZED, content_class=AppCustomizedContent)
 
     # Override
-    def _register_content_factories(self):
-        super()._register_content_factories()
-        self._register_customized_factories()
-
-    # Override
     def _register_command_factories(self):
         super()._register_command_factories()
         # Handshake
-        self._set_command_factory(cmd=HandshakeCommand.HANDSHAKE, command_class=HandshakeCommand)
+        self._set_command_factory(cmd=HandshakeCommand.HANDSHAKE, command_class=BaseHandshakeCommand)
 ```
 
 ## Usages
@@ -165,16 +181,31 @@ class CommonLoader(ExtensionLoader):
 You must load all extensions before your business run:
 
 ```python
-from ..common import CommonLoader
+from dimsdk.plugins import ExtensionLoader
+from dimplugins import PluginLoader
+
+from .common_loader import CommonExtensionLoader
+
+
+class LibraryLoader:
+
+    def __init__(self, extensions: ExtensionLoader = None, plugins: PluginLoader = None):
+        super().__init__()
+        self.__extensions = CommonExtensionLoader() if extensions is None else extensions
+        self.__plugins = PluginLoader() if plugins is None else plugins
+
+    def run(self):
+        self.__extensions.run()
+        self.__plugins.run()
 
 
 if __name__ == '__main__':
-  loader = CommonLoader()
+  loader = LibraryLoader()
   loader.run()
   # do your jobs after all extensions loaded.
 ```
 
-Also, to let your **CustomizedContentProcessor** start to work,
+To let your **CustomizedContentProcessor** start to work,
 you must override ```BaseContentProcessorCreator``` for message types:
 
 1. ContentType.APPLICATION 
@@ -184,5 +215,5 @@ and then set your **creator** for ```GeneralContentProcessorFactory``` in the ``
 
 ----
 
-Copyright &copy; 2018 Albert Moky
+Copyright &copy; 2018-2025 Albert Moky
 [![Followers](https://img.shields.io/github/followers/moky)](https://github.com/moky?tab=followers)

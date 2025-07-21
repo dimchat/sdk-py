@@ -90,8 +90,8 @@ class GroupCommandFactory(HistoryCommandFactory):
     def parse_content(self, content: Dict) -> Optional[Content]:
         ext = SharedCommandExtensions()
         # get factory by command name
-        name = ext.helper.get_cmd(content=content, default='*')
-        factory = ext.cmd_helper.get_command_factory(cmd=name)
+        cmd = ext.helper.get_cmd(content=content)
+        factory = cmd if cmd is None else ext.cmd_helper.get_command_factory(cmd=cmd)
         if factory is None:
             factory = self
         return factory.parse_command(content=content)

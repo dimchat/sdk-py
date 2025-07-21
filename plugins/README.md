@@ -53,7 +53,6 @@
 from typing import Optional
 
 from dimsdk import ConstantString
-from dimsdk import EntityType
 from dimsdk import Address, ANYWHERE, EVERYWHERE
 from dimplugins import BTCAddress, ETHAddress
 from dimplugins import BaseAddressFactory
@@ -104,7 +103,7 @@ class UnknownAddress(ConstantString, Address):
 
     @property  # Override
     def network(self) -> int:
-        return EntityType.USER.value
+        return 0  # EntityType.USER.value
 ```
 
 ### Meta
@@ -126,26 +125,9 @@ class CompatibleMetaFactory(BaseMetaFactory):
         super().__init__(version=version)
 
     # Override
-    def create_meta(self, public_key: VerifyKey, seed: Optional[str], fingerprint: Optional[TransportableData]) -> Meta:
-        version = self.type
-        if version == Meta.MKM:
-            # MKM
-            out = DefaultMeta(version='1', public_key=public_key, seed=seed, fingerprint=fingerprint)
-        elif version == Meta.BTC:
-            # BTC
-            out = BTCMeta(version='2', public_key=public_key)
-        elif version == Meta.ETH:
-            # ETH
-            out = ETHMeta(version='4', public_key=public_key)
-        else:
-            raise TypeError('unknown meta type: %d' % version)
-        assert out.valid, 'meta error: %s' % out
-        return out
-
-    # Override
     def parse_meta(self, meta: dict) -> Optional[Meta]:
         ext = SharedAccountExtensions()
-        version = ext.helper.get_meta_type(meta=meta, default='')
+        version = ext.helper.get_meta_type(meta=meta)
         if version in ['1', 'mkm', 'MKM']:
             # MKM
             out = DefaultMeta(meta=meta)
@@ -199,13 +181,26 @@ You must load all plugins before your business run:
 
 ```python
 from dimsdk.plugins import ExtensionLoader
+from dimplugins import PluginLoader
 
 from .compat_loader import CompatiblePluginLoader
 
 
+class LibraryLoader:
+
+    def __init__(self, extensions: ExtensionLoader = None, plugins: PluginLoader = None):
+        super().__init__()
+        self.__extensions = ExtensionLoader() if extensions is None else extensions
+        self.__plugins = CompatiblePluginLoader() if plugins is None else plugins
+
+    def run(self):
+        self.__extensions.run()
+        self.__plugins.run()
+
+
 if __name__ == '__main__':
-  ExtensionLoader().run()
-  CompatiblePluginLoader().run()
+  loader = LibraryLoader()
+  loader.run()
   # do your jobs after all extensions & plugins loaded
 ```
 
@@ -213,5 +208,5 @@ You must ensure that every ```Address``` you extend has a ```Meta``` type that c
 
 ----
 
-Copyright &copy; 2018 Albert Moky
+Copyright &copy; 2018-2025 Albert Moky
 [![Followers](https://img.shields.io/github/followers/moky)](https://github.com/moky?tab=followers)
