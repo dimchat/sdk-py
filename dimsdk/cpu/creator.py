@@ -61,7 +61,7 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         # # application customized
         # if msg_type == ContentType.APPLICATION or msg_type == 'application':
         #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
-        # if msg_type == ContentType.CUSTOMIZED or msg_type == 'customized':
+        # elif msg_type == ContentType.CUSTOMIZED or msg_type == 'customized':
         #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # forward content
         if msg_type == ContentType.FORWARD or msg_type == 'forward':
