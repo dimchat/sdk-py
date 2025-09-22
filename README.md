@@ -4,7 +4,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dimchat/sdk-py/pulls)
 [![Platform](https://img.shields.io/badge/Platform-Python%203-brightgreen.svg)](https://github.com/dimchat/sdk-py/wiki)
 [![Issues](https://img.shields.io/github/issues/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/issues)
-[![Repo Size](https://img.shields.io/github/repo-size/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/archive/refs/heads/main.zip)
+[![Repo Size](https://img.shields.io/github/repo-size/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/archive/refs/heads/master.zip)
 [![Tags](https://img.shields.io/github/tag/dimchat/sdk-py)](https://github.com/dimchat/sdk-py/tags)
 [![Version](https://img.shields.io/pypi/v/dimsdk)](https://pypi.org/project/dimsdk)
 
@@ -58,7 +58,7 @@ class AppCustomizedProcessor(CustomizedContentProcessor):
         key = '%s:%s' % (app, mod)
         return self.__handlers.get(key)
 
-    # noinspection PyUnusedLocal
+    # Override
     def _filter(self, app: str, mod: str, content: CustomizedContent, msg: ReliableMessage) -> CustomizedContentHandler:
         """ Override for your handler """
         handler = self.get_handler(app=app, mod=mod)
@@ -167,59 +167,7 @@ class ClientContentProcessorCreator(BaseContentProcessorCreator):
         return super().create_command_processor(msg_type=msg_type, cmd=cmd)
 ```
 
-### ExtensionLoader
-
-```python
-from dimsdk import ContentType
-from dimsdk.plugins import ExtensionLoader
-
-from ..protocol import HandshakeCommand, BaseHandshakeCommand
-from ..protocol import AppCustomizedContent
-
-
-class CommonExtensionLoader(ExtensionLoader):
-
-    # Override
-    def _register_customized_factories(self):
-        # Application Customized
-        self._set_content_factory(msg_type=ContentType.APPLICATION, content_class=AppCustomizedContent)
-        self._set_content_factory(msg_type=ContentType.CUSTOMIZED, content_class=AppCustomizedContent)
-
-    # Override
-    def _register_command_factories(self):
-        super()._register_command_factories()
-        # Handshake
-        self._set_command_factory(cmd=HandshakeCommand.HANDSHAKE, command_class=BaseHandshakeCommand)
-```
-
-## Usages
-
-You must load all extensions before your business run:
-
-```python
-from dimsdk.plugins import ExtensionLoader
-from dimplugins import PluginLoader
-
-from .common_loader import CommonExtensionLoader
-
-
-class LibraryLoader:
-
-    def __init__(self, extensions: ExtensionLoader = None, plugins: PluginLoader = None):
-        super().__init__()
-        self.__extensions = CommonExtensionLoader() if extensions is None else extensions
-        self.__plugins = PluginLoader() if plugins is None else plugins
-
-    def run(self):
-        self.__extensions.run()
-        self.__plugins.run()
-
-
-if __name__ == '__main__':
-  loader = LibraryLoader()
-  loader.run()
-  # do your jobs after all extensions loaded.
-```
+## Usage
 
 To let your **CustomizedContentProcessor** start to work,
 you must override ```BaseContentProcessorCreator``` for message types:

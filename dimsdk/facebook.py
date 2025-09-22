@@ -123,7 +123,10 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         #
         #  2. check visa key
         #
-        if not identifier.is_broadcast:
+        if identifier.is_broadcast:
+            # no need to check visa key for broadcast user
+            pass
+        else:
             visa_key = await self.public_key_for_encryption(identifier=identifier)
             if visa_key is None:
                 # assert False, 'visa.key not found: %s' % identifier
@@ -151,7 +154,10 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         #
         #  2. check members
         #
-        if not identifier.is_broadcast:
+        if identifier.is_broadcast:
+            # no need to check members for broadcast group
+            pass
+        else:
             members = await self.get_members(identifier=identifier)
             if members is None or len(members) == 0:
                 # assert False, 'group members not found: %s' % identifier

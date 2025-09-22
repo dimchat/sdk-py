@@ -33,7 +33,7 @@ from typing import Optional
 
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 
-from .dkd import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
+from .msg import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
 from .msg import MessageUtils
 from .core import Packer
@@ -93,7 +93,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         #       if receiver is a group, query all members' visa too!
         facebook = self.facebook
         messenger = self.messenger
-        assert facebook != enumerate and messenger != enumerate, 'twins not ready'
+        assert facebook is not None and messenger is not None, 'twins not ready'
 
         # NOTICE: before sending group message, you can decide whether expose the group ID
         #       (A) if you don't want to expose the group ID,

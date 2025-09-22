@@ -28,22 +28,26 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .instant import InstantMessagePacker
-from .secure import SecureMessagePacker
-from .reliable import ReliableMessagePacker
+from .instant_delegate import InstantMessageDelegate
+from .secure_delegate import SecureMessageDelegate
+from .reliable_delegate import ReliableMessageDelegate
 
-from .factory import MessageFactory
+from .instant_packer import InstantMessagePacker
+from .secure_packer import SecureMessagePacker
+from .reliable_packer import ReliableMessagePacker
 
 from .utils import MessageUtils
 
 
 __all__ = [
 
+    'InstantMessageDelegate',
+    'SecureMessageDelegate',
+    'ReliableMessageDelegate',
+
     'InstantMessagePacker',
     'SecureMessagePacker',
     'ReliableMessagePacker',
-
-    'MessageFactory',
 
     'MessageUtils',
 

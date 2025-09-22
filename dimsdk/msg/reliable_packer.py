@@ -34,7 +34,7 @@ from typing import Optional
 
 from dimp import SecureMessage, ReliableMessage
 
-from ..dkd import ReliableMessageDelegate
+from .reliable_delegate import ReliableMessageDelegate
 
 
 class ReliableMessagePacker:

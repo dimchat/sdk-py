@@ -35,11 +35,11 @@ from .dkd import *
 from .msg import *
 from .core import *
 
+from .twins import TwinsHelper
 from .facebook import Facebook
 from .messenger import Messenger
-from .packer import MessagePacker
 from .processor import MessageProcessor
-from .twins import TwinsHelper
+from .packer import MessagePacker
 
 
 name = 'DIM-SDK'
@@ -66,7 +66,6 @@ __all__ = [
     'DataCoder', 'Hex', 'Base58', 'Base64',
     'ObjectCoder', 'JSON',
     'MapCoder', 'JSONMap',
-    'ListCoder', 'JSONList',
     'StringCoder', 'UTF8',
 
     'hex_encode', 'hex_decode',
@@ -82,9 +81,9 @@ __all__ = [
     #   Data Digest
     #
 
-    'DataDigester',
-    'MD5', 'SHA1', 'SHA256', 'KECCAK256', 'RIPEMD160',
-    'md5', 'sha1', 'sha256', 'keccak256', 'ripemd160',
+    'MessageDigester',
+    'SHA256', 'KECCAK256', 'RIPEMD160',
+    'sha256', 'keccak256', 'ripemd160',
 
     #
     #   Crypto Keys
@@ -159,7 +158,7 @@ __all__ = [
 
     # group history
     'HistoryCommand', 'GroupCommand',
-    'InviteCommand', 'ExpelCommand', 'JoinCommand', 'QuitCommand', 'QueryCommand', 'ResetCommand',
+    'InviteCommand', 'ExpelCommand', 'JoinCommand', 'QuitCommand', 'ResetCommand',
     'HireCommand', 'FireCommand', 'ResignCommand',
 
     # extend contents
@@ -178,8 +177,8 @@ __all__ = [
 
     # extend group history
     'BaseHistoryCommand', 'BaseGroupCommand',
-    'InviteGroupCommand', 'ExpelGroupCommand', 'JoinGroupCommand',
-    'QuitGroupCommand', 'QueryGroupCommand', 'ResetGroupCommand',
+    'InviteGroupCommand', 'ExpelGroupCommand',
+    'JoinGroupCommand', 'QuitGroupCommand', 'ResetGroupCommand',
     'HireGroupCommand', 'FireGroupCommand', 'ResignGroupCommand',
 
     #
@@ -195,30 +194,23 @@ __all__ = [
     'EnvelopeFactory',
     'InstantMessageFactory', 'SecureMessageFactory', 'ReliableMessageFactory',
 
-    # delegates
-    'InstantMessageDelegate', 'SecureMessageDelegate', 'ReliableMessageDelegate',
-
-    #
-    #   Core
-    #
-
-    'Archivist', 'Barrack',
-    'Shortener', 'MessageShortener',
-    'Compressor', 'MessageCompressor',
-
-    'Transceiver', 'Packer', 'Processor',
-    'CipherKeyDelegate',
-
     #
     #   MingKeMing extends
     #
 
     'EntityDelegate',
-    'Entity', 'EntityDataSource', 'BaseEntity',
-    'User', 'UserDataSource', 'BaseUser',
-    'Group', 'GroupDataSource', 'BaseGroup',
+    'EntityDataSource',
+    'Entity', 'BaseEntity',
 
-    'ServiceProvider', 'Station', 'Bot',
+    'GroupDataSource',
+    'Group', 'BaseGroup',
+
+    'UserDataSource',
+    'User', 'BaseUser',
+
+    'ServiceProvider',
+    'Station',
+    'Bot',
 
     'MetaUtils', 'DocumentUtils',
 
@@ -229,17 +221,41 @@ __all__ = [
     'ContentProcessor',
     'ContentProcessorCreator',
     'ContentProcessorFactory',
+
     'GeneralContentProcessorFactory',
 
-    'GeneralCommandFactory',
-    'HistoryCommandFactory',
-    'GroupCommandFactory',
+    #
+    #   Message extends
+    #
 
-    'InstantMessagePacker', 'SecureMessagePacker', 'ReliableMessagePacker',
-    'MessageFactory', 'MessageUtils',
+    'InstantMessageDelegate',
+    'SecureMessageDelegate',
+    'ReliableMessageDelegate',
+
+    'InstantMessagePacker',
+    'SecureMessagePacker',
+    'ReliableMessagePacker',
+
+    'MessageUtils',
 
     #
     #   Core extends
+    #
+
+    'Archivist',
+    'Barrack',
+
+    'Shortener', 'MessageShortener',
+    'Compressor', 'MessageCompressor',
+
+    'Packer',
+    'Processor',
+    'Transceiver',
+
+    'CipherKeyDelegate',
+
+    #
+    #   Twins
     #
 
     'TwinsHelper',

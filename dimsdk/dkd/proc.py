@@ -35,10 +35,10 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 from dimp import ReliableMessage
-from dimp import Content, Command, GroupCommand
+from dimp import Content
 
 
 class ContentProcessor(ABC):
@@ -110,54 +110,3 @@ class ContentProcessorFactory(ABC):
     @abstractmethod
     def get_content_processor_for_type(self, msg_type: str) -> Optional[ContentProcessor]:
         raise NotImplemented
-
-
-class GeneralContentProcessorFactory(ContentProcessorFactory):
-    """ General ContentProcessor Factory """
-
-    def __init__(self, creator: ContentProcessorCreator):
-        super().__init__()
-        self.__creator = creator
-        self.__content_processors: Dict[str, ContentProcessor] = {}
-        self.__command_processors: Dict[str, ContentProcessor] = {}
-
-    @property  # protected
-    def creator(self) -> ContentProcessorCreator:
-        return self.__creator
-
-    #
-    #   ContentProcessorFactory
-    #
-
-    # Override
-    def get_content_processor(self, content: Content) -> Optional[ContentProcessor]:
-        msg_type = content.type
-        if isinstance(content, Command):
-            name = content.cmd
-            cpu = self._get_command_processor(msg_type, cmd=name)
-            if cpu is not None:
-                return cpu
-            elif isinstance(content, GroupCommand):  # or 'group' in content:
-                cpu = self._get_command_processor(msg_type, cmd='group')
-                if cpu is not None:
-                    return cpu
-        # content processor
-        return self.get_content_processor_for_type(msg_type)
-
-    # Override
-    def get_content_processor_for_type(self, msg_type: str) -> Optional[ContentProcessor]:
-        cpu = self.__content_processors.get(msg_type)
-        if cpu is None:
-            cpu = self.creator.create_content_processor(msg_type)
-            if cpu is not None:
-                self.__content_processors[msg_type] = cpu
-        return cpu
-
-    # private
-    def _get_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
-        cpu = self.__command_processors.get(cmd)
-        if cpu is None:
-            cpu = self.creator.create_command_processor(msg_type, cmd)
-            if cpu is not None:
-                self.__command_processors[cmd] = cpu
-        return cpu

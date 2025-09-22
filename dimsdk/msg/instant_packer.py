@@ -38,7 +38,7 @@ from dimp import ID
 from dimp import InstantMessage, SecureMessage
 from dimp import BaseMessage
 
-from ..dkd import InstantMessageDelegate
+from .instant_delegate import InstantMessageDelegate
 
 
 class InstantMessagePacker:

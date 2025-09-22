@@ -37,8 +37,8 @@ from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import BaseMessage
 
-from ..dkd import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 from ..mkm import EntityDelegate
+from ..msg import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 
 from .compressor import Compressor
 

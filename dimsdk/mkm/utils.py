@@ -38,7 +38,7 @@ from dimp import VerifyKey
 from dimp import Address, ID, Meta
 from dimp import Document, Visa, Bulletin
 
-from dimp.plugins import SharedAccountExtensions
+from dimp.ext import SharedAccountExtensions
 
 
 class MetaUtils:
@@ -56,7 +56,7 @@ class MetaUtils:
             return False
         # check ID.address
         old = identifier.address
-        gen = Address.generate(meta=meta, network=old.network)
+        gen = Address.generate(meta, old.network)
         return old == gen
 
     @classmethod

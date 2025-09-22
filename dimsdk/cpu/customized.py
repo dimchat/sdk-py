@@ -124,7 +124,7 @@ class CustomizedContentProcessor(BaseContentProcessor):
         # get handler for 'app' & 'mod'
         app = content.application
         mod = content.module
-        handler = self._filter(app, mod, content=content, msg=r_msg)
+        handler = self._filter(app=app, mod=mod, content=content, msg=r_msg)
         # handle the action
         act = content.action
         sender = r_msg.sender

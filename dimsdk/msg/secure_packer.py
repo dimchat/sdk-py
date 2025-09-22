@@ -36,7 +36,7 @@ from dimp import TransportableData
 from dimp import ID
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 
-from ..dkd import SecureMessageDelegate
+from .secure_delegate import SecureMessageDelegate
 
 
 class SecureMessagePacker:

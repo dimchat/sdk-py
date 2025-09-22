@@ -106,7 +106,7 @@ class MessageShortener(Shortener):
             "N", "sn",
             "W", "time",       # When
             "G", "group",
-            "C", "command",
+            "C", "command",    # Command name
         ]
         # Compress SymmetricKey
         self.__crypto_short_keys = [

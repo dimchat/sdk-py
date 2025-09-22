@@ -31,29 +31,15 @@
 from .proc import ContentProcessor
 from .proc import ContentProcessorCreator
 from .proc import ContentProcessorFactory
-from .proc import GeneralContentProcessorFactory
 
-from .cmd_fact import GeneralCommandFactory
-from .cmd_fact import HistoryCommandFactory
-from .cmd_fact import GroupCommandFactory
-
-from .instant import InstantMessageDelegate
-from .secure import SecureMessageDelegate
-from .reliable import ReliableMessageDelegate
+from .factory import GeneralContentProcessorFactory
 
 __all__ = [
 
     'ContentProcessor',
     'ContentProcessorCreator',
     'ContentProcessorFactory',
+
     'GeneralContentProcessorFactory',
-
-    'GeneralCommandFactory',
-    'HistoryCommandFactory',
-    'GroupCommandFactory',
-
-    'InstantMessageDelegate',
-    'SecureMessageDelegate',
-    'ReliableMessageDelegate',
 
 ]
