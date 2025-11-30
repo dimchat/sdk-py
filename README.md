@@ -49,19 +49,19 @@ class AppCustomizedProcessor(CustomizedContentProcessor):
         super().__init__(facebook=facebook, messenger=messenger)
         self.__handlers: Dict[str, CustomizedContentHandler] = {}
 
-    def set_handler(self, app: str, mod: str, handler: CustomizedContentHandler):
+    def set_content_handler(self, app: str, mod: str, handler: CustomizedContentHandler):
         key = '%s:%s' % (app, mod)
         self.__handlers[key] = handler
 
     # protected
-    def get_handler(self, app: str, mod: str) -> Optional[CustomizedContentHandler]:
+    def get_content_handler(self, app: str, mod: str) -> Optional[CustomizedContentHandler]:
         key = '%s:%s' % (app, mod)
         return self.__handlers.get(key)
 
     # Override
     def _filter(self, app: str, mod: str, content: CustomizedContent, msg: ReliableMessage) -> CustomizedContentHandler:
         """ Override for your handler """
-        handler = self.get_handler(app=app, mod=mod)
+        handler = self.get_content_handler(app=app, mod=mod)
         if handler is not None:
             return handler
         # default handler
@@ -145,7 +145,7 @@ class ClientContentProcessorCreator(BaseContentProcessorCreator):
         cpu = AppCustomizedProcessor(facebook=facebook, messenger=messenger)
         # 'chat.dim.group:history'
         handler = GroupHistoryHandler(facebook=facebook, messenger=messenger)
-        cpu.set_handler(app=GroupHistory.APP, mod=GroupHistory.MOD, handler=handler)
+        cpu.set_content_handler(app=GroupHistory.APP, mod=GroupHistory.MOD, handler=handler)
         return cpu
 
     # Override
