@@ -2,12 +2,12 @@
 #
 #   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
-#                                Written in 2019 by Moky <albert.moky@gmail.com>
+#                                Written in 2026 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2019 Albert Moky
+# Copyright (c) 2026 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,33 +28,17 @@
 # SOFTWARE.
 # ==============================================================================
 
-"""
-    Bot User
-    ~~~~~~~~
-"""
+from .bundle import EncryptedBundle, UserEncryptedBundle
+from .bundle import EncryptedBundleHelper, DefaultBundleHelper
 
-from typing import Optional
-
-from dimp import ID, EntityType
-from dimp import Document
-
-from .user import BaseUser
+from .agent import VisaAgent, DefaultVisaAgent
 
 
-class Bot(BaseUser):
+__all__ = [
 
-    def __init__(self, identifier: ID):
-        super().__init__(identifier=identifier)
-        assert identifier.type == EntityType.BOT, 'Bot ID type error: %s' % identifier
+    'EncryptedBundle', 'UserEncryptedBundle',
+    'EncryptedBundleHelper', 'DefaultBundleHelper',
 
-    @property
-    async def profile(self) -> Optional[Document]:
-        """ Bot Document """
-        return await self.visa
+    'VisaAgent', 'DefaultVisaAgent',
 
-    @property
-    async def provider(self) -> Optional[ID]:
-        doc = await self.profile
-        if doc is not None:
-            icp = doc.get_property(name='provider')
-            return ID.parse(identifier=icp)
+]

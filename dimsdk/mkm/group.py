@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIMP : Decentralized Instant Messaging Protocol
+#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -32,9 +32,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, List
 
 from dimp import ID
-from dimp import Bulletin
 
-from .utils import DocumentUtils
 from .entity import EntityDataSource, Entity, BaseEntity
 
 
@@ -78,16 +76,6 @@ class GroupDataSource(EntityDataSource, ABC):
         """
         raise NotImplemented
 
-    @abstractmethod
-    async def get_assistants(self, identifier: ID) -> List[ID]:
-        """
-        Get assistants for this group
-
-        :param identifier: group ID
-        :return: bot ID list
-        """
-        raise NotImplemented
-
 
 class Group(Entity, ABC):
     """ This class is for creating group
@@ -115,13 +103,6 @@ class Group(Entity, ABC):
 
     @property
     @abstractmethod
-    async def bulletin(self) -> Optional[Bulletin]:
-        """ Group Document """
-        # return self.document(doc_type=Document.BULLETIN)
-        raise NotImplemented
-
-    @property
-    @abstractmethod
     async def founder(self) -> ID:
         raise NotImplemented
 
@@ -135,11 +116,6 @@ class Group(Entity, ABC):
     async def members(self) -> List[ID]:
         """ NOTICE: the owner must be a member
             (usually the first one) """
-        raise NotImplemented
-
-    @property
-    @abstractmethod
-    async def assistants(self) -> List[ID]:
         raise NotImplemented
 
 
@@ -159,17 +135,14 @@ class BaseGroup(BaseEntity, Group):
     #     super(BaseGroup, BaseGroup).data_source.__set__(self, facebook)
 
     @property  # Override
-    async def bulletin(self) -> Optional[Bulletin]:
-        docs = await self.documents
-        return await DocumentUtils.last_bulletin(documents=docs)
-
-    @property  # Override
     async def founder(self) -> ID:
-        if self.__founder is None:
+        uid = self.__founder
+        if uid is None:
             facebook = self.data_source
             assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
-            self.__founder = await facebook.get_founder(identifier=self.identifier)
-        return self.__founder
+            uid = await facebook.get_founder(identifier=self.identifier)
+            self.__founder = uid
+        return uid
 
     @property  # Override
     async def owner(self) -> ID:
@@ -182,9 +155,3 @@ class BaseGroup(BaseEntity, Group):
         facebook = self.data_source
         assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
         return await facebook.get_members(identifier=self.identifier)
-
-    @property  # Override
-    async def assistants(self) -> List[ID]:
-        facebook = self.data_source
-        assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
-        return await facebook.get_assistants(identifier=self.identifier)

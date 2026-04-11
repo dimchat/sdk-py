@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIMP : Decentralized Instant Messaging Protocol
+#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -29,13 +29,15 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Optional, Set, List
 
-from dimp import EncryptKey, DecryptKey, SignKey, VerifyKey
+from dimp import DecryptKey, SignKey
 from dimp import ID
-from dimp import Visa
+from dimp import Document, Visa
+from dimp import GeneralAccountHelper, shared_account_extensions
 
-from .utils import DocumentUtils
+from ..crypto import EncryptedBundle, VisaAgent
+
 from .entity import EntityDataSource, Entity, BaseEntity
 
 
@@ -71,28 +73,6 @@ class UserDataSource(EntityDataSource, ABC):
 
         :param identifier: user ID
         :return: contact ID list
-        """
-        raise NotImplemented
-
-    @abstractmethod
-    async def public_key_for_encryption(self, identifier: ID) -> Optional[EncryptKey]:
-        """
-        Get user's public key for encryption
-        (visa.key or meta.key)
-
-        :param identifier: user ID
-        :return: public key
-        """
-        raise NotImplemented
-
-    @abstractmethod
-    async def public_keys_for_verification(self, identifier: ID) -> List[VerifyKey]:
-        """
-        Get user's public keys for verification
-        [visa.key, meta.key]
-
-        :param identifier: user ID
-        :return: public keys
         """
         raise NotImplemented
 
@@ -156,18 +136,21 @@ class User(Entity, ABC):
 
     @property
     @abstractmethod
-    async def visa(self) -> Optional[Visa]:
-        """ User Document """
-        # return self.document(doc_type=Document.VISA)
-        raise NotImplemented
-
-    @property
-    @abstractmethod
     async def contacts(self) -> List[ID]:
         """
         Get all contacts of the user
 
         :return: contacts list
+        """
+        raise NotImplemented
+
+    @property
+    @abstractmethod
+    async def terminals(self) -> Set[str]:
+        """
+        Get terminals from visa documents
+
+        :return: login devices
         """
         raise NotImplemented
 
@@ -183,12 +166,12 @@ class User(Entity, ABC):
         raise NotImplemented
 
     @abstractmethod
-    async def encrypt(self, data: bytes) -> bytes:
+    async def encrypt_bundle(self, plaintext: bytes) -> EncryptedBundle:
         """
         Encrypt data, try visa.key first, if not found, use meta.key
 
-        :param data: plaintext
-        :return: encrypted data
+        :param plaintext: serialized symmetric key info
+        :return: EncryptedBundle with terminal-specific encrypted data
         """
         raise NotImplemented
 
@@ -207,12 +190,12 @@ class User(Entity, ABC):
         raise NotImplemented
 
     @abstractmethod
-    async def decrypt(self, data: bytes) -> Optional[bytes]:
+    async def decrypt_bundle(self, bundle: EncryptedBundle) -> Optional[bytes]:
         """
         Decrypt data with user's private key(s)
 
-        :param data: encrypted data
-        :return: plaintext
+        :param bundle: Encrypted data bundle with terminal-specific data
+        :return: serialized symmetric key info
         """
         raise NotImplemented
 
@@ -246,21 +229,24 @@ class BaseUser(BaseEntity, User):
     #     super(BaseUser, BaseUser).data_source.__set__(self, facebook)
 
     @property  # Override
-    async def visa(self) -> Optional[Visa]:
-        docs = await self.documents
-        return DocumentUtils.last_visa(documents=docs)
-
-    @property  # Override
     async def contacts(self) -> List[ID]:
         facebook = self.data_source
         assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
         return await facebook.get_contacts(identifier=self.identifier)
 
+    @property  # Override
+    async def terminals(self) -> Set[str]:
+        docs = await self.documents
+        assert len(docs) > 0, 'failed to get documents: %s' % self.identifier
+        agent = visa_agent()
+        return agent.get_terminals(documents=docs)
+
     # Override
     async def verify(self, data: bytes, signature: bytes) -> bool:
-        facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
-        keys = await facebook.public_keys_for_verification(identifier=self.identifier)
+        meta = await self.meta
+        docs = await self.documents
+        agent = visa_agent()
+        keys = agent.get_verify_keys(meta=meta, documents=docs)
         assert len(keys) > 0, 'failed to get verify keys: %s' % self.identifier
         for key in keys:
             if key.verify(data=data, signature=signature):
@@ -270,61 +256,107 @@ class BaseUser(BaseEntity, User):
         # TODO: check whether visa is expired, query new document for this contact
 
     # Override
-    async def encrypt(self, data: bytes) -> bytes:
-        facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+    async def encrypt_bundle(self, plaintext: bytes) -> EncryptedBundle:
         # NOTICE: meta.key will never changed, so use visa.key to encrypt message
         #         is the better way
-        key = await facebook.public_key_for_encryption(identifier=self.identifier)
-        assert key is not None, 'failed to get encrypt key for user: %s' % self.identifier
-        return key.encrypt(data=data)
+        meta = await self.meta
+        docs = await self.documents
+        agent = visa_agent()
+        return agent.encrypt_bundle(plaintext=plaintext, meta=meta, documents=docs)
 
     # Override
     async def sign(self, data: bytes) -> bytes:
-        facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
-        key = await facebook.private_key_for_signature(identifier=self.identifier)
+        key = await self._private_key_for_signature()
         assert key is not None, 'failed to get sign key for user: %s' % self.identifier
         return key.sign(data=data)
 
     # Override
-    async def decrypt(self, data: bytes) -> Optional[bytes]:
-        facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+    async def decrypt_bundle(self, bundle: EncryptedBundle) -> Optional[bytes]:
         # NOTICE: if you provide a public key in visa document for encryption,
         #         here you should return the private key paired with visa.key
-        keys = await facebook.private_keys_for_decryption(identifier=self.identifier)
-        assert len(keys) > 0, 'failed to get decrypt keys: %s' % self.identifier
-        for key in keys:
+        dictionary = bundle.dictionary
+        assert len(dictionary) > 0, 'key data empty: %s' % bundle
+        for terminal in dictionary:
+            ciphertext = dictionary.get(terminal)
+            # get private keys for terminal
+            decrypt_keys = await self._private_keys_for_decryption(terminal=terminal)
+            if decrypt_keys is None:
+                # assert False, 'failed to get decrypt keys for user: %s, terminal: %s' % (self.identifier, terminal)
+                continue
             # try decrypting it with each private key
-            plaintext = key.decrypt(data=data)
-            if plaintext is not None:
-                # OK!
-                return plaintext
+            for pri_key in decrypt_keys:
+                plaintext = pri_key.decrypt(ciphertext=ciphertext)
+                if plaintext is not None and len(plaintext) > 0:
+                    # OK
+                    return plaintext
         # decryption failed
         # TODO: check whether my visa key is changed, push new visa to this contact
 
     # Override
     async def sign_visa(self, visa: Visa) -> Optional[Visa]:
-        assert self.identifier == visa.identifier, 'visa ID not match: %s, %s' % (self.identifier, visa)
-        facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        uid = self.identifier
+        did = get_document_id(document=visa)
+        assert did is None or did.address == uid.address, 'visa ID not match: %s, %s' % (did, uid)
         # NOTICE: only sign visa with the private key paired with your meta.key
-        key = await facebook.private_key_for_visa_signature(identifier=self.identifier)
-        assert key is not None, 'failed to get sign key for visa: %s' % self.identifier
-        if visa.sign(private_key=key) is None:
-            assert False, 'failed to sign visa: %s, %s' % (self.identifier, visa)
-        else:
-            return visa
+        pri_key = await self._private_key_for_visa_signature()
+        if pri_key is None:
+            # assert False, 'failed to get sign key for visa: %s' % uid
+            return None
+        if visa.sign(private_key=pri_key) is None:
+            # assert False, 'failed to sign visa: %s, %s' % (self.identifier, visa)
+            return None
+        # OK
+        return visa
 
     # Override
     async def verify_visa(self, visa: Visa) -> bool:
         # NOTICE: only verify visa with meta.key
         #         (if meta not exists, user won't be created)
-        if self.identifier != visa.identifier:
-            # visa ID not match
-            return False
+        uid = self.identifier
+        did = get_document_id(document=visa)
+        assert did is None or did.address == uid.address, 'visa ID not match: %s, %s' % (did, uid)
+        # if meta not exists, user won't be created
         meta = await self.meta
         key = meta.public_key
         assert key is not None, 'failed to get meta key for visa: %s' % self.identifier
         return visa.verify(public_key=key)
+
+    #
+    #   Private Keys
+    #
+
+    # protected
+    async def _private_keys_for_decryption(self, terminal: str) -> List[DecryptKey]:
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        uid = self.identifier
+        if terminal is not None and len(terminal) > 0 and terminal != '*':
+            uid = ID.create(name=uid.name, address=uid.address, terminal=terminal)
+        return await facebook.private_keys_for_decryption(identifier=uid)
+
+    # protected
+    async def _private_key_for_signature(self) -> Optional[SignKey]:
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        uid = self.identifier
+        return await facebook.private_key_for_signature(identifier=uid)
+
+    # protected
+    async def _private_key_for_visa_signature(self) -> Optional[SignKey]:
+        facebook = self.data_source
+        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        uid = self.identifier
+        return await facebook.private_key_for_visa_signature(identifier=uid)
+
+
+def visa_agent():
+    agent = shared_account_extensions.visa_agent
+    assert isinstance(agent, VisaAgent), 'visa agent error: %s' % agent
+    return agent
+
+
+def get_document_id(document: Document) -> Optional[ID]:
+    helper = shared_account_extensions.helper
+    assert isinstance(helper, GeneralAccountHelper), 'account helper error: %s' % helper
+    info = document.dictionary
+    return helper.get_document_id(document=info)

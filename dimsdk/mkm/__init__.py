@@ -38,10 +38,6 @@ from .group import Group, BaseGroup
 from .user import UserDataSource
 from .user import User, BaseUser
 
-from .station import ServiceProvider, Station
-from .bot import Bot
-
-from .utils import MetaUtils, DocumentUtils
 
 __all__ = [
 
@@ -54,11 +50,5 @@ __all__ = [
 
     'UserDataSource',
     'User', 'BaseUser',
-
-    'ServiceProvider',
-    'Station',
-    'Bot',
-
-    'MetaUtils', 'DocumentUtils',
 
 ]
