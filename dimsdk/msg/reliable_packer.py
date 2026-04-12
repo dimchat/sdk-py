@@ -41,11 +41,11 @@ class ReliableMessagePacker:
 
     def __init__(self, messenger: ReliableMessageDelegate):
         super().__init__()
-        self.__transceiver = weakref.ref(messenger)
+        self.__transformer = weakref.ref(messenger)
 
     @property
     def delegate(self) -> Optional[ReliableMessageDelegate]:
-        return self.__transceiver()
+        return self.__transformer()
 
     """
         Verify the Reliable Message to Secure Message
@@ -70,32 +70,38 @@ class ReliableMessagePacker:
         :param msg: network message
         :return: SecureMessage object if signature matched
         """
-        transceiver = self.delegate
-        assert transceiver is not None, 'should not happen'
+        transformer = self.delegate
+        assert transformer is not None, 'reliable message delegate not found'
+
         #
         #   0. Decode 'message.data' to encrypted content data
         #
-        ciphertext = msg.data
-        if len(ciphertext) == 0:
-            # assert False, 'failed to decode message data: %s => %s, %s'\
-            #               % (msg.sender, msg.receiver, msg.group)
+        msg_data = msg.data
+        ciphertext = None if msg_data is None else msg_data.binary
+        if ciphertext is None:
             return None
+        assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s'\
+                                    % (msg.sender, msg.receiver, msg.group)
+
         #
         #   1. Decode 'message.signature' from String (Base64)
         #
-        signature = msg.signature
-        if len(signature) == 0:
-            # assert False, 'failed to decode message signature: %s => %s, %s'\
-            #               % (msg.sender, msg.receiver, msg.group)
+        msg_sig = msg.signature
+        signature = None if msg_sig is None else msg_sig.binary
+        if signature is None:
             return None
+        assert len(signature) > 0, 'failed to decode message signature: %s => %s, %s'\
+                                   % (msg.sender, msg.receiver, msg.group)
+
         #
         #   2. Verify the message data and signature with sender's public key
         #
-        ok = await transceiver.verify_data_signature(data=ciphertext, signature=signature, msg=msg)
+        ok = await transformer.verify_data_signature(data=ciphertext, signature=signature, msg=msg)
         if not ok:
             # assert False, 'message signature not match: %s => %s, %s'\
             #               % (msg.sender, msg.receiver, msg.group)
             return None
+
         # OK, pack message
         info = msg.copy_dictionary()
         info.pop('signature', None)

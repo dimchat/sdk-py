@@ -29,12 +29,14 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Dict
 
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
 from dimp import SecureMessage
+
+from ..crypto import EncryptedBundle
 
 
 class SecureMessageDelegate(ABC):
@@ -57,23 +59,24 @@ class SecureMessageDelegate(ABC):
     #   Decrypt Key
     #
 
-    # @abstractmethod
-    # async def decode_key(self, key: Any, msg: SecureMessage) -> Optional[bytes]:
-    #     """
-    #     1. Decode 'message.key' to encrypted symmetric key data
-    #
-    #     :param key:      base64 string
-    #     :param msg:      secure message object
-    #     :return: encrypted symmetric key data
-    #     """
-    #     raise NotImplemented
+    @abstractmethod
+    async def decode_key(self, keys: Dict, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+        """
+        1. Decode 'message.key' to encrypted symmetric key data
+
+        :param keys:     encrypted key bundle with terminal-specific data
+        :param receiver: actual receiver (user, or group member)
+        :param msg:      secure message object
+        :return: encrypted symmetric key data
+        """
+        raise NotImplemented
 
     @abstractmethod
-    async def decrypt_key(self, data: bytes, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
+    async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
         """
         2. Decrypt 'message.key' with receiver's private key
 
-        :param data:     encrypted symmetric key data
+        :param bundle:   encrypted key bundle with terminal-specific data
         :param receiver: actual receiver (user, or group member)
         :param msg:      secure message object
         :return: serialized symmetric key

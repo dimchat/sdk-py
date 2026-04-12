@@ -2,12 +2,12 @@
 #
 #   DIMP : Decentralized Instant Messaging Protocol
 #
-#                                Written in 2019 by Moky <albert.moky@gmail.com>
+#                                Written in 2026 by Moky <albert.moky@gmail.com>
 #
 # ==============================================================================
 # MIT License
 #
-# Copyright (c) 2019 Albert Moky
+# Copyright (c) 2026 Albert Moky
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,8 @@
 # SOFTWARE.
 # ==============================================================================
 
+from dimp import MessageExtensions
+
 from .instant_delegate import InstantMessageDelegate
 from .secure_delegate import SecureMessageDelegate
 from .reliable_delegate import ReliableMessageDelegate
@@ -36,19 +38,35 @@ from .instant_packer import InstantMessagePacker
 from .secure_packer import SecureMessagePacker
 from .reliable_packer import ReliableMessagePacker
 
-from .helpers import MessagePackerFactory
+
+# noinspection PyMethodMayBeStatic
+class MessagePackerFactory:
+
+    def create_instant_message_packer(self, messenger: InstantMessageDelegate):
+        return InstantMessagePacker(messenger=messenger)
+
+    def create_secure_message_packer(self, messenger: SecureMessageDelegate):
+        return SecureMessagePacker(messenger=messenger)
+
+    def create_reliable_message_packer(self, messenger: ReliableMessageDelegate):
+        return ReliableMessagePacker(messenger=messenger)
 
 
-__all__ = [
+# -----------------------------------------------------------------------------
+#  Message Extensions
+# -----------------------------------------------------------------------------
 
-    'InstantMessageDelegate',
-    'SecureMessageDelegate',
-    'ReliableMessageDelegate',
 
-    'InstantMessagePacker',
-    'SecureMessagePacker',
-    'ReliableMessagePacker',
+class _PackerExt:
+    _packer_factory: MessagePackerFactory = MessagePackerFactory()
 
-    'MessagePackerFactory',
+    @property
+    def packer_factory(self) -> MessagePackerFactory:
+        return _PackerExt._packer_factory
 
-]
+    @packer_factory.setter
+    def packer_factory(self, factory: MessagePackerFactory):
+        _PackerExt._packer_factory = factory
+
+
+MessageExtensions.packer_factory = _PackerExt.packer_factory

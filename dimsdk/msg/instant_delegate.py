@@ -29,12 +29,14 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any, Dict
 
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
 from dimp import InstantMessage
+
+from ..crypto import EncryptedBundle
 
 
 class InstantMessageDelegate(ABC):
@@ -108,24 +110,25 @@ class InstantMessageDelegate(ABC):
         raise NotImplemented
 
     @abstractmethod
-    async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[bytes]:
+    async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[EncryptedBundle]:
         """
         5. Encrypt key data to 'message.key' with receiver's public key
 
         :param data:     serialized data of symmetric key
         :param receiver: actual receiver (user, or group member)
         :param msg:      instant message object
-        :return: encrypted symmetric key data, None on visa not found
+        :return: encoded map (ID+terminal → base64-encoded encrypted key data)
         """
         raise NotImplemented
 
-    # @abstractmethod
-    # async def encode_key(self, data: bytes, msg: InstantMessage) -> Any:
-    #     """
-    #     6. Encode 'message.key' to String (Base64)
-    #
-    #     :param data:     encrypted key data
-    #     :param msg:      instant message object
-    #     :return: base64 string
-    #     """
-    #     raise NotImplemented
+    @abstractmethod
+    async def encode_key(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
+        """
+        6. Encode 'message.key' to String (Base64)
+
+        :param bundle:   encrypted key bundle with terminal-specific data
+        :param receiver: actual receiver (user, or group member)
+        :param msg:      instant message object
+        :return: base64 string
+        """
+        raise NotImplemented

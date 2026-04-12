@@ -29,12 +29,13 @@
 # ==============================================================================
 
 import weakref
-from abc import abstractmethod
 from typing import Optional
 
-from dimp import TransportableData
+from dimp import Base64Data
 from dimp import ID
 from dimp import InstantMessage, SecureMessage, ReliableMessage
+
+from ..crypto import EncryptedBundle
 
 from .secure_delegate import SecureMessageDelegate
 
@@ -43,11 +44,11 @@ class SecureMessagePacker:
 
     def __init__(self, messenger: SecureMessageDelegate):
         super().__init__()
-        self.__transceiver = weakref.ref(messenger)
+        self.__transformer = weakref.ref(messenger)
 
     @property
     def delegate(self) -> Optional[SecureMessageDelegate]:
-        return self.__transceiver()
+        return self.__transformer()
 
     """
         Decrypt the Secure Message to Instant Message
@@ -63,7 +64,23 @@ class SecureMessagePacker:
             +----------+
     """
 
-    @abstractmethod
+    async def _decode_key(self, msg: SecureMessage, receiver: ID) -> Optional[EncryptedBundle]:
+        """ Decodes the encrypted key map from a SecureMessage """
+        msg_keys = msg.encrypted_keys
+        if msg_keys is None:
+            # get from 'key'
+            base64 = msg.get('key')
+            if base64 is None:
+                # broadcast message?
+                # reuse key?
+                return None
+            msg_keys = {
+                str(receiver): base64
+            }
+        transformer = self.delegate
+        assert transformer is not None, 'secure message delegate not found'
+        return await transformer.decode_key(keys=msg_keys, receiver=receiver, msg=msg)
+
     async def decrypt_message(self, msg: SecureMessage, receiver: ID) -> Optional[InstantMessage]:
         """
         Decrypt message, replace encrypted 'data' with 'content' field
@@ -73,67 +90,71 @@ class SecureMessagePacker:
         :return: InstantMessage object
         """
         assert receiver.is_user, 'receiver error: %s' % receiver
-        transceiver = self.delegate
-        assert transceiver is not None, 'should not happen'
+        transformer = self.delegate
+        assert transformer is not None, 'secure message delegate not found'
+
         #
         #   1. Decode 'message.key' to encrypted symmetric key data
         #
-        encrypted_key = msg.encrypted_key
-        if encrypted_key is None:
+        bundle = await self._decode_key(msg=msg, receiver=receiver)
+        if bundle is None or bundle.empty:
+            # broadcast message?
+            # reuse key?
             key_data = None
         else:
-            assert len(encrypted_key) > 0, 'encrypted key data should not be empty: %s => %s, %s'\
-                                           % (msg.sender, receiver, msg.group)
             #
             #   2. Decrypt 'message.key' with receiver's private key
             #
-            key_data = await transceiver.decrypt_key(data=encrypted_key, receiver=receiver, msg=msg)
-            if key_data is None:
+            key_data = await transformer.decrypt_key(bundle=bundle, receiver=receiver, msg=msg)
+            if key_data is None or len(key_data) == 0:
                 # A: my visa updated but the sender doesn't got the new one;
                 # B: key data error.
-                raise ValueError('failed to decrypt message key: %d byte(s) %s => %s, %s'
-                                 % (len(encrypted_key), msg.sender, receiver, msg.group))
+                raise ValueError('failed to decrypt message key: %s %s => %s, %s'
+                                 % (bundle, msg.sender, receiver, msg.group))
                 # TODO: check whether my visa key is changed, push new visa to this contact
-            assert len(key_data) > 0, 'message key data should not be empty: %s => %s, %s'\
-                                      % (msg.sender, receiver, msg.group)
+
         #
         #   3. Deserialize message key from data (JsON / ProtoBuf / ...)
         #      (if key is empty, means it should be reused, get it from key cache)
         #
-        password = await transceiver.deserialize_key(data=key_data, msg=msg)
+        password = await transformer.deserialize_key(data=key_data, msg=msg)
         if password is None:
             # A: key data is empty, and cipher key not found from local storage;
             # B: key data error.
             raise ValueError('failed to get message key: %d byte(s) %s => %s, %s'
                              % (0 if key_data is None else len(key_data), msg.sender, receiver, msg.group))
             # TODO: ask the sender to send again (with new message key)
+
         #
         #   4. Decode 'message.data' to encrypted content data
         #
-        ciphertext = msg.data
-        if len(ciphertext) == 0:
-            # assert False, 'failed to decode message data: %s => %s, %s' % (msg.sender, receiver, msg.group)
+        msg_data = msg.data
+        ciphertext = None if msg_data is None else msg_data.binary
+        if ciphertext is None:
             return None
+        assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s' % (msg.sender, receiver, msg.group)
+
         #
         #   5. Decrypt 'message.data' with symmetric key
         #
-        body = await transceiver.decrypt_content(data=ciphertext, key=password, msg=msg)
-        if body is None:
+        body = await transformer.decrypt_content(data=ciphertext, key=password, msg=msg)
+        if body is None or len(body) == 0:
             # A: password is a reused key loaded from local storage, but it's expired;
             # B: key error.
             raise ValueError('failed to decrypt message data with key: %s, data length: %d bytes %s => %s, %s'
                              % (password, len(ciphertext), msg.sender, receiver, msg.group))
             # TODO: ask the sender to send again
-        assert len(body) > 0, 'message data should not be empty: %s => %s, %s'\
-                              % (msg.sender, receiver, msg.group)
+        assert len(body) > 0, 'message data should not be empty: %s => %s, %s' % (msg.sender, receiver, msg.group)
+
         #
         #   6. Deserialize message content from data (JsON / ProtoBuf / ...)
         #
-        content = await transceiver.deserialize_content(data=body, key=password, msg=msg)
+        content = await transformer.deserialize_content(data=body, key=password, msg=msg)
         if content is None:
             # assert False, 'failed to deserialize content: %d byte(s) %s => %s, %s'\
             #               % (len(body), msg.sender, receiver, msg.group)
             return None
+
         # TODO: check attachment for File/Image/Audio/Video message content
         #      if URL exists, means file data was uploaded to a CDN,
         #          1. save password as 'content.key';
@@ -141,6 +162,7 @@ class SecureMessagePacker:
         #          3. decrypt downloaded data with 'content.key'.
         #      (do it by application)
         #
+
         # OK, pack message
         info = msg.copy_dictionary()
         info.pop('key', None)
@@ -164,34 +186,43 @@ class SecureMessagePacker:
                               +----------+
     """
 
-    async def sign_message(self, msg: SecureMessage) -> ReliableMessage:
+    async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
         """
         Sign message.data, add 'signature' field
 
         :param msg: encrypted message
         :return: ReliableMessage object
         """
-        transceiver = self.delegate
-        assert transceiver is not None, 'should not happen'
+        transformer = self.delegate
+        assert transformer is not None, 'secure message delegate not found'
+
         #
         #   0. decode message data
         #
-        ciphertext = msg.data
+        msg_data = msg.data
+        ciphertext = None if msg_data is None else msg_data.binary
+        if ciphertext is None:
+            return None
         assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s'\
                                     % (msg.sender, msg.receiver, msg.group)
+
         #
         #   1. Sign 'message.data' with sender's private key
         #
-        signature = await transceiver.sign_data(data=ciphertext, msg=msg)
+        signature = await transformer.sign_data(data=ciphertext, msg=msg)
+        if signature is None:
+            return None
         assert len(signature) > 0, 'failed to sign message: %d byte(s) %s => %s, %s'\
                                    % (len(ciphertext), msg.sender, msg.receiver, msg.group)
+
         #
         #   2. Encode 'message.signature' to String (Base64)
         #
-        base64 = TransportableData.encode(data=signature)
-        assert base64 is not None, 'failed to encode signature: %d byte(s) %s => %s, %s'\
-                                   % (len(signature), msg.sender, msg.receiver, msg.group)
+        base64 = Base64Data.create(binary=signature)
+        assert not base64.empty, 'failed to encode signature: %d byte(s) %s => %s, %s'\
+                                 % (len(signature), msg.sender, msg.receiver, msg.group)
+
         # OK, pack message
         info = msg.copy_dictionary()
-        info['signature'] = base64
+        info['signature'] = base64.serialize()
         return ReliableMessage.parse(msg=info)
