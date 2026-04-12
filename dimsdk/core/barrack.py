@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIMP : Decentralized Instant Messaging Protocol
+#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -31,13 +31,9 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from dimp import EntityType
-from dimp import VerifyKey, EncryptKey
 from dimp import ID, Meta, Document
 
-from ..mkm import User, BaseUser
-from ..mkm import Group, BaseGroup
-from ..mkm import Station, Bot, ServiceProvider
+from ..mkm import User, Group
 
 
 class Barrack(ABC):
@@ -63,7 +59,7 @@ class Barrack(ABC):
     def get_group(self, identifier: ID) -> Optional[Group]:
         raise NotImplemented
 
-    # noinspection PyMethodMayBeStatic
+    @abstractmethod
     def create_user(self, identifier: ID) -> Optional[User]:
         """
         Create user when visa.key exists
@@ -71,17 +67,9 @@ class Barrack(ABC):
         :param identifier: user ID
         :return: user, None on not ready
         """
-        assert identifier.is_user, 'user ID error: %s' % identifier
-        network = identifier.type
-        # check user type
-        if network == EntityType.STATION:
-            return Station(identifier=identifier)
-        elif network == EntityType.BOT:
-            return Bot(identifier=identifier)
-        # general user, or 'anyone@anywhere'
-        return BaseUser(identifier=identifier)
+        raise NotImplemented
 
-    # noinspection PyMethodMayBeStatic
+    @abstractmethod
     def create_group(self, identifier: ID) -> Optional[Group]:
         """
         Create group when members exist
@@ -89,13 +77,7 @@ class Barrack(ABC):
         :param identifier: group ID
         :return: group, None on not ready
         """
-        assert identifier.is_group, 'group ID error: %s' % identifier
-        network = identifier.type
-        # check group type
-        if network == EntityType.ISP:
-            return ServiceProvider(identifier=identifier)
-        # general group, or 'everyone@everywhere'
-        return BaseGroup(identifier=identifier)
+        raise NotImplemented
 
 
 class Archivist(ABC):
@@ -122,36 +104,11 @@ class Archivist(ABC):
         raise NotImplemented
 
     #
-    #   Public Keys
-    #
-
-    @abstractmethod
-    async def get_meta_key(self, identifier: ID) -> Optional[VerifyKey]:
-        """
-        Get meta.key
-
-        :param identifier: entity ID
-        :return: None on not found
-        """
-        raise NotImplemented
-
-    @abstractmethod
-    async def get_visa_key(self, identifier: ID) -> Optional[EncryptKey]:
-        """
-        Get visa.key
-
-        :param identifier: entity ID
-        :return: None on not found
-        """
-        raise NotImplemented
-
-    #
     #   Local Users
     #
 
-    @property
     @abstractmethod
-    async def local_users(self) -> List[ID]:
+    async def get_local_users(self) -> List[ID]:
         """
         Get all local users (for decrypting received message)
 

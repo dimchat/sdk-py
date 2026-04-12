@@ -36,7 +36,7 @@ from .compressor import Compressor, MessageCompressor
 
 from .packer import Packer
 from .processor import Processor
-from .transceiver import Transceiver
+from .transformer import Transformer
 
 from .delegate import CipherKeyDelegate
 
@@ -51,7 +51,7 @@ __all__ = [
 
     'Packer',
     'Processor',
-    'Transceiver',
+    'Transformer',
 
     'CipherKeyDelegate',
 

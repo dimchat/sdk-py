@@ -32,37 +32,31 @@ from abc import ABC
 from typing import Optional
 
 from dimp import InstantMessage, SecureMessage, ReliableMessage
+from dimp import shared_message_extensions
 
-from .msg import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
+from .msg import MessagePackerFactory
 from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
-from .msg import MessageUtils
 from .core import Packer
-from .core import Archivist
 
 from .facebook import Facebook
 from .messenger import Messenger
 from .twins import TwinsHelper
 
 
+def packer_factory() -> MessagePackerFactory:
+    factory = shared_message_extensions.packer_factory
+    assert isinstance(factory, MessagePackerFactory), 'packer factory error: %s' % factory
+    return factory
+
+
 class MessagePacker(TwinsHelper, Packer, ABC):
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)
-        self.__instant_packer = self._create_instant_message_packer(messenger=messenger)
-        self.__secure_packer = self._create_secure_message_packer(messenger=messenger)
-        self.__reliablePacker = self._create_reliable_message_packer(messenger=messenger)
-
-    # noinspection PyMethodMayBeStatic
-    def _create_instant_message_packer(self, messenger: InstantMessageDelegate):
-        return InstantMessagePacker(messenger=messenger)
-
-    # noinspection PyMethodMayBeStatic
-    def _create_secure_message_packer(self, messenger: SecureMessageDelegate):
-        return SecureMessagePacker(messenger=messenger)
-
-    # noinspection PyMethodMayBeStatic
-    def _create_reliable_message_packer(self, messenger: ReliableMessageDelegate):
-        return ReliableMessagePacker(messenger=messenger)
+        factory = packer_factory()
+        self.__instant_packer = factory.create_instant_message_packer(messenger=messenger)
+        self.__secure_packer = factory.create_secure_message_packer(messenger=messenger)
+        self.__reliablePacker = factory.create_reliable_message_packer(messenger=messenger)
 
     @property  # protected
     def instant_packer(self) -> InstantMessagePacker:
@@ -75,12 +69,6 @@ class MessagePacker(TwinsHelper, Packer, ABC):
     @property  # protected
     def reliable_packer(self) -> ReliableMessagePacker:
         return self.__reliablePacker
-
-    @property  # protected
-    def archivist(self) -> Optional[Archivist]:
-        facebook = self.facebook
-        if facebook is not None:
-            return facebook.archivist
 
     #
     #   InstantMessage -> SecureMessage -> ReliableMessage -> Data
@@ -112,7 +100,9 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         #   1. get message key with direction (sender -> receiver) or (sender -> group)
         #
         password = await messenger.get_encrypt_key(msg=msg)
-        assert password is not None, 'failed to get msg key: %s => %s, %s' % (msg.sender, receiver, msg.get('group'))
+        if password is None:
+            # assert False, 'failed to get msg key: %s => %s, %s' % (msg.sender, receiver, msg.get('group'))
+            return None
 
         #
         #   2. encrypt 'content' to 'data' for receiver/group members
@@ -120,6 +110,8 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         if receiver.is_group:
             # group message
             members = await facebook.get_members(identifier=receiver)
+            if members is None:
+                return None
             assert len(members) > 0, 'group not ready: %s' % receiver
             # a station will never send group message, so here must be a client;
             # the client messenger should check the group's meta & members before encrypting,
@@ -142,7 +134,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         return s_msg
 
     # Override
-    async def sign_message(self, msg: SecureMessage) -> ReliableMessage:
+    async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
         assert len(msg.data) > 0, 'message data cannot be empty: %s' % msg
         # sign 'data' by sender
         return await self.secure_packer.sign_message(msg=msg)
@@ -162,35 +154,9 @@ class MessagePacker(TwinsHelper, Packer, ABC):
     #     info = compressor.extract_reliable_message(data=data)
     #     return ReliableMessage.parse(msg=info)
 
-    async def _check_attachments(self, msg: ReliableMessage) -> bool:
-        """ Check meta & visa """
-        archivist = self.archivist
-        if archivist is None:
-            assert False, 'archivist not ready'
-            # return False
-        else:
-            sender = msg.sender
-        # [Meta Protocol]
-        meta = MessageUtils.get_meta(msg=msg)
-        if meta is not None:
-            await archivist.save_meta(meta=meta, identifier=sender)
-        # [Visa Protocol]
-        visa = MessageUtils.get_visa(msg=msg)
-        if visa is not None:
-            await archivist.save_document(document=visa)
-        #
-        # NOTICE: check [Visa Protocol] before calling this
-        #         make sure the sender's meta(visa) exists
-        #         (do it by application)
-        #
-        return True
-
     # Override
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        # make sure sender's meta exists before verifying message
-        if not await self._check_attachments(msg=msg):
-            return None
-        assert len(msg.signature) > 0, 'message signature cannot be empty: %s' % msg
+        assert not msg.signature.empty, 'message signature cannot be empty: %s' % msg
         # verify 'data' with 'signature'
         return await self.reliable_packer.verify_message(msg=msg)
 
@@ -200,11 +166,13 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         #       or you are a member of the group when this is a group message,
         #       so that you will have a private key (decrypt key) to decrypt it.
         receiver = msg.receiver
-        me = await self.facebook.select_local_user(receiver=receiver)
-        if me is None:
+        user = await self.select_local_user(receiver=receiver)
+        if user is None:
             # not for you?
             raise LookupError('receiver error: %s, from %s, %s' % (receiver, msg.sender, msg.group))
-        assert len(msg.data) > 0, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
+        else:
+            me = user.identifier
+        assert not msg.data.empty, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
         # decrypt 'data' to 'content'
         return await self.secure_packer.decrypt_message(msg=msg, receiver=me)
         # TODO: check top-secret message

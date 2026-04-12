@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIMP : Decentralized Instant Messaging Protocol
+#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
 #                                Written in 2025 by Moky <albert.moky@gmail.com>
 #
@@ -81,7 +81,7 @@ class MessageCompressor(Compressor):
     # Override
     def compress_content(self, content: Dict, key: Dict) -> bytes:
         content = self.shortener.compress_content(content=content)
-        json = json_encode(obj=content)
+        json = json_encode(container=content)
         return utf8_encode(string=json)
 
     # Override
@@ -102,7 +102,7 @@ class MessageCompressor(Compressor):
     # Override
     def compress_symmetric_key(self, key: Dict) -> bytes:
         key = self.shortener.compress_symmetric_key(key=key)
-        json = json_encode(obj=key)
+        json = json_encode(container=key)
         return utf8_encode(string=json)
 
     # Override
@@ -123,7 +123,7 @@ class MessageCompressor(Compressor):
     # Override
     def compress_reliable_message(self, msg: Dict) -> bytes:
         msg = self.shortener.compress_reliable_message(msg=msg)
-        json = json_encode(obj=msg)
+        json = json_encode(container=msg)
         return utf8_encode(string=json)
 
     # Override

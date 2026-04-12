@@ -150,17 +150,19 @@ class MessageProcessor(TwinsHelper, Processor):
         # 2. select a local user to build message
         sender = msg.sender
         receiver = msg.receiver
-        me = await facebook.select_local_user(receiver=receiver)
-        if me is None:
+        user = await self.select_local_user(receiver=receiver)
+        if user is None:
             # assert False, 'receiver error: %s' % receiver
             return []
+        else:
+            me = user.identifier
         # 3. package messages
         messages = []
         for res in responses:
             assert res is not None, 'should not happen'
             env = Envelope.create(sender=me, receiver=sender)
             msg = InstantMessage.create(head=env, body=res)
-            assert msg is not None, 'should not happen'
+            # assert msg is not None, 'should not happen'
             messages.append(msg)
         return messages
 

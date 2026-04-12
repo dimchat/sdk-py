@@ -31,6 +31,10 @@
 import weakref
 from typing import Optional
 
+from dimp import ID
+
+from .mkm import User
+
 from .facebook import Facebook
 from .messenger import Messenger
 
@@ -55,3 +59,27 @@ class TwinsHelper:
     @property
     def messenger(self) -> Optional[Messenger]:
         return self.__messenger()
+
+    # protected
+    async def select_local_user(self, receiver: ID) -> Optional[User]:
+        """ Selects the local User entity for decrypting messages to a target receiver """
+        facebook = self.facebook
+        assert facebook is not None, 'facebook not ready'
+        if receiver.is_broadcast:
+            # broadcast message can be decrypted by anyone
+            me = await facebook.select_user(receiver=receiver)
+        elif receiver.is_user:
+            # check local users
+            me = await facebook.select_user(receiver=receiver)
+        elif receiver.is_group:
+            members = await facebook.get_members(identifier=receiver)
+            if members is None or len(members) == 0:
+                # assert False, 'failed to get group members: %s' % receiver
+                return None
+            me = await facebook.select_member(members=members)
+        else:
+            assert False, 'unknown receiver: %s' % receiver
+        if me is None:
+            # not for me?
+            return None
+        return await facebook.get_user(identifier=me)

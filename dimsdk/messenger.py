@@ -42,11 +42,11 @@ from dimp import SymmetricKey
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 
-from .core import Transceiver, Packer, Processor
+from .core import Transformer, Packer, Processor
 from .core import CipherKeyDelegate
 
 
-class Messenger(Transceiver, Packer, Processor, ABC):
+class Messenger(Transformer, Packer, Processor, ABC):
 
     @property  # protected
     @abstractmethod

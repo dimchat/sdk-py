@@ -38,7 +38,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from dimp import EncryptKey, VerifyKey
 from dimp import ID
 
 from .core import Barrack, Archivist
@@ -58,52 +57,50 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
     def archivist(self) -> Optional[Archivist]:
         raise NotImplemented
 
-    async def select_local_user(self, receiver: ID) -> Optional[ID]:
+    async def select_user(self, receiver: ID) -> Optional[ID]:
         """
         Select local user for receiver
 
-        :param receiver: user/group ID
+        :param receiver: user/broadcast ID
+        :return: local user
+        """
+        assert receiver.is_user or receiver.is_broadcast, 'user ID error: %s' % receiver
+        archivist = self.archivist
+        assert archivist is not None, 'archivist not ready'
+        all_users = await archivist.get_local_users()
+        if all_users is None or len(all_users) == 0:
+            # assert False, 'local users should not be empty'
+            return None
+        elif receiver.is_broadcast:
+            # broadcast message can decrypt by anyone, so
+            # just return current user
+            return all_users[0]
+        # personal message
+        for item in all_users:
+            if receiver == item:
+                # DISCUSS: set this item to be current user?
+                return item
+        # not for me?
+
+    async def select_member(self, members: List[ID]) -> Optional[ID]:
+        """
+        Select local user for group members
+
+        :param members: group member list
         :return: local user
         """
         archivist = self.archivist
         assert archivist is not None, 'archivist not ready'
-        users = await archivist.local_users
-        #
-        #  1.
-        #
-        if users is None or len(users) == 0:
-            assert False, 'local users should not be empty'
-            # return None
-        elif receiver.is_broadcast:
-            # broadcast message can decrypt by anyone, so
-            # just return current user
-            return users[0]
-        #
-        #  2.
-        #
-        if receiver.is_user:
-            # personal message
-            for item in users:
-                if receiver == item:
-                    # DISCUSS: set this item to be current user?
-                    return item
-        elif receiver.is_group:
-            # split group message
-            #
-            # the messenger will check group info before decrypting message,
-            # so we can trust that the group's meta & members MUST exist here.
-            members = await self.get_members(identifier=receiver)
-            if members is None or len(members) == 0:
-                # assert False, 'members not found: %s' % receiver
-                return None
-            for item in users:
-                if item in members:
-                    # DISCUSS: set this item to be current user?
-                    return item
-        else:
-            assert False, 'receiver error: %s' % receiver
-        # not me?
-        return None
+        all_users = await archivist.get_local_users()
+        if all_users is None or len(all_users) == 0:
+            # assert False, 'local users should not be empty'
+            return None
+        # group message (recipient not designated)
+        for item in all_users:
+            if item in members:
+                # DISCUSS: set this item to be current user?
+                return item
+        # not for me?
 
     #
     #   Entity Delegate
@@ -114,30 +111,13 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         assert identifier.is_user, 'user ID error: %s' % identifier
         barrack = self.barrack
         assert barrack is not None, 'barrack not ready'
-        #
-        #  1. get from user cache
-        #
+        # get from user cache
         user = barrack.get_user(identifier=identifier)
-        if user is not None:
-            return user
-        #
-        #  2. check visa key
-        #
-        if identifier.is_broadcast:
-            # no need to check visa key for broadcast user
-            pass
-        else:
-            visa_key = await self.public_key_for_encryption(identifier=identifier)
-            if visa_key is None:
-                # assert False, 'visa.key not found: %s' % identifier
-                return None
-            # NOTICE: if visa.key exists, then visa & meta must exist too.
-        #
-        #  3. create user and cache it
-        #
-        user = barrack.create_user(identifier=identifier)
-        if user is not None:
-            barrack.cache_user(user=user)
+        if user is None:
+            # create user and cache it
+            user = barrack.create_user(identifier=identifier)
+            if user is not None:
+                barrack.cache_user(user=user)
         return user
 
     # Override
@@ -145,79 +125,11 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         assert identifier.is_group, 'group ID error: %s' % identifier
         barrack = self.barrack
         assert barrack is not None, 'barrack not ready'
-        #
-        #  1. get from group cache
-        #
+        # get from group cache
         group = barrack.get_group(identifier=identifier)
-        if group is not None:
-            return group
-        #
-        #  2. check members
-        #
-        if identifier.is_broadcast:
-            # no need to check members for broadcast group
-            pass
-        else:
-            members = await self.get_members(identifier=identifier)
-            if members is None or len(members) == 0:
-                # assert False, 'group members not found: %s' % identifier
-                return None
-            # NOTICE: if members exist, then owner (founder) must exist,
-            #         and bulletin & meta must exist too.
-        #
-        #  3. create group and cache it
-        #
-        group = barrack.create_group(identifier=identifier)
-        if group is not None:
-            barrack.cache_group(group=group)
+        if group is None:
+            # create group and cache it
+            group = barrack.create_group(identifier=identifier)
+            if group is not None:
+                barrack.cache_group(group=group)
         return group
-
-    #
-    #   User DataSource
-    #
-
-    # Override
-    async def public_key_for_encryption(self, identifier: ID) -> Optional[EncryptKey]:
-        assert identifier.is_user, 'user ID error: %s' % identifier
-        archivist = self.archivist
-        assert archivist is not None, 'archivist not ready'
-        #
-        #  1. get key from visa
-        #
-        visa_key = await archivist.get_visa_key(identifier=identifier)
-        if visa_key is not None:
-            # if visa.key exists, use it for encryption
-            return visa_key
-        #
-        #  2. get key from meta
-        #
-        meta_key = await archivist.get_meta_key(identifier=identifier)
-        if isinstance(meta_key, EncryptKey):
-            # if visa.key not exists and meta.key is encrypt key,
-            # use it for encryption
-            return meta_key
-
-    # Override
-    async def public_keys_for_verification(self, identifier: ID) -> List[VerifyKey]:
-        # assert identifier.is_user, 'user ID error: %s' % identifier
-        archivist = self.archivist
-        assert archivist is not None, 'archivist not ready'
-        keys: List[VerifyKey] = []
-        #
-        #  1. get key from visa
-        #
-        visa_key = await archivist.get_visa_key(identifier=identifier)
-        if isinstance(visa_key, VerifyKey):
-            # the sender may use communication key to sign message.data,
-            # so try to verify it with visa.key first
-            keys.append(visa_key)
-        #
-        #  2. get key from meta
-        #
-        meta_key = await archivist.get_meta_key(identifier=identifier)
-        if meta_key is not None:
-            # the sender may use identity key to sign message.data,
-            # try to verify it with meta.key too
-            keys.append(meta_key)
-        assert len(keys) > 0, 'failed to get verify key for user: %s' % identifier
-        return keys
