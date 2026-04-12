@@ -28,15 +28,14 @@
 # SOFTWARE.
 # ==============================================================================
 
+from typing import Optional, List, Iterable
 
-from typing import Optional, List
-
-from dimp import ID, Meta, Document
+from dimp import ID, Address, Meta, Document
 from dimp import ReliableMessage
 from dimp import Envelope, Content
 from dimp import MetaCommand, DocumentCommand
+from dimp import GeneralAccountHelper, shared_account_extensions
 
-from ..mkm import MetaUtils, DocumentUtils
 from ..core import Archivist
 
 from .base import BaseCommandProcessor
@@ -78,6 +77,14 @@ class MetaCommandProcessor(BaseCommandProcessor):
                 }
             })
         # meta got
+        return await self._respond_meta(meta=meta, identifier=identifier, receiver=envelope.sender)
+
+    # noinspection PyMethodMayBeStatic
+    async def _respond_meta(self, meta: Meta, identifier: ID, receiver: ID) -> List[Content]:
+        if receiver == identifier:
+            # assert False, 'cycled response: %s' % identifier
+            return []
+        # TODO: check response expired
         return [
             MetaCommand.response(identifier=identifier, meta=meta)
         ]
@@ -122,7 +129,11 @@ class MetaCommandProcessor(BaseCommandProcessor):
 
     # noinspection PyMethodMayBeStatic
     async def _check_meta(self, meta: Meta, identifier: ID) -> bool:
-        return meta.valid and MetaUtils.match_identifier(identifier=identifier, meta=meta)
+        if not meta.valid:
+            return False
+        old = identifier.address
+        gen = Address.generate(meta=meta, network=old.network)
+        return old == gen
 
 
 class DocumentCommandProcessor(MetaCommandProcessor):
@@ -131,34 +142,23 @@ class DocumentCommandProcessor(MetaCommandProcessor):
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         assert isinstance(content, DocumentCommand), 'document command error: %s' % content
         identifier = content.identifier
-        docs = content.documents
+        documents = content.documents
         if identifier is None:
             # assert False, 'doc ID cannot be empty: %s' % content
             text = 'Document command error.'
             return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope)
-        elif docs is None:
+        elif documents is None:
             # query entity document for ID
             return await self._get_documents(identifier=identifier, content=content, envelope=r_msg.envelope)
-        # check document ID
-        for document in docs:
-            if identifier != document.identifier:
-                # error
-                text = 'Document ID not match.'
-                return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope, extra={
-                    'template': 'Document ID not match: ${did}.',
-                    'replacements': {
-                        'did': str(identifier),
-                    }
-                })
-        # received new documents
-        return await self._put_docs(documents=docs, identifier=identifier, content=content, envelope=r_msg.envelope)
+        else:
+            # received new documents
+            return await self._put_docs(documents, identifier=identifier, content=content, envelope=r_msg.envelope)
 
     # private
     async def _get_documents(self, identifier: ID, content: DocumentCommand, envelope: Envelope) -> List[Content]:
         facebook = self.facebook
         documents = await facebook.get_documents(identifier=identifier)
-        count = 0 if documents is None else len(documents)
-        if count == 0:
+        if documents is None or len(documents) == 0:
             text = 'Document not found.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
                 'template': 'Document not found: ${did}.',
@@ -170,12 +170,11 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         query_time = content.last_time
         if query_time is not None:
             # check last document time
-            last = DocumentUtils.last_document(documents=documents)
+            last = self._last_document(documents=documents)
             assert last is not None, 'should not happen'
-            last_time = last.time
+            last_time = None if last is None else last.time
             if last_time is None:
                 assert False, 'document error: %s' % last
-                pass
             elif not last_time.after(query_time):
                 # document not updated
                 text = 'Document not updated.'
@@ -186,10 +185,43 @@ class DocumentCommandProcessor(MetaCommandProcessor):
                         'time': last_time.timestamp,
                     }
                 })
-        meta = await facebook.get_meta(identifier=identifier)
+        # documents got
+        return await self._respond_documents(documents=documents, identifier=identifier, receiver=envelope.sender)
+
+    # protected
+    async def _respond_documents(self, documents: List[Document], identifier: ID, receiver: ID) -> List[Content]:
+        if receiver == identifier:
+            # assert False, 'cycled response: %s' % identifier
+            return []
+        # TODO: check response expired
+        meta = await self.facebook.get_meta(identifier=identifier)
         return [
             DocumentCommand.response(identifier=identifier, meta=meta, documents=documents)
         ]
+
+    # noinspection PyMethodMayBeStatic
+    def _last_document(self, documents: Iterable[Document]) -> Optional[Document]:
+        last_doc = None
+        last_time = None
+        for doc in documents:
+            doc_time = doc.time
+            if last_doc is None:
+                # first document
+                last_doc = doc
+                last_time = doc_time
+            elif last_time is None:
+                # the first document has no time (old version),
+                # if this document has time, use the new one
+                if doc_time is not None:
+                    # first document with time
+                    last_doc = doc
+                    last_time = doc_time
+            elif doc_time is not None and doc_time.after(last_time):
+                # new document
+                last_doc = doc
+                last_time = doc_time
+        # OK
+        return last_doc
 
     # private
     async def _put_docs(self, documents: List[Document], identifier: ID,
@@ -219,8 +251,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             array = await self._save_document(doc, meta=meta, identifier=identifier, content=content, envelope=envelope)
             if isinstance(array, List):
                 # failed
-                for item in array:
-                    errors.append(item)
+                errors.extend(array)
         if len(errors) > 0:
             # failed
             return errors
@@ -237,7 +268,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
     async def _save_document(self, doc: Document, meta: Meta, identifier: ID,
                              content: DocumentCommand, envelope: Envelope) -> Optional[List[Content]]:
         # check document
-        if not await self._check_document(doc, meta=meta):
+        if not await self._check_document(doc, meta=meta, identifier=identifier):
             # document invalid
             text = 'Document not accepted.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={
@@ -257,13 +288,34 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             })
         # document saved, return no error
 
-    # noinspection PyMethodMayBeStatic
-    async def _check_document(self, doc: Document, meta: Meta) -> bool:
-        if doc.valid:
-            return True
+    # protected
+    async def _check_document(self, doc: Document, meta: Meta, identifier: ID) -> bool:
+        # check meta with ID
+        ok = await self._check_meta(meta=meta, identifier=identifier)
+        if not ok:
+            # meta error
+            return False
+        # check document ID
+        helper = account_helper()
+        doc_id = helper.get_document_id(document=doc.dictionary)
+        if doc_id is not None:
+            inside = doc_id.address
+            outside = identifier.address
+            if inside != outside:
+                # assert False, 'ID not matched: %s, %s' % (identifier, doc)
+                return False
+        else:
+            assert False, 'document ID not found: %s' % doc
         # NOTICE: if this is a bulletin document for group,
         #             verify it with the group owner's meta.key
         #         else (this is a visa document for user)
         #             verify it with the user's meta.key
-        return doc.verify(public_key=meta.public_key)
+        meta_key = meta.public_key
+        return doc.verify(public_key=meta_key)
         # TODO: check for group document
+
+
+def account_helper() -> GeneralAccountHelper:
+    helper = shared_account_extensions.helper
+    assert isinstance(helper, GeneralAccountHelper), 'account helper error: %s' % helper
+    return helper

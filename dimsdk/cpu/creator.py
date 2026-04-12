@@ -50,7 +50,6 @@ from .contents import ForwardContentProcessor
 from .contents import ArrayContentProcessor
 from .commands import MetaCommandProcessor
 from .commands import DocumentCommandProcessor
-# from .customized import CustomizedContentProcessor
 
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
@@ -58,24 +57,19 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
 
     # Override
     def create_content_processor(self, msg_type: str) -> Optional[ContentProcessor]:
-        # # application customized
-        # if msg_type == ContentType.APPLICATION or msg_type == 'application':
-        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
-        # elif msg_type == ContentType.CUSTOMIZED or msg_type == 'customized':
-        #     return CustomizedContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # forward content
-        if msg_type == ContentType.FORWARD or msg_type == 'forward':
+        if msg_type == ContentType.FORWARD:
             return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # array content
-        if msg_type == ContentType.ARRAY or msg_type == 'array':
+        if msg_type == ContentType.ARRAY:
             return ArrayContentProcessor(facebook=self.facebook, messenger=self.messenger)
 
         # default commands
-        if msg_type == ContentType.COMMAND or msg_type == 'command':
+        if msg_type == ContentType.COMMAND:
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
 
         # unknown content
-        if msg_type == ContentType.ANY or msg_type == '*':
+        if msg_type == ContentType.ANY:
             # must return a default processor for unknown type
             return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # assert False, 'unsupported content: %s' % msg_type

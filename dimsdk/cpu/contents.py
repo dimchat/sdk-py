@@ -48,10 +48,10 @@ class ForwardContentProcessor(BaseContentProcessor):
         responses = []
         for item in secrets:
             results = await messenger.process_reliable_message(msg=item)
-            if len(results) == 1:
-                res = ForwardContent.create(message=results[0])
-            else:
-                res = ForwardContent.create(messages=results)
+            if results is None:
+                # assert False, 'should not happen'
+                continue
+            res = ForwardContent.create(messages=results)
             responses.append(res)
         return responses
 
@@ -67,7 +67,10 @@ class ArrayContentProcessor(BaseContentProcessor):
         responses = []
         for item in contents:
             results = await messenger.process_content(content=item, r_msg=r_msg)
-            if len(results) == 1:
+            if results is None:
+                # assert False, 'should not happen'
+                continue
+            elif len(results) == 1:
                 res = results[0]
             else:
                 res = ArrayContent.create(contents=results)
