@@ -82,11 +82,11 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         :param extra:    extra info
         :return: receipt command
         """
+        # create base receipt command with text, original envelope, serial number & group ID
         res = ReceiptCommand.create(text=text, envelope=envelope, content=content)
         # add extra key-values
         if extra is not None:
-            for key in extra:
-                res[key] = extra.get(key)
+            res.update(extra)
         return res
 
 

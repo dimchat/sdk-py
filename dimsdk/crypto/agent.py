@@ -35,7 +35,7 @@ from dimp import VerifyKey, EncryptKey
 from dimp import PublicKey
 from dimp import ID, Meta, Document, Visa
 from dimp import GeneralAccountHelper
-from dimp import AccountExtensions, shared_account_extensions
+from dimp import shared_account_extensions
 
 from .bundle import EncryptedBundle, UserEncryptedBundle
 
@@ -176,16 +176,19 @@ def get_document_id(document: Document) -> Optional[ID]:
 # -----------------------------------------------------------------------------
 
 
-class _AgentExt:
-    _visa_agent: VisaAgent = DefaultVisaAgent()
+class VisaAgentExtension:
 
     @property
     def visa_agent(self) -> VisaAgent:
-        return _AgentExt._visa_agent
+        raise NotImplemented
 
     @visa_agent.setter
     def visa_agent(self, agent: VisaAgent):
-        _AgentExt._visa_agent = agent
+        raise NotImplemented
 
 
-AccountExtensions.visa_agent = _AgentExt.visa_agent
+shared_account_extensions.visa_agent: VisaAgent = DefaultVisaAgent()
+
+
+# def account_extensions() -> Union[AccountExtensions, VisaAgentExtension]:
+#     return shared_account_extensions

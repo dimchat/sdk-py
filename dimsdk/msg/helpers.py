@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from dimp import MessageExtensions
+from dimp import shared_message_extensions
 
 from .instant_delegate import InstantMessageDelegate
 from .secure_delegate import SecureMessageDelegate
@@ -57,16 +57,19 @@ class MessagePackerFactory:
 # -----------------------------------------------------------------------------
 
 
-class _PackerExt:
-    _packer_factory: MessagePackerFactory = MessagePackerFactory()
+class PackerExtensions:
 
     @property
     def packer_factory(self) -> MessagePackerFactory:
-        return _PackerExt._packer_factory
+        raise NotImplemented
 
     @packer_factory.setter
     def packer_factory(self, factory: MessagePackerFactory):
-        _PackerExt._packer_factory = factory
+        raise NotImplemented
 
 
-MessageExtensions.packer_factory = _PackerExt.packer_factory
+shared_message_extensions.packer_factory = MessagePackerFactory()
+
+
+# def message_extensions() -> Union[MessageExtensions, PackerExtensions]:
+#     return shared_message_extensions

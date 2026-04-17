@@ -277,7 +277,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
                     'did': str(identifier),
                 }
             })
-        elif not await self.archivist.save_document(document=doc):
+        elif not await self.archivist.save_document(document=doc, identifier=identifier):
             # document expired
             text = 'Document not changed.'
             return self._respond_receipt(text=text, content=content, envelope=envelope, extra={

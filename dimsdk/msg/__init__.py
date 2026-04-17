@@ -37,9 +37,14 @@ from .secure_packer import SecureMessagePacker
 from .reliable_packer import ReliableMessagePacker
 
 from .helpers import MessagePackerFactory
+from .helpers import PackerExtensions
 
 
 __all__ = [
+
+    #
+    #   Message Transformers (DaoKeDao)
+    #
 
     'InstantMessageDelegate',
     'SecureMessageDelegate',
@@ -50,5 +55,6 @@ __all__ = [
     'ReliableMessagePacker',
 
     'MessagePackerFactory',
+    'PackerExtensions',
 
 ]

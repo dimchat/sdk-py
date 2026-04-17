@@ -34,6 +34,7 @@ from typing import List
 from dimp import ContentType
 from dimp import Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
+from dimp import ArrayContent
 
 from .dkd import ContentProcessorFactory
 from .core import Processor
@@ -158,12 +159,20 @@ class MessageProcessor(TwinsHelper, Processor):
             me = user.identifier
         # 3. package messages
         messages = []
-        for res in responses:
-            assert res is not None, 'should not happen'
-            env = Envelope.create(sender=me, receiver=sender)
-            msg = InstantMessage.create(head=env, body=res)
-            # assert msg is not None, 'should not happen'
-            messages.append(msg)
+        # for res in responses:
+        #     assert res is not None, 'should not happen'
+        #     env = Envelope.create(sender=me, receiver=sender)
+        #     msg = InstantMessage.create(head=env, body=res)
+        #     # assert msg is not None, 'should not happen'
+        #     messages.append(msg)
+
+        # pack all responses in one message
+        env = Envelope.create(sender=me, receiver=sender)
+        if len(responses) == 1:
+            msg = InstantMessage.create(head=env, body=responses[0])
+        else:
+            msg = InstantMessage.create(head=env, body=ArrayContent.create(contents=responses))
+        messages.append(msg)
         return messages
 
     # Override

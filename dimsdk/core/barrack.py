@@ -94,11 +94,12 @@ class Archivist(ABC):
         raise NotImplemented
 
     @abstractmethod
-    async def save_document(self, document: Document) -> bool:
+    async def save_document(self, document: Document, identifier: ID) -> bool:
         """
         Save entity document with ID (must verify first)
 
-        :param document: entity document
+        :param document:   entity document
+        :param identifier: entity ID
         :return: True on success
         """
         raise NotImplemented

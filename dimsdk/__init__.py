@@ -278,6 +278,7 @@ __all__ = [
     'ReliableMessagePacker',
 
     'MessagePackerFactory',
+    'PackerExtensions',
 
     #
     #   Content Processors (DaoKeDao)

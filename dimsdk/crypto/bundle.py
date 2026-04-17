@@ -35,7 +35,7 @@ from typing import Iterator, Iterable, ItemsView, KeysView, ValuesView
 from dimp import base64_encode
 from dimp import TransportableData
 from dimp import ID, Identifier
-from dimp import AccountExtensions, shared_account_extensions
+from dimp import shared_account_extensions
 
 
 class EncryptedBundle(ABC):
@@ -317,16 +317,19 @@ class DefaultBundleHelper(EncryptedBundleHelper):
         return bundle
 
 
-class _BundleExt:
-    _bundle_helper: EncryptedBundleHelper = DefaultBundleHelper()
+class EncryptedBundleExtension:
 
     @property
     def bundle_helper(self) -> EncryptedBundleHelper:
-        return _BundleExt._bundle_helper
+        raise NotImplemented
 
     @bundle_helper.setter
     def bundle_helper(self, helper: EncryptedBundleHelper):
-        _BundleExt._bundle_helper = helper
+        raise NotImplemented
 
 
-AccountExtensions.bundle_helper = _BundleExt.bundle_helper
+shared_account_extensions.bundle_helper = DefaultBundleHelper()
+
+
+# def account_extensions() -> Union[AccountExtensions, EncryptedBundleExtension]:
+#     return shared_account_extensions
