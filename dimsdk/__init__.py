@@ -36,12 +36,9 @@ from .msg import *
 # from .dkd import *
 
 from .core import *
+from .base import *
 
-from .twins import TwinsHelper
-from .facebook import Facebook
-from .messenger import Messenger
-from .processor import MessageProcessor
-from .packer import MessagePacker
+from .cpu import *
 
 
 name = 'DIM-SDK'
@@ -317,5 +314,19 @@ __all__ = [
     'Messenger',
     'MessageProcessor',
     'MessagePacker',
+
+    #
+    #   CPU - Content Processing Units
+    #
+
+    'ContentProcessor',
+    'ContentProcessorCreator',
+    'ContentProcessorFactory',
+    'GeneralContentProcessorFactory',
+
+    'BaseContentProcessor', 'BaseCommandProcessor',
+    'ArrayContentProcessor', 'ForwardContentProcessor',
+    'MetaCommandProcessor', 'DocumentCommandProcessor',
+    'BaseContentProcessorCreator',
 
 ]

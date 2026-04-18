@@ -43,7 +43,7 @@ from dimp import ReceiptCommand
 
 from ..dkd import ContentProcessor
 
-from ..twins import TwinsHelper
+from ..base import TwinsHelper
 
 
 class BaseContentProcessor(TwinsHelper, ContentProcessor):

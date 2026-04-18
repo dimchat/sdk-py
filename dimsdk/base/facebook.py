@@ -40,9 +40,9 @@ from typing import Optional, List
 
 from dimp import ID
 
-from .core import Barrack, Archivist
-from .mkm import EntityDelegate, User, Group
-from .mkm import UserDataSource, GroupDataSource
+from ..core import Barrack, Archivist
+from ..mkm import EntityDelegate, User, Group
+from ..mkm import UserDataSource, GroupDataSource
 
 
 class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):

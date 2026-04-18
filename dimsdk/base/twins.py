@@ -33,7 +33,7 @@ from typing import Optional
 
 from dimp import ID
 
-from .mkm import User
+from ..mkm import User
 
 from .facebook import Facebook
 from .messenger import Messenger

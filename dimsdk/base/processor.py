@@ -36,8 +36,8 @@ from dimp import Content, Envelope
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import ArrayContent
 
-from .dkd import ContentProcessorFactory
-from .core import Processor
+from ..dkd import ContentProcessorFactory
+from ..core import Processor
 
 from .facebook import Facebook
 from .messenger import Messenger

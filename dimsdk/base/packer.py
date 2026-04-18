@@ -34,9 +34,9 @@ from typing import Optional, Union
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import MessageExtensions, shared_message_extensions
 
-from .msg import MessagePackerFactory, PackerExtensions
-from .msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
-from .core import Packer
+from ..msg import MessagePackerFactory, PackerExtensions
+from ..msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
+from ..core import Packer
 
 from .facebook import Facebook
 from .messenger import Messenger

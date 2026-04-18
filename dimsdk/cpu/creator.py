@@ -41,7 +41,7 @@ from dimp import ContentType, Command
 
 from ..dkd import ContentProcessor, ContentProcessorCreator
 
-from ..twins import TwinsHelper
+from ..base import TwinsHelper
 
 from .base import BaseContentProcessor
 from .base import BaseCommandProcessor

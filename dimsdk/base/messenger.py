@@ -42,8 +42,8 @@ from dimp import SymmetricKey
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 
-from .core import Transformer, Packer, Processor
-from .core import CipherKeyDelegate
+from ..core import Transformer, Packer, Processor
+from ..core import CipherKeyDelegate
 
 
 class Messenger(Transformer, Packer, Processor, ABC):
