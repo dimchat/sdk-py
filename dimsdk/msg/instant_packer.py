@@ -109,7 +109,7 @@ class InstantMessagePacker:
             # message content had been encrypted by a symmetric key,
             # so the data should be encoded here (with algorithm 'base64' as default).
             encoded_data = Base64Data.create(binary=ciphertext)
-        assert not encoded_data.empty, 'failed to encode content data: %s' % ciphertext
+        assert not encoded_data.is_empty, 'failed to encode content data: %s' % ciphertext
 
         #
         #   4. Serialize message key to data (JsON / ProtoBuf / ...)
@@ -117,7 +117,7 @@ class InstantMessagePacker:
         pwd = await transformer.serialize_key(key=password, msg=msg)
         # NOTICE:
         #    if the key is reused, the msg must be updated with key digest.
-        info = msg.copy_dictionary()
+        info = msg.copy_dict()
 
         # replace 'content' with encrypted 'data
         info.pop('content', None)
@@ -148,7 +148,7 @@ class InstantMessagePacker:
             #   5. Encrypt key data to 'message.key/keys' with receiver's public key
             #
             bundle = await transformer.encrypt_key(pwd, receiver=receiver, msg=msg)
-            if bundle is None or bundle.empty:
+            if bundle is None or bundle.is_empty:
                 # public key for encryption not found
                 # TODO: suspend this message for waiting receiver's visa
                 continue

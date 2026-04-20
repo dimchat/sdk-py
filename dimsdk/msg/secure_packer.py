@@ -97,7 +97,7 @@ class SecureMessagePacker:
         #   1. Decode 'message.key' to encrypted symmetric key data
         #
         bundle = await self._decode_key(msg=msg, receiver=receiver)
-        if bundle is None or bundle.empty:
+        if bundle is None or bundle.is_empty:
             # broadcast message?
             # reuse key?
             key_data = None
@@ -129,7 +129,7 @@ class SecureMessagePacker:
         #   4. Decode 'message.data' to encrypted content data
         #
         msg_data = msg.data
-        ciphertext = None if msg_data is None else msg_data.binary
+        ciphertext = None if msg_data is None else msg_data.to_bytes()
         if ciphertext is None:
             return None
         assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s' % (msg.sender, receiver, msg.group)
@@ -164,11 +164,11 @@ class SecureMessagePacker:
         #
 
         # OK, pack message
-        info = msg.copy_dictionary()
+        info = msg.copy_dict()
         info.pop('key', None)
         info.pop('keys', None)
         info.pop('data', None)
-        info['content'] = content.dictionary
+        info['content'] = content.to_dict()
         return InstantMessage.parse(msg=info)
 
     """
@@ -200,7 +200,7 @@ class SecureMessagePacker:
         #   0. decode message data
         #
         msg_data = msg.data
-        ciphertext = None if msg_data is None else msg_data.binary
+        ciphertext = None if msg_data is None else msg_data.to_bytes()
         if ciphertext is None:
             return None
         assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s'\
@@ -219,10 +219,10 @@ class SecureMessagePacker:
         #   2. Encode 'message.signature' to String (Base64)
         #
         base64 = Base64Data.create(binary=signature)
-        assert not base64.empty, 'failed to encode signature: %d byte(s) %s => %s, %s'\
-                                 % (len(signature), msg.sender, msg.receiver, msg.group)
+        assert not base64.is_empty, 'failed to encode signature: %d byte(s) %s => %s, %s'\
+                                    % (len(signature), msg.sender, msg.receiver, msg.group)
 
         # OK, pack message
-        info = msg.copy_dictionary()
+        info = msg.copy_dict()
         info['signature'] = base64.serialize()
         return ReliableMessage.parse(msg=info)

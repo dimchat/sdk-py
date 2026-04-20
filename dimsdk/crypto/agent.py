@@ -80,7 +80,7 @@ class DefaultVisaAgent(VisaAgent):
                 continue
             ciphertext = pub_key.encrypt(plaintext=plaintext)
             bundle[terminal] = ciphertext
-        if bundle.empty:
+        if bundle.is_empty:
             #
             #  2. encrypt with meta key
             #
@@ -167,7 +167,7 @@ class DefaultVisaAgent(VisaAgent):
 def get_document_id(document: Document) -> Optional[ID]:
     helper = shared_account_extensions.helper
     assert isinstance(helper, GeneralAccountHelper), 'account helper error: %s' % helper
-    info = document.dictionary
+    info = document.to_dict()
     return helper.get_document_id(document=info)
 
 

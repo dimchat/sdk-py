@@ -77,7 +77,7 @@ class ReliableMessagePacker:
         #   0. Decode 'message.data' to encrypted content data
         #
         msg_data = msg.data
-        ciphertext = None if msg_data is None else msg_data.binary
+        ciphertext = None if msg_data is None else msg_data.to_bytes()
         if ciphertext is None:
             return None
         assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s'\
@@ -87,7 +87,7 @@ class ReliableMessagePacker:
         #   1. Decode 'message.signature' from String (Base64)
         #
         msg_sig = msg.signature
-        signature = None if msg_sig is None else msg_sig.binary
+        signature = None if msg_sig is None else msg_sig.to_bytes()
         if signature is None:
             return None
         assert len(signature) > 0, 'failed to decode message signature: %s => %s, %s'\
@@ -103,6 +103,6 @@ class ReliableMessagePacker:
             return None
 
         # OK, pack message
-        info = msg.copy_dictionary()
+        info = msg.copy_dict()
         info.pop('signature', None)
         return SecureMessage.parse(msg=info)

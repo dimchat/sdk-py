@@ -147,7 +147,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
     # # Override
     # async def serialize_message(self, msg: ReliableMessage) -> bytes:
     #     compressor = self.compressor
-    #     return compressor.compress_reliable_message(msg=msg.dictionary)
+    #     return compressor.compress_reliable_message(msg=msg.to_dict())
 
     #
     #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
@@ -161,7 +161,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
 
     # Override
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        assert not msg.signature.empty, 'message signature cannot be empty: %s' % msg
+        assert not msg.signature.is_empty, 'message signature cannot be empty: %s' % msg
         # verify 'data' with 'signature'
         return await self.reliable_packer.verify_message(msg=msg)
 
@@ -177,7 +177,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
             raise LookupError('receiver error: %s, from %s, %s' % (receiver, msg.sender, msg.group))
         else:
             me = user.identifier
-        assert not msg.data.empty, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
+        assert not msg.data.is_empty, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
         # decrypt 'data' to 'content'
         return await self.secure_packer.decrypt_message(msg=msg, receiver=me)
         # TODO: check top-secret message

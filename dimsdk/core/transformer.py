@@ -68,7 +68,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         :param msg: network message
         :return: data package
         """
-        msg_info = msg.dictionary
+        msg_info = msg.to_dict()
         compressor = self.compressor
         return compressor.compress_reliable_message(msg=msg_info)
 
@@ -91,15 +91,15 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     async def serialize_content(self, content: Content, key: SymmetricKey, msg: InstantMessage) -> bytes:
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         before serialize content, this job should be do in subclass
-        msg_body = content.dictionary
-        key_info = key.dictionary
+        msg_body = content.to_dict()
+        key_info = key.to_dict()
         compressor = self.compressor
         return compressor.compress_content(content=msg_body, key=key_info)
 
     # Override
     async def encrypt_content(self, data: bytes, key: SymmetricKey, msg: InstantMessage) -> bytes:
         # store 'IV' in msg for AES encryption
-        msg_info = msg.dictionary
+        msg_info = msg.to_dict()
         return key.encrypt(plaintext=data, extra=msg_info)
 
     # # Override
@@ -117,7 +117,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         if BaseMessage.is_broadcast(msg=msg):
             # broadcast message has no key
             return None
-        key_info = key.dictionary
+        key_info = key.to_dict()
         compressor = self.compressor
         return compressor.compress_symmetric_key(key=key_info)
 
@@ -201,13 +201,13 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     # Override
     async def decrypt_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[bytes]:
         # check 'IV' in msg for AES decryption
-        msg_info = msg.dictionary
+        msg_info = msg.to_dict()
         return key.decrypt(ciphertext=data, params=msg_info)
 
     # Override
     async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
-        # assert len(msg.data) > 0, 'message data empty: %s' % msg.dictionary
-        key_info = key.dictionary
+        # assert len(msg.data) > 0, 'message data empty: %s' % msg.to_dict()
+        key_info = key.to_dict()
         compressor = self.compressor
         info = compressor.extract_content(data=data, key=key_info)
         return Content.parse(content=info)

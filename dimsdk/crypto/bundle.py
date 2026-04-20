@@ -40,19 +40,17 @@ from dimp import shared_account_extensions
 
 class EncryptedBundle(ABC):
 
-    @property
     @abstractmethod
-    def string(self) -> str:
+    def to_str(self) -> str:
+        raise NotImplemented
+
+    @abstractmethod
+    def to_dict(self) -> Dict[str, bytes]:
         raise NotImplemented
 
     @property
     @abstractmethod
-    def dictionary(self) -> Dict[str, bytes]:
-        raise NotImplemented
-
-    @property
-    @abstractmethod
-    def empty(self) -> bool:
+    def is_empty(self) -> bool:
         raise NotImplemented
 
     @abstractmethod
@@ -142,8 +140,8 @@ class UserEncryptedBundle(EncryptedBundle):
         super().__init__()
         self.__dictionary: Dict[str, bytes] = {}
 
-    @property  # Override
-    def string(self) -> str:
+    # Override
+    def to_str(self) -> str:
         clazz = self.__class__.__name__
         text = ''
         info = self.__dictionary
@@ -152,12 +150,12 @@ class UserEncryptedBundle(EncryptedBundle):
             text += '\t"%s": %d byte(s)\n' % (key, len(value))
         return '<%s count=%d>\n%s</%s>' % (clazz, len(info), text, clazz)
 
-    @property  # Override
-    def dictionary(self) -> Dict[str, bytes]:
+    # Override
+    def to_dict(self) -> Dict[str, bytes]:
         return self.__dictionary
 
     @property  # Override
-    def empty(self) -> bool:
+    def is_empty(self) -> bool:
         return len(self.__dictionary) == 0
 
     # Override
@@ -262,7 +260,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
     def encode_bundle(self, bundle: EncryptedBundle, identifier: ID) -> Dict[str, Any]:
         text = Identifier.concat(name=identifier.name, address=identifier.address)
         encoded_keys = {}
-        info = bundle.dictionary
+        info = bundle.to_dict()
         for terminal in info:
             data = info.get(terminal)
             # encode data
@@ -305,7 +303,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
             #
             ted = TransportableData.parse(base64)
             if ted is not None:
-                data = ted.binary
+                data = ted.to_bytes()
                 if data is not None:
                     #
                     #  3. Store decoded data for the terminal

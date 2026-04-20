@@ -129,7 +129,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
 
     # noinspection PyMethodMayBeStatic
     async def _check_meta(self, meta: Meta, identifier: ID) -> bool:
-        if not meta.valid:
+        if not meta.is_valid:
             return False
         old = identifier.address
         gen = Address.generate(meta=meta, network=old.network)
@@ -297,7 +297,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             return False
         # check document ID
         helper = account_helper()
-        doc_id = helper.get_document_id(document=doc.dictionary)
+        doc_id = helper.get_document_id(document=doc.to_dict())
         if doc_id is not None:
             inside = doc_id.address
             outside = identifier.address

@@ -274,7 +274,7 @@ class BaseUser(BaseEntity, User):
     async def decrypt_bundle(self, bundle: EncryptedBundle) -> Optional[bytes]:
         # NOTICE: if you provide a public key in visa document for encryption,
         #         here you should return the private key paired with visa.key
-        dictionary = bundle.dictionary
+        dictionary = bundle.to_dict()
         assert len(dictionary) > 0, 'key data empty: %s' % bundle
         for terminal in dictionary:
             ciphertext = dictionary.get(terminal)
@@ -358,5 +358,5 @@ def visa_agent():
 def get_document_id(document: Document) -> Optional[ID]:
     helper = shared_account_extensions.helper
     assert isinstance(helper, GeneralAccountHelper), 'account helper error: %s' % helper
-    info = document.dictionary
+    info = document.to_dict()
     return helper.get_document_id(document=info)
