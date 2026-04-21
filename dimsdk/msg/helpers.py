@@ -71,5 +71,10 @@ class PackerExtensions:
 shared_message_extensions.packer_factory = MessagePackerFactory()
 
 
-# def message_extensions() -> Union[MessageExtensions, PackerExtensions]:
-#     return shared_message_extensions
+def message_extensions() -> PackerExtensions:
+    return shared_message_extensions
+
+
+def packer_factory() -> MessagePackerFactory:
+    ext = message_extensions()
+    return ext.packer_factory

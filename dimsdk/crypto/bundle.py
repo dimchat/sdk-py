@@ -232,12 +232,6 @@ class UserEncryptedBundle(EncryptedBundle):
         return helper.encode_bundle(bundle=self, identifier=identifier)
 
 
-def bundle_helper():
-    helper = shared_account_extensions.bundle_helper
-    assert isinstance(helper, EncryptedBundleHelper), 'bundle helper error: %s' % helper
-    return helper
-
-
 # -----------------------------------------------------------------------------
 #  Account Extensions
 # -----------------------------------------------------------------------------
@@ -329,5 +323,10 @@ class EncryptedBundleExtension:
 shared_account_extensions.bundle_helper = DefaultBundleHelper()
 
 
-# def account_extensions() -> Union[AccountExtensions, EncryptedBundleExtension]:
-#     return shared_account_extensions
+def account_extensions() -> EncryptedBundleExtension:
+    return shared_account_extensions
+
+
+def bundle_helper() -> EncryptedBundleHelper:
+    ext = account_extensions()
+    return ext.bundle_helper

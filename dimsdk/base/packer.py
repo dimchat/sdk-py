@@ -29,29 +29,17 @@
 # ==============================================================================
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional
 
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import MessageExtensions, shared_message_extensions
 
-from ..msg import MessagePackerFactory, PackerExtensions
+from ..msg.helpers import packer_factory
 from ..msg import InstantMessagePacker, SecureMessagePacker, ReliableMessagePacker
 from ..core import Packer
 
 from .facebook import Facebook
 from .messenger import Messenger
 from .twins import TwinsHelper
-
-
-def message_extensions() -> Union[MessageExtensions, PackerExtensions]:
-    return shared_message_extensions
-
-
-def packer_factory() -> MessagePackerFactory:
-    ext = message_extensions()
-    factory = ext.packer_factory
-    assert isinstance(factory, MessagePackerFactory), 'packer factory error: %s' % factory
-    return factory
 
 
 class MessagePacker(TwinsHelper, Packer, ABC):

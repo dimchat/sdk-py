@@ -33,10 +33,10 @@ from typing import Optional, Set, List
 
 from dimp import DecryptKey, SignKey
 from dimp import ID
-from dimp import Document, Visa
-from dimp import GeneralAccountHelper, shared_account_extensions
+from dimp import Visa
 
-from ..crypto import EncryptedBundle, VisaAgent
+from ..crypto import EncryptedBundle
+from ..crypto.agent import visa_agent, account_helper
 
 from .entity import EntityDataSource, Entity, BaseEntity
 
@@ -295,7 +295,9 @@ class BaseUser(BaseEntity, User):
     # Override
     async def sign_visa(self, visa: Visa) -> Optional[Visa]:
         uid = self.identifier
-        did = get_document_id(document=visa)
+        helper = account_helper()
+        info = visa.to_dict()
+        did = helper.get_document_id(document=info)
         assert did is None or did.address == uid.address, 'visa ID not match: %s, %s' % (did, uid)
         # NOTICE: only sign visa with the private key paired with your meta.key
         pri_key = await self._private_key_for_visa_signature()
@@ -313,7 +315,9 @@ class BaseUser(BaseEntity, User):
         # NOTICE: only verify visa with meta.key
         #         (if meta not exists, user won't be created)
         uid = self.identifier
-        did = get_document_id(document=visa)
+        helper = account_helper()
+        info = visa.to_dict()
+        did = helper.get_document_id(document=info)
         assert did is None or did.address == uid.address, 'visa ID not match: %s, %s' % (did, uid)
         # if meta not exists, user won't be created
         meta = await self.meta
@@ -347,16 +351,3 @@ class BaseUser(BaseEntity, User):
         assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
         uid = self.identifier
         return await facebook.private_key_for_visa_signature(identifier=uid)
-
-
-def visa_agent():
-    agent = shared_account_extensions.visa_agent
-    assert isinstance(agent, VisaAgent), 'visa agent error: %s' % agent
-    return agent
-
-
-def get_document_id(document: Document) -> Optional[ID]:
-    helper = shared_account_extensions.helper
-    assert isinstance(helper, GeneralAccountHelper), 'account helper error: %s' % helper
-    info = document.to_dict()
-    return helper.get_document_id(document=info)

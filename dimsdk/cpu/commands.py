@@ -34,8 +34,8 @@ from dimp import ID, Address, Meta, Document
 from dimp import ReliableMessage
 from dimp import Envelope, Content
 from dimp import MetaCommand, DocumentCommand
-from dimp import GeneralAccountHelper, shared_account_extensions
 
+from ..crypto.agent import account_helper
 from ..core import Archivist
 
 from .base import BaseCommandProcessor
@@ -297,7 +297,8 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             return False
         # check document ID
         helper = account_helper()
-        doc_id = helper.get_document_id(document=doc.to_dict())
+        info = doc.to_dict()
+        doc_id = helper.get_document_id(document=info)
         if doc_id is not None:
             inside = doc_id.address
             outside = identifier.address
@@ -313,9 +314,3 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         meta_key = meta.public_key
         return doc.verify(public_key=meta_key)
         # TODO: check for group document
-
-
-def account_helper() -> GeneralAccountHelper:
-    helper = shared_account_extensions.helper
-    assert isinstance(helper, GeneralAccountHelper), 'account helper error: %s' % helper
-    return helper
