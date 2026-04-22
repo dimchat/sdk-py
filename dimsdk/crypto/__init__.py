@@ -30,15 +30,19 @@
 
 from .bundle import EncryptedBundle, UserEncryptedBundle
 from .bundle import EncryptedBundleHelper, DefaultBundleHelper
+from .bundle import EncryptedBundleExtension
 
 from .agent import VisaAgent, DefaultVisaAgent
+from .agent import VisaAgentExtension
 
 
 __all__ = [
 
     'EncryptedBundle', 'UserEncryptedBundle',
     'EncryptedBundleHelper', 'DefaultBundleHelper',
+    'EncryptedBundleExtension',
 
     'VisaAgent', 'DefaultVisaAgent',
+    'VisaAgentExtension',
 
 ]

@@ -69,7 +69,8 @@ class ArrayContentProcessor(BaseContentProcessor):
             results = await messenger.process_content(content=item, r_msg=r_msg)
             if results is None:
                 # assert False, 'should not happen'
-                continue
+                res = ArrayContent.create(contents=[])
+                # continue
             elif len(results) == 1:
                 res = results[0]
             else:

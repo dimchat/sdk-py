@@ -41,10 +41,6 @@ from dimp import shared_account_extensions
 class EncryptedBundle(ABC):
 
     @abstractmethod
-    def to_str(self) -> str:
-        raise NotImplemented
-
-    @abstractmethod
     def to_dict(self) -> Dict[str, bytes]:
         raise NotImplemented
 
@@ -140,7 +136,7 @@ class UserEncryptedBundle(EncryptedBundle):
         super().__init__()
         self.__dictionary: Dict[str, bytes] = {}
 
-    # Override
+    # private
     def to_str(self) -> str:
         clazz = self.__class__.__name__
         text = ''
@@ -210,11 +206,12 @@ class UserEncryptedBundle(EncryptedBundle):
     # Override
     def __str__(self) -> str:
         """ Return str(self). """
+        return self.to_str()
 
     # Override
     def __repr__(self) -> str:
         """ Return repr(self). """
-        return self.__dictionary.__repr__()
+        return self.to_str()
 
     # Override
     def __setitem__(self, k: str, v: Optional[bytes]):

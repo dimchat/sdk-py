@@ -87,6 +87,7 @@ __all__ = [
     #
     #   TED
     #
+
     'EncodeAlgorithms',
 
     'BaseString', 'BaseData',
@@ -97,12 +98,16 @@ __all__ = [
     #
     #   PNF
     #
+
     'TransportableFile', 'TransportableFileFactory',
-    'TransportableFileHelper',
+    # 'TransportableFileHelper', 'TransportableFileExtension',
     'TransportableFileWrapper', 'TransportableFileWrapperFactory',
+    # 'TransportableFileWrapperExtension',
 
     'PortableNetworkFile',
     'PortableNetworkFileWrapper',
+
+    # ================================================================
 
     #
     #   Digest
@@ -124,12 +129,17 @@ __all__ = [
     'SymmetricKeyFactory', 'PrivateKeyFactory', 'PublicKeyFactory',
 
     'SymmetricKeyHelper', 'PublicKeyHelper', 'PrivateKeyHelper',
+
+    'SymmetricKeyExtension', 'PublicKeyExtension', 'PrivateKeyExtension',
     'CryptoExtensions', 'shared_crypto_extensions',
 
     #
     #   Algorithms
     #
+
     'AsymmetricAlgorithms', 'SymmetricAlgorithms',
+
+    # ================================================================
 
     #
     #   Ming-Ke-Ming
@@ -148,18 +158,10 @@ __all__ = [
 
     'AddressHelper', 'IDHelper',
     'MetaHelper', 'DocumentHelper',
+
+    'AddressExtension', 'IDExtension',
+    'MetaExtension', 'DocumentExtension',
     'AccountExtensions', 'shared_account_extensions',
-
-    #
-    #   Account Extends
-    #
-
-    'GeneralCryptoHelper',
-    'GeneralAccountHelper',
-
-    'MetaType',
-    'DocumentType',
-    'Visa', 'Bulletin',
 
     #
     #   Dao-Ke-Dao
@@ -174,18 +176,25 @@ __all__ = [
 
     'ContentHelper', 'EnvelopeHelper',
     'InstantMessageHelper', 'SecureMessageHelper', 'ReliableMessageHelper',
+
+    'ContentExtension',
+    'InstantMessageExtension', 'SecureMessageExtension', 'ReliableMessageExtension',
     'MessageExtensions', 'shared_message_extensions',
 
     #
-    #   Message Extends
+    #   Core Protocols
     #
 
-    'GeneralMessageHelper',
+    'MetaType',
+    'DocumentType',
+    'Visa', 'Bulletin',
 
     'ContentType',
 
     'Command', 'CommandFactory',
-    'CommandHelper', 'GeneralCommandHelper',
+
+    # 'CommandHelper', 'GeneralCommandHelper',
+    # 'CommandExtension', 'CmdExtension',
 
     #
     #  Contents
@@ -196,7 +205,7 @@ __all__ = [
     'FileContent', 'ImageContent', 'AudioContent', 'VideoContent',
     'ForwardContent', 'CombineContent', 'ArrayContent',
     'QuoteContent',
-    'QuoteHelper', 'QuotePurifier',
+    # 'QuoteHelper', 'QuotePurifier', 'QuoteExtension',
 
     #
     #  Commands
@@ -208,23 +217,29 @@ __all__ = [
     'HistoryCommand', 'GroupCommand',
     'InviteCommand', 'ExpelCommand', 'JoinCommand', 'QuitCommand', 'ResetCommand',
 
+    # ================================================================
+
     #
-    #   Implementations
+    #   Account Implementations
     #
 
     'BaseMeta',
     'BaseDocument', 'BaseVisa', 'BaseBulletin',
 
     #
-    #   Contents
+    #   Content Implementations
+    #
 
     'BaseContent', 'BaseCommand',
+    # 'CommandHelper', 'GeneralCommandHelper',
+    # 'CommandExtension', 'CmdExtension',
 
     'BaseTextContent', 'WebPageContent', 'NameCardContent',
     'BaseMoneyContent', 'TransferMoneyContent',
     'BaseFileContent', 'ImageFileContent', 'AudioFileContent', 'VideoFileContent',
     'SecretContent', 'CombineForwardContent', 'ListContent',
     'BaseQuoteContent',
+    # 'QuoteHelper', 'QuotePurifier', 'QuoteExtension',
 
     'BaseMetaCommand', 'BaseDocumentCommand',
     'BaseReceiptCommand',
@@ -232,21 +247,44 @@ __all__ = [
     'InviteGroupCommand', 'ExpelGroupCommand', 'JoinGroupCommand', 'QuitGroupCommand', 'ResetGroupCommand',
 
     #
-    #   Messages
+    #   Message Implementations
     #
 
     'MessageEnvelope',
     'BaseMessage',
     'PlainMessage', 'EncryptedMessage', 'NetworkMessage',
 
+    # ================================================================
 
+    'GeneralCryptoHelper', 'GeneralCryptoExtension',
+    'GeneralAccountHelper', 'GeneralAccountExtension',
+
+    'GeneralMessageHelper', 'GeneralMessageExtension',
+
+    'TransportableFileHelper',
+    'TransportableFileExtension',
+    'TransportableFileWrapperExtension',
+
+    'CommandHelper', 'GeneralCommandHelper',
+    'CommandExtension', 'CmdExtension',
+
+    'QuoteHelper', 'QuotePurifier',
+    'QuoteExtension',
+
+
+    ################################################################
+    #
+    #   Software Development Kits
+    #
     ################################################################
 
 
     'EncryptedBundle', 'UserEncryptedBundle',
     'EncryptedBundleHelper', 'DefaultBundleHelper',
+    'EncryptedBundleExtension',
 
     'VisaAgent', 'DefaultVisaAgent',
+    'VisaAgentExtension',
 
     #
     #   Entities (MingKeMing)
@@ -275,7 +313,7 @@ __all__ = [
     'ReliableMessagePacker',
 
     'MessagePackerFactory',
-    'PackerExtensions',
+    'MessagePackerExtension',
 
     #
     #   Content Processors (DaoKeDao)

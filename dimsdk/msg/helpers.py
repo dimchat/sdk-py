@@ -57,7 +57,7 @@ class MessagePackerFactory:
 # -----------------------------------------------------------------------------
 
 
-class PackerExtensions:
+class MessagePackerExtension:
 
     @property
     def packer_factory(self) -> MessagePackerFactory:
@@ -71,7 +71,7 @@ class PackerExtensions:
 shared_message_extensions.packer_factory = MessagePackerFactory()
 
 
-def message_extensions() -> PackerExtensions:
+def message_extensions() -> MessagePackerExtension:
     return shared_message_extensions
 
 
