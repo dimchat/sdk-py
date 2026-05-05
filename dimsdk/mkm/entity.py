@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#   DIMP : Decentralized Instant Messaging Protocol
+#   DIM-SDK : Decentralized Instant Messaging Software Development Kit
 #
 #                                Written in 2019 by Moky <albert.moky@gmail.com>
 #
@@ -78,7 +78,7 @@ class Entity(ABC):
                 identifier - entity ID
                 type       - entity type
                 meta       - meta for entity ID
-                document   - visa for user, or bulletin for group
+                documents  - visa for user, or bulletin for group
     """
 
     @property

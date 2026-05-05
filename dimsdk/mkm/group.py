@@ -88,7 +88,6 @@ class Group(Entity, ABC):
                 owner
                 members
                 administrators - Optional
-                assistants     - group bots
     """
 
     # @property

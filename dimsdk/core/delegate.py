@@ -39,7 +39,8 @@ from dimp import Message
 class CipherKeyDelegate(ABC):
 
     """
-        Situations:
+        Message scenario matrix (key destination determination):
+
                       +-------------+-------------+-------------+-------------+
                       |  receiver   |  receiver   |  receiver   |  receiver   |
                       |     is      |     is      |     is      |     is      |
@@ -71,6 +72,17 @@ class CipherKeyDelegate(ABC):
         |             |             |             |             |             |
         +-------------+-------------+-------------+-------------+-------------+
 
+        Scenario explanations:
+          A: Personal message (1:1, directional key)
+          B: (same to J)
+          C: Broadcast to individual user (no encryption)
+          D: (same to G)
+          E: Broadcast group message to individual user (no encryption)
+          F: Broadcast group message to any user (no encryption)
+          G: Broadcast group message (receiver=group, no encryption, non-split)
+          H: Group message targeted to individual member (split key)
+          J: Standard group message (receiver=group, non-split)
+          K: Unencrypted group command (broadcast receiver + normal group)
     """
 
     @classmethod
