@@ -56,7 +56,9 @@ class ContentProcessor(ABC):
         :param r_msg:   reliable message
         :return: responses to sender
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.process_content()'
+        )
 
 
 class ContentProcessorCreator(ABC):
@@ -75,7 +77,9 @@ class ContentProcessorCreator(ABC):
         :param msg_type: content type
         :return ContentProcessor
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_content_processor()'
+        )
 
     @abstractmethod
     def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
@@ -86,7 +90,9 @@ class ContentProcessorCreator(ABC):
         :param cmd:      command name
         :return CommandProcessor
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_command_processor()'
+        )
 
 
 class ContentProcessorFactory(ABC):
@@ -105,8 +111,18 @@ class ContentProcessorFactory(ABC):
         :param content: Content/Command
         :return: ContentProcessor
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_content_processor()'
+        )
 
     @abstractmethod
     def get_content_processor_for_type(self, msg_type: str) -> Optional[ContentProcessor]:
-        raise NotImplemented
+        """
+        Get content/command processor
+
+        :param msg_type: content type
+        :return: ContentProcessor
+        """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_content_processor_for_type()'
+        )

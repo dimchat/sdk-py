@@ -69,7 +69,9 @@ class SecureMessageDelegate(ABC):
         :param msg:      secure message object
         :return: encrypted symmetric key data
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_key()'
+        )
 
     @abstractmethod
     async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
@@ -81,7 +83,9 @@ class SecureMessageDelegate(ABC):
         :param msg:      secure message object
         :return: serialized symmetric key
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decrypt_key()'
+        )
 
     @abstractmethod
     async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
@@ -93,7 +97,9 @@ class SecureMessageDelegate(ABC):
         :param msg:      secure message object
         :return: symmetric key
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.deserialize_key()'
+        )
 
     #
     #   Decrypt Content
@@ -108,7 +114,9 @@ class SecureMessageDelegate(ABC):
     #     :param msg:      secure message object
     #     :return: encrypted content data
     #     """
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_data()'
+    #     )
 
     @abstractmethod
     async def decrypt_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[bytes]:
@@ -120,7 +128,9 @@ class SecureMessageDelegate(ABC):
         :param msg:      secure message object
         :return: serialized message content
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decrypt_content()'
+        )
 
     @abstractmethod
     async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
@@ -132,7 +142,9 @@ class SecureMessageDelegate(ABC):
         :param msg:      secure message object
         :return: message content
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.deserialize_content()'
+        )
 
     """
         Sign the Secure Message to Reliable Message
@@ -162,7 +174,9 @@ class SecureMessageDelegate(ABC):
         :param msg:       secure message object
         :return: signature of encrypted message data
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.sign_data()'
+        )
 
     # @abstractmethod
     # async def encode_signature(self, signature: bytes, msg: SecureMessage) -> Any:
@@ -173,4 +187,6 @@ class SecureMessageDelegate(ABC):
     #     :param msg:       secure message object
     #     :return: base64 string
     #     """
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_signature()'
+    #     )

@@ -54,7 +54,9 @@ class GroupDataSource(EntityDataSource, ABC):
         :param identifier: group ID
         :return: founder ID
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_founder()'
+        )
 
     @abstractmethod
     async def get_owner(self, identifier: ID) -> Optional[ID]:
@@ -64,7 +66,9 @@ class GroupDataSource(EntityDataSource, ABC):
         :param identifier: group ID
         :return: owner ID
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_owner()'
+        )
 
     @abstractmethod
     async def get_members(self, identifier: ID) -> List[ID]:
@@ -74,7 +78,9 @@ class GroupDataSource(EntityDataSource, ABC):
         :param identifier: group ID
         :return: member ID list
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_members()'
+        )
 
 
 class Group(Entity, ABC):
@@ -93,29 +99,41 @@ class Group(Entity, ABC):
     # @property
     # @abstractmethod
     # def data_source(self) -> Optional[GroupDataSource]:
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.data_source getter'
+    #     )
     #
     # @data_source.setter
     # @abstractmethod
     # def data_source(self, delegate: GroupDataSource):
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.data_source setter'
+    #     )
 
     @property
     @abstractmethod
     async def founder(self) -> ID:
-        raise NotImplemented
+        """ Group founder """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.founder getter'
+        )
 
     @property
     @abstractmethod
     async def owner(self) -> ID:
-        raise NotImplemented
+        """ Group owner(founder) """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.owner getter'
+        )
 
     @property
     @abstractmethod
     async def members(self) -> List[ID]:
         """ NOTICE: the owner must be a member
             (usually the first one) """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.members getter'
+        )
 
 
 class BaseGroup(BaseEntity, Group):

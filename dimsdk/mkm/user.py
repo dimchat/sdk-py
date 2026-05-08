@@ -74,7 +74,9 @@ class UserDataSource(EntityDataSource, ABC):
         :param identifier: user ID
         :return: contact ID list
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_contacts()'
+        )
 
     @abstractmethod
     async def private_keys_for_decryption(self, identifier: ID) -> List[DecryptKey]:
@@ -85,7 +87,9 @@ class UserDataSource(EntityDataSource, ABC):
         :param identifier: user ID
         :return: private keys
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.private_keys_for_decryption()'
+        )
 
     @abstractmethod
     async def private_key_for_signature(self, identifier: ID) -> Optional[SignKey]:
@@ -96,7 +100,9 @@ class UserDataSource(EntityDataSource, ABC):
         :param identifier: user ID
         :return: private key
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.private_key_for_signature()'
+        )
 
     @abstractmethod
     async def private_key_for_visa_signature(self, identifier: ID) -> Optional[SignKey]:
@@ -106,7 +112,9 @@ class UserDataSource(EntityDataSource, ABC):
         :param identifier: user ID
         :return: private key
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.private_key_for_visa_signature()'
+        )
 
 
 class User(Entity, ABC):
@@ -127,12 +135,16 @@ class User(Entity, ABC):
     # @property
     # @abstractmethod
     # def data_source(self) -> Optional[UserDataSource]:
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.data_source getter'
+    #     )
     #
     # @data_source.setter
     # @abstractmethod
     # def data_source(self, delegate: UserDataSource):
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.data_source setter'
+    #     )
 
     @property
     @abstractmethod
@@ -142,7 +154,9 @@ class User(Entity, ABC):
 
         :return: contacts list
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.contacts getter'
+        )
 
     @property
     @abstractmethod
@@ -152,7 +166,9 @@ class User(Entity, ABC):
 
         :return: login devices
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.terminals getter'
+        )
 
     @abstractmethod
     async def verify(self, data: bytes, signature: bytes) -> bool:
@@ -163,7 +179,9 @@ class User(Entity, ABC):
         :param signature:
         :return:
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.verify()'
+        )
 
     @abstractmethod
     async def encrypt_bundle(self, plaintext: bytes) -> EncryptedBundle:
@@ -173,7 +191,9 @@ class User(Entity, ABC):
         :param plaintext: serialized symmetric key info
         :return: EncryptedBundle with terminal-specific encrypted data
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_bundle()'
+        )
 
     #
     #   interfaces for local user
@@ -187,7 +207,9 @@ class User(Entity, ABC):
         :param data: message data
         :return: signature
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.sign()'
+        )
 
     @abstractmethod
     async def decrypt_bundle(self, bundle: EncryptedBundle) -> Optional[bytes]:
@@ -197,7 +219,9 @@ class User(Entity, ABC):
         :param bundle: Encrypted data bundle with terminal-specific data
         :return: serialized symmetric key info
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decrypt_bundle()'
+        )
 
     #
     #   Interfaces for Visa
@@ -206,13 +230,17 @@ class User(Entity, ABC):
     @abstractmethod
     async def sign_visa(self, visa: Visa) -> Optional[Visa]:
         # NOTICE: only sign visa with the private key paired with your meta.key
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.sign_visa()'
+        )
 
     @abstractmethod
     async def verify_visa(self, visa: Visa) -> bool:
         # NOTICE: only verify visa with meta.key
         #         (if meta not exists, user won't be created)
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.verify_visa()'
+        )
 
 
 class BaseUser(BaseEntity, User):

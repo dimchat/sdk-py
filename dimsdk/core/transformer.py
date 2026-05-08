@@ -54,12 +54,18 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     @property  # protected
     @abstractmethod
     def facebook(self) -> EntityDelegate:
-        raise NotImplemented
+        """ Entity delegate """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.facebook getter'
+        )
 
     @property  # protected
     @abstractmethod
     def compressor(self) -> Compressor:
-        raise NotImplemented
+        """ Message compressor """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compressor getter'
+        )
 
     async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
         """

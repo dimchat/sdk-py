@@ -61,11 +61,17 @@ class MessagePackerExtension:
 
     @property
     def packer_factory(self) -> MessagePackerFactory:
-        raise NotImplemented
+        """ Get message packer factory """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.packer_factory getter'
+        )
 
     @packer_factory.setter
     def packer_factory(self, factory: MessagePackerFactory):
-        raise NotImplemented
+        """ Set message packer factory """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.packer_factory setter'
+        )
 
 
 shared_message_extensions.packer_factory = MessagePackerFactory()

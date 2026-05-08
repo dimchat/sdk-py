@@ -44,15 +44,24 @@ class VisaAgent(ABC):
 
     @abstractmethod
     def encrypt_bundle(self, plaintext: bytes, meta: Meta, documents: List[Document]) -> EncryptedBundle:
-        raise NotImplemented
+        """ Encrypt key bundle with public key """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_bundle()'
+        )
 
     @abstractmethod
     def get_verify_keys(self, meta: Meta, documents: List[Document]) -> List[VerifyKey]:
-        raise NotImplemented
+        """ Get public keys """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_verify_keys()'
+        )
 
     @abstractmethod
     def get_terminals(self, documents: List[Document]) -> Set[str]:
-        raise NotImplemented
+        """ Get login points """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_terminals()'
+        )
 
 
 # noinspection PyMethodMayBeStatic
@@ -175,11 +184,17 @@ class VisaAgentExtension:
 
     @property
     def visa_agent(self) -> VisaAgent:
-        raise NotImplemented
+        """ Get visa agent """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.visa_agent getter'
+        )
 
     @visa_agent.setter
     def visa_agent(self, agent: VisaAgent):
-        raise NotImplemented
+        """ Set visa agent """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.visa_agent setter'
+        )
 
 
 shared_account_extensions.visa_agent: VisaAgent = DefaultVisaAgent()

@@ -55,7 +55,9 @@ class EntityDataSource(ABC):
         :param identifier: entity ID
         :return: Meta object
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_meta()'
+        )
 
     @abstractmethod
     async def get_documents(self, identifier: ID) -> List[Document]:
@@ -65,7 +67,9 @@ class EntityDataSource(ABC):
         :param identifier: entity ID
         :return: Document list
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_documents()'
+        )
 
 
 class Entity(ABC):
@@ -84,35 +88,50 @@ class Entity(ABC):
     @property
     @abstractmethod
     def data_source(self) -> Optional[EntityDataSource]:
-        raise NotImplemented
+        """ Get entity database """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.data_source getter'
+        )
 
     @data_source.setter
     @abstractmethod
     def data_source(self, facebook: EntityDataSource):
-        raise NotImplemented
+        """ Set entity database """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.data_source setter'
+        )
 
     @property
     @abstractmethod
     def identifier(self) -> ID:
-        raise NotImplemented
+        """ Entity ID """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.identifier getter'
+        )
 
     @property
     @abstractmethod
     def type(self) -> int:
         """ Entity type """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.type getter'
+        )
 
     @property
     @abstractmethod
     async def meta(self) -> Meta:
         """ Get meta """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.meta getter'
+        )
 
     @property
     @abstractmethod
     async def documents(self) -> List[Document]:
         """ Get documents """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.documents getter'
+        )
 
 
 class BaseEntity(Entity):

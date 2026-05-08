@@ -52,7 +52,9 @@ class Packer(ABC):
         :param msg: plain message
         :return: encrypted message
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_message()'
+        )
 
     @abstractmethod
     async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
@@ -62,7 +64,9 @@ class Packer(ABC):
         :param msg: encrypted message
         :return: network message
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.sign_message()'
+        )
 
     # @abstractmethod
     # async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
@@ -72,7 +76,9 @@ class Packer(ABC):
     #     :param msg: network message
     #     :return: data package
     #     """
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.serialize_message()'
+    #     )
 
     #
     #   Data -> ReliableMessage -> SecureMessage -> InstantMessage
@@ -86,7 +92,9 @@ class Packer(ABC):
     #     :param data: data package
     #     :return: network message
     #     """
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.deserialize_message()'
+    #     )
 
     @abstractmethod
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
@@ -96,7 +104,9 @@ class Packer(ABC):
         :param msg: network message
         :return: encrypted message
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.verify_message()'
+        )
 
     @abstractmethod
     async def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
@@ -106,4 +116,6 @@ class Packer(ABC):
         :param msg: encrypted message
         :return: plain message
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decrypt_message()'
+        )

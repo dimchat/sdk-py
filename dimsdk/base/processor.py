@@ -57,7 +57,10 @@ class MessageProcessor(TwinsHelper, Processor):
 
     @abstractmethod  # protected
     def _create_factory(self, facebook: Facebook, messenger: Messenger) -> ContentProcessorFactory:
-        raise NotImplemented
+        """ Create CPU factory """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}._create_factory()'
+        )
 
     #
     #  Processing Message

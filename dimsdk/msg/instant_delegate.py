@@ -69,7 +69,9 @@ class InstantMessageDelegate(ABC):
         :param msg:      instant message object
         :return: serialized content data
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.serialize_content()'
+        )
 
     @abstractmethod
     async def encrypt_content(self, data: bytes, key: SymmetricKey, msg: InstantMessage) -> bytes:
@@ -81,7 +83,9 @@ class InstantMessageDelegate(ABC):
         :param msg:      instant message object
         :return: encrypted message content data
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_content()'
+        )
 
     # @abstractmethod
     # async def encode_data(self, data: bytes, msg: InstantMessage) -> Any:
@@ -92,7 +96,9 @@ class InstantMessageDelegate(ABC):
     #     :param msg:      instant message object
     #     :return: base64 string
     #     """
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_data()'
+    #     )
 
     #
     #   Encrypt Key
@@ -107,7 +113,9 @@ class InstantMessageDelegate(ABC):
         :param msg:      instant message object
         :return: serialized key data, None for reused (or broadcast message)
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.serialize_key()'
+        )
 
     @abstractmethod
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[EncryptedBundle]:
@@ -119,7 +127,9 @@ class InstantMessageDelegate(ABC):
         :param msg:      instant message object
         :return: encoded map (ID+terminal → base64-encoded encrypted key data)
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_key()'
+        )
 
     @abstractmethod
     async def encode_key(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
@@ -131,4 +141,6 @@ class InstantMessageDelegate(ABC):
         :param msg:      instant message object
         :return: base64 string
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_key()'
+        )

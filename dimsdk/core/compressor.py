@@ -41,27 +41,45 @@ class Compressor(ABC):
 
     @abstractmethod
     def compress_content(self, content: Dict, key: Dict) -> bytes:
-        raise NotImplemented
+        """ Compress content info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
+        )
 
     @abstractmethod
     def extract_content(self, data: bytes, key: Dict) -> Optional[Dict]:
-        raise NotImplemented
+        """ Extract content info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
+        )
 
     @abstractmethod
     def compress_symmetric_key(self, key: Dict) -> bytes:
-        raise NotImplemented
+        """ Compress password info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
+        )
 
     @abstractmethod
     def extract_symmetric_key(self, data: bytes) -> Optional[Dict]:
-        raise NotImplemented
+        """ Extract password info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
+        )
 
     @abstractmethod
     def compress_reliable_message(self, msg: Dict) -> bytes:
-        raise NotImplemented
+        """ Compress message info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
+        )
 
     @abstractmethod
     def extract_reliable_message(self, data: bytes) -> Optional[Dict]:
-        raise NotImplemented
+        """ Extract message info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
+        )
 
 
 class MessageCompressor(Compressor):
@@ -113,7 +131,7 @@ class MessageCompressor(Compressor):
             return None
         key = json_decode(string=json)
         if key is not None:
-            key = self.shortener.extract_symmetric_keys(key=key)
+            key = self.shortener.extract_symmetric_key(key=key)
             return key
 
     #

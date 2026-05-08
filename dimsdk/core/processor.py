@@ -48,7 +48,9 @@ class Processor(ABC):
         :param data: data to be processed
         :return: responses
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.process_package()'
+        )
 
     @abstractmethod
     async def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
@@ -58,7 +60,9 @@ class Processor(ABC):
         :param msg: message to be processed
         :return: response messages
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.process_reliable_message()'
+        )
 
     @abstractmethod
     async def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
@@ -69,7 +73,9 @@ class Processor(ABC):
         :param r_msg: message received
         :return: response messages
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.process_secure_message()'
+        )
 
     @abstractmethod
     async def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
@@ -80,7 +86,9 @@ class Processor(ABC):
         :param r_msg: message received
         :return: response messages
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.process_instant_message()'
+        )
 
     @abstractmethod
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
@@ -91,4 +99,6 @@ class Processor(ABC):
         :param r_msg: message received
         :return: response contents
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.process_content()'
+        )

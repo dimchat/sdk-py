@@ -133,7 +133,9 @@ class CipherKeyDelegate(ABC):
         :param generate: generate when key not exists
         :return:         cipher key
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_cipher_key()'
+        )
 
     @abstractmethod
     async def cache_cipher_key(self, key: SymmetricKey, sender: ID, receiver: ID):
@@ -144,4 +146,6 @@ class CipherKeyDelegate(ABC):
         :param sender:   user or contact ID
         :param receiver: contact or user/group ID
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.cache_cipher_key()'
+        )

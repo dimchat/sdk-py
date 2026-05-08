@@ -42,32 +42,44 @@ class EncryptedBundle(ABC):
 
     @abstractmethod
     def to_dict(self) -> Dict[str, bytes]:
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.to_dict()'
+        )
 
     @property
     @abstractmethod
     def is_empty(self) -> bool:
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.is_empty getter'
+        )
 
     @abstractmethod
     def clear(self):
         """ D.clear() -> None.  Remove all items from D. """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.clear()'
+        )
 
     @abstractmethod
     def get(self, key: str, default: Optional[bytes] = None) -> Optional[bytes]:
         """ Return the value for key if key is in the dictionary, else default. """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get()'
+        )
 
     @abstractmethod
     def items(self) -> ItemsView[str, bytes]:
         """ D.items() -> a set-like object providing a view on D's items """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.items()'
+        )
 
     @abstractmethod
     def keys(self) -> KeysView[str]:
         """ D.keys() -> a set-like object providing a view on D's keys """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.keys()'
+        )
 
     @abstractmethod
     def pop(self, key: str, default: Optional[bytes] = None) -> Optional[bytes]:
@@ -75,54 +87,79 @@ class EncryptedBundle(ABC):
         D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
         If key is not found, d is returned if given, otherwise KeyError is raised
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.pop()'
+        )
 
     @abstractmethod
     def values(self) -> ValuesView[bytes]:
         """ D.values() -> an object providing a view on D's values """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.values()'
+        )
 
     def __contains__(self, o) -> bool:
         """ True if the dictionary has the specified key, else False. """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__contains__()'
+        )
 
     def __delitem__(self, v: str):
         """ Delete self[key]. """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__delitem__()'
+        )
 
     def __getitem__(self, k: str) -> bytes:
         """ x.__getitem__(y) <==> x[y] """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__getitem__()'
+        )
 
     def __iter__(self) -> Iterator[str]:
         """ Implement iter(self). """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__iter__()'
+        )
 
     def __len__(self) -> int:
         """ Return len(self). """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__len__()'
+        )
 
     def __str__(self) -> str:
         """ Return str(self). """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__str__()'
+        )
 
     def __repr__(self) -> str:
         """ Return repr(self). """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__repr__()'
+        )
 
     def __setitem__(self, k: str, v: Optional[bytes]):
         """ Set self[key] to value. """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__setitem__()'
+        )
 
     def __sizeof__(self) -> int:
         """ D.__sizeof__() -> size of D in memory, in bytes """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.__sizeof__()'
+        )
 
     __hash__ = None
 
     @abstractmethod
     def encode(self, identifier: ID) -> Dict[str, Any]:
-        raise NotImplemented
+        """ Encode for user id """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode()'
+        )
 
     @classmethod
     def decode(cls, keys: Dict, identifier: ID, terminals: Iterable[str]):  # -> EncryptedBundle:
@@ -238,11 +275,17 @@ class EncryptedBundleHelper(ABC):
 
     @abstractmethod
     def encode_bundle(self, bundle: EncryptedBundle, identifier: ID) -> Dict[str, Any]:
-        raise NotImplemented
+        """ Encode key bundle """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_bundle()'
+        )
 
     @abstractmethod
     def decode_bundle(self, keys: Dict, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
-        raise NotImplemented
+        """ Decode key bundle """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_bundle()'
+        )
 
 
 class DefaultBundleHelper(EncryptedBundleHelper):
@@ -310,11 +353,17 @@ class EncryptedBundleExtension:
 
     @property
     def bundle_helper(self) -> EncryptedBundleHelper:
-        raise NotImplemented
+        """ Get bundle helper """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.bundle_helper getter'
+        )
 
     @bundle_helper.setter
     def bundle_helper(self, helper: EncryptedBundleHelper):
-        raise NotImplemented
+        """ Set bundle helper """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.bundle_helper setter'
+        )
 
 
 shared_account_extensions.bundle_helper = DefaultBundleHelper()

@@ -52,19 +52,25 @@ class Messenger(Transformer, Packer, Processor, ABC):
     @abstractmethod
     def key_cache(self) -> Optional[CipherKeyDelegate]:
         """ Delegate for Cipher Key """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.key_cache getter'
+        )
 
     @property  # protected
     @abstractmethod
     def packer(self) -> Optional[Packer]:
         """ Delegate for Packing Message """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.packer getter'
+        )
 
     @property  # protected
     @abstractmethod
     def processor(self) -> Optional[Processor]:
         """ Delegate for Processing Message """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.processor getter'
+        )
 
     #
     #   SecureMessageDelegate

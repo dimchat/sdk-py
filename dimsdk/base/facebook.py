@@ -50,12 +50,18 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
     @property  # protected
     @abstractmethod
     def barrack(self) -> Optional[Barrack]:
-        raise NotImplemented
+        """ Entity factory """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.barrack getter'
+        )
 
     @property
     @abstractmethod
     def archivist(self) -> Optional[Archivist]:
-        raise NotImplemented
+        """ Entity database """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.archivist getter'
+        )
 
     async def select_user(self, receiver: ID) -> Optional[ID]:
         """

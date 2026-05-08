@@ -71,7 +71,9 @@ class CustomizedContentHandler(ABC):
         @param messenger: message transceiver
         @return contents
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.handle_action()'
+        )
 
 
 class BaseCustomizedContentHandler(CustomizedContentHandler):
@@ -117,7 +119,9 @@ class CustomizedContentFilter(ABC):
 
     @abstractmethod
     def filter_content(self, content: CustomizedContent, msg: ReliableMessage) -> CustomizedContentHandler:
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.filter_content()'
+        )
 
 
 class AppCustomizedFilter(CustomizedContentFilter):
@@ -153,11 +157,15 @@ class CustomizedFilterExtension:
 
     @property
     def customized_filter(self) -> CustomizedContentFilter:
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.customized_filter getter'
+        )
 
     @customized_filter.setter
     def customized_filter(self, delegate: CustomizedContentFilter):
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.customized_filter setter'
+        )
 
 
 shared_message_extensions.customized_filter = AppCustomizedFilter()

@@ -65,11 +65,17 @@ class Shortener(ABC):
 
     @abstractmethod
     def compress_content(self, content: Dict) -> Dict:
-        raise NotImplemented
+        """ Shorten keys for content info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
+        )
 
     @abstractmethod
     def extract_content(self, content: Dict) -> Dict:
-        raise NotImplemented
+        """ Restore keys for content info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
+        )
 
     #
     #   Compress SymmetricKey
@@ -77,11 +83,17 @@ class Shortener(ABC):
 
     @abstractmethod
     def compress_symmetric_key(self, key: Dict) -> Dict:
-        raise NotImplemented
+        """ Shorten keys for password info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
+        )
 
     @abstractmethod
-    def extract_symmetric_keys(self, key: Dict) -> Dict:
-        raise NotImplemented
+    def extract_symmetric_key(self, key: Dict) -> Dict:
+        """ Restore keys for password info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
+        )
 
     #
     #   Compress ReliableMessage
@@ -89,11 +101,17 @@ class Shortener(ABC):
 
     @abstractmethod
     def compress_reliable_message(self, msg: Dict) -> Dict:
-        raise NotImplemented
+        """ Shorten keys for message info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
+        )
 
     @abstractmethod
     def extract_reliable_message(self, msg: Dict) -> Dict:
-        raise NotImplemented
+        """ Restore keys for message info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
+        )
 
 
 class MessageShortener(Shortener):
@@ -192,7 +210,7 @@ class MessageShortener(Shortener):
         return key
 
     # Override
-    def extract_symmetric_keys(self, key: Dict) -> Dict:
+    def extract_symmetric_key(self, key: Dict) -> Dict:
         self._restore_keys(keys=self.crypto_short_keys, info=key)
         return key
 

@@ -59,7 +59,9 @@ class ReliableMessageDelegate(ABC):  # (SecureMessageDelegate, ABC):
     #     :param msg:       reliable message
     #     :return: signature data
     #     """
-    #     raise NotImplemented
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_signature()'
+    #     )
 
     @abstractmethod
     async def verify_data_signature(self, data: bytes, signature: bytes, msg: ReliableMessage) -> bool:
@@ -71,4 +73,6 @@ class ReliableMessageDelegate(ABC):  # (SecureMessageDelegate, ABC):
         :param msg:       reliable message
         :return: True on signature matched
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.verify_data_signature()'
+        )

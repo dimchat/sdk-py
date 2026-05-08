@@ -45,19 +45,31 @@ class Barrack(ABC):
 
     @abstractmethod
     def cache_user(self, user: User):
-        raise NotImplemented
+        """ User pool """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.cache_user()'
+        )
 
     @abstractmethod
     def cache_group(self, group: Group):
-        raise NotImplemented
+        """ Group pool """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.cache_group()'
+        )
 
     @abstractmethod
     def get_user(self, identifier: ID) -> Optional[User]:
-        raise NotImplemented
+        """ User factory """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_user()'
+        )
 
     @abstractmethod
     def get_group(self, identifier: ID) -> Optional[Group]:
-        raise NotImplemented
+        """ Group factory """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_group()'
+        )
 
     @abstractmethod
     def create_user(self, identifier: ID) -> Optional[User]:
@@ -67,7 +79,9 @@ class Barrack(ABC):
         :param identifier: user ID
         :return: user, None on not ready
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_user()'
+        )
 
     @abstractmethod
     def create_group(self, identifier: ID) -> Optional[Group]:
@@ -77,10 +91,16 @@ class Barrack(ABC):
         :param identifier: group ID
         :return: group, None on not ready
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_group()'
+        )
 
 
 class Archivist(ABC):
+    """
+        Entity Database
+        ~~~~~~~~~~~~~~~
+    """
 
     @abstractmethod
     async def save_meta(self, meta: Meta, identifier: ID) -> bool:
@@ -91,7 +111,9 @@ class Archivist(ABC):
         :param identifier: entity ID
         :return: True on success
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.save_meta()'
+        )
 
     @abstractmethod
     async def save_document(self, document: Document, identifier: ID) -> bool:
@@ -102,7 +124,9 @@ class Archivist(ABC):
         :param identifier: entity ID
         :return: True on success
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.save_document()'
+        )
 
     #
     #   Local Users
@@ -115,4 +139,6 @@ class Archivist(ABC):
 
         :return: users with private key
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_local_users()'
+        )

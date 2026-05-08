@@ -47,7 +47,9 @@ class EntityDelegate(ABC):
         :param identifier: ID object
         :return: User object
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_user()'
+        )
 
     @abstractmethod
     async def get_group(self, identifier: ID) -> Optional[Group]:
@@ -57,4 +59,6 @@ class EntityDelegate(ABC):
         :param identifier: ID object
         :return: Group object
         """
-        raise NotImplemented
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_group()'
+        )
