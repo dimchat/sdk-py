@@ -89,7 +89,7 @@ class SecureMessagePacker:
         :param receiver: actual receiver (local user)
         :return: InstantMessage object
         """
-        assert receiver.is_user, 'receiver error: %s' % receiver
+        assert receiver.is_user, f'receiver error: {receiver}'
         transformer = self.delegate
         assert transformer is not None, 'secure message delegate not found'
 
@@ -109,8 +109,7 @@ class SecureMessagePacker:
             if key_data is None or len(key_data) == 0:
                 # A: my visa updated but the sender doesn't got the new one;
                 # B: key data error.
-                raise ValueError('failed to decrypt message key: %s %s => %s, %s'
-                                 % (bundle, msg.sender, receiver, msg.group))
+                raise ValueError(f'failed to decrypt message key: {bundle} {msg.sender} => {receiver}, {msg.group}')
                 # TODO: check whether my visa key is changed, push new visa to this contact
 
         #
@@ -121,8 +120,8 @@ class SecureMessagePacker:
         if password is None:
             # A: key data is empty, and cipher key not found from local storage;
             # B: key data error.
-            raise ValueError('failed to get message key: %d byte(s) %s => %s, %s'
-                             % (0 if key_data is None else len(key_data), msg.sender, receiver, msg.group))
+            size = 0 if key_data is None else len(key_data)
+            raise ValueError(f'failed to get message key: {size} byte(s) {msg.sender} => {receiver}, {msg.group}')
             # TODO: ask the sender to send again (with new message key)
 
         #
@@ -132,7 +131,7 @@ class SecureMessagePacker:
         ciphertext = None if msg_data is None else msg_data.to_bytes()
         if ciphertext is None:
             return None
-        assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s' % (msg.sender, receiver, msg.group)
+        assert len(ciphertext) > 0, f'failed to decode message data: {msg.sender} => {receiver}, {msg.group}'
 
         #
         #   5. Decrypt 'message.data' with symmetric key
@@ -141,18 +140,17 @@ class SecureMessagePacker:
         if body is None or len(body) == 0:
             # A: password is a reused key loaded from local storage, but it's expired;
             # B: key error.
-            raise ValueError('failed to decrypt message data with key: %s, data length: %d bytes %s => %s, %s'
-                             % (password, len(ciphertext), msg.sender, receiver, msg.group))
+            raise ValueError(f'failed to decrypt message data with key: {password},'
+                             f' data length: {len(ciphertext)} bytes {msg.sender} => {receiver}, {msg.group}')
             # TODO: ask the sender to send again
-        assert len(body) > 0, 'message data should not be empty: %s => %s, %s' % (msg.sender, receiver, msg.group)
+        assert len(body) > 0, f'message data should not be empty: {msg.sender} => {receiver}, {msg.group}'
 
         #
         #   6. Deserialize message content from data (JsON / ProtoBuf / ...)
         #
         content = await transformer.deserialize_content(data=body, key=password, msg=msg)
         if content is None:
-            # assert False, 'failed to deserialize content: %d byte(s) %s => %s, %s'\
-            #               % (len(body), msg.sender, receiver, msg.group)
+            # assert False, f'failed to deserialize content: {len(body)} bytes {msg.sender} => {receiver}, {msg.group}'
             return None
 
         # TODO: check attachment for File/Image/Audio/Video message content
@@ -203,8 +201,7 @@ class SecureMessagePacker:
         ciphertext = None if msg_data is None else msg_data.to_bytes()
         if ciphertext is None:
             return None
-        assert len(ciphertext) > 0, 'failed to decode message data: %s => %s, %s'\
-                                    % (msg.sender, msg.receiver, msg.group)
+        assert len(ciphertext) > 0, f'failed to decode message data: {msg.sender} => {msg.receiver}, {msg.group}'
 
         #
         #   1. Sign 'message.data' with sender's private key
@@ -212,15 +209,15 @@ class SecureMessagePacker:
         signature = await transformer.sign_data(data=ciphertext, msg=msg)
         if signature is None:
             return None
-        assert len(signature) > 0, 'failed to sign message: %d byte(s) %s => %s, %s'\
-                                   % (len(ciphertext), msg.sender, msg.receiver, msg.group)
+        assert len(signature) > 0, f'failed to sign message: {len(ciphertext)} byte(s)' \
+                                   f' {msg.sender} => {msg.receiver}, {msg.group}'
 
         #
         #   2. Encode 'message.signature' to String (Base64)
         #
         base64 = Base64Data.create(binary=signature)
-        assert not base64.is_empty, 'failed to encode signature: %d byte(s) %s => %s, %s'\
-                                    % (len(signature), msg.sender, msg.receiver, msg.group)
+        assert not base64.is_empty, f'failed to encode signature: {len(signature)} byte(s)' \
+                                    f' {msg.sender} => {msg.receiver}, {msg.group}'
 
         # OK, pack message
         info = msg.copy_dict()

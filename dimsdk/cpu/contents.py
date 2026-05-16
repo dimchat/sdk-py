@@ -41,7 +41,7 @@ class ForwardContentProcessor(BaseContentProcessor):
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        assert isinstance(content, ForwardContent), 'forward content error: %s' % content
+        assert isinstance(content, ForwardContent), f'forward content error: {content}'
         # call messenger to process it
         messenger = self.messenger
         secrets = content.secrets
@@ -60,7 +60,7 @@ class ArrayContentProcessor(BaseContentProcessor):
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        assert isinstance(content, ArrayContent), 'forward content error: %s' % content
+        assert isinstance(content, ArrayContent), f'forward content error: {content}'
         # call messenger to process it
         messenger = self.messenger
         contents = content.contents

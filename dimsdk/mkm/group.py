@@ -156,7 +156,7 @@ class BaseGroup(BaseEntity, Group):
         uid = self.__founder
         if uid is None:
             facebook = self.data_source
-            assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
+            assert isinstance(facebook, GroupDataSource), f'group delegate error: {facebook}'
             uid = await facebook.get_founder(identifier=self.identifier)
             self.__founder = uid
         return uid
@@ -164,11 +164,11 @@ class BaseGroup(BaseEntity, Group):
     @property  # Override
     async def owner(self) -> ID:
         facebook = self.data_source
-        assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
+        assert isinstance(facebook, GroupDataSource), f'group delegate error: {facebook}'
         return await facebook.get_owner(identifier=self.identifier)
 
     @property  # Override
     async def members(self) -> List[ID]:
         facebook = self.data_source
-        assert isinstance(facebook, GroupDataSource), 'group delegate error: %s' % facebook
+        assert isinstance(facebook, GroupDataSource), f'group delegate error: {facebook}'
         return await facebook.get_members(identifier=self.identifier)

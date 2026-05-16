@@ -88,7 +88,7 @@ class InstantMessagePacker:
         body = await transformer.serialize_content(content=msg.content, key=password, msg=msg)
         if body is None:
             return None
-        assert len(body) > 0, 'failed to serialize content: %s' % msg.content
+        assert len(body) > 0, f'failed to serialize content: {msg.content}'
 
         #
         #   2. Encrypt content data to 'message.data' with symmetric key
@@ -96,7 +96,7 @@ class InstantMessagePacker:
         ciphertext = await transformer.encrypt_content(data=body, key=password, msg=msg)
         if ciphertext is None:
             return None
-        assert len(ciphertext) > 0, 'failed to encrypt content with key: %s' % password
+        assert len(ciphertext) > 0, f'failed to encrypt content with key: {password}'
 
         #
         #   3. Encode 'message.data' to String (Base64)
@@ -109,7 +109,7 @@ class InstantMessagePacker:
             # message content had been encrypted by a symmetric key,
             # so the data should be encoded here (with algorithm 'base64' as default).
             encoded_data = Base64Data.create(binary=ciphertext)
-        assert not encoded_data.is_empty, 'failed to encode content data: %s' % ciphertext
+        assert not encoded_data.is_empty, f'failed to encode content data: {ciphertext}'
 
         #
         #   4. Serialize message key to data (JsON / ProtoBuf / ...)
@@ -134,13 +134,13 @@ class InstantMessagePacker:
         if members is None:
             # personal message
             receiver = msg.receiver
-            assert receiver.is_user, 'message.receiver error: %s' % receiver
+            assert receiver.is_user, f'message.receiver error: {receiver}'
             members = [receiver]
         else:
             # group message
             receiver = msg.receiver
-            assert receiver.is_group, 'message.receiver error: %s' % receiver
-            assert len(members) > 0, 'group members empty: %s' % receiver
+            assert receiver.is_group, f'message.receiver error: {receiver}'
+            assert len(members) > 0, f'group members empty: {receiver}'
 
         bundle_map: Dict[ID, EncryptedBundle] = {}
         for receiver in members:
@@ -178,7 +178,7 @@ class InstantMessagePacker:
             bundle = bundle_map.get(receiver)
             encoded_keys = await transformer.encode_key(bundle=bundle, receiver=receiver, msg=msg)
             if encoded_keys is None or len(encoded_keys) == 0:
-                # assert False, 'failed to encode key data: %s' % receiver
+                # assert False, f'failed to encode key data: {receiver}'
                 continue
             # insert to 'message.keys' with ID + terminal
             msg_keys.update(encoded_keys)

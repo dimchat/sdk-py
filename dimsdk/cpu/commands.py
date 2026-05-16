@@ -51,11 +51,11 @@ class MetaCommandProcessor(BaseCommandProcessor):
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        assert isinstance(content, MetaCommand), 'meta command error: %s' % content
+        assert isinstance(content, MetaCommand), f'meta command error: {content}'
         identifier = content.identifier
         meta = content.meta
         if identifier is None:
-            # assert False, 'meta ID cannot empty: %s' % content
+            # assert False, f'meta ID cannot empty: {content}'
             text = 'Meta command error.'
             return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope)
         elif meta is None:
@@ -82,7 +82,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
     # noinspection PyMethodMayBeStatic
     async def _respond_meta(self, meta: Meta, identifier: ID, receiver: ID) -> List[Content]:
         if receiver == identifier:
-            # assert False, 'cycled response: %s' % identifier
+            # assert False, f'cycled response: {identifier}'
             return []
         # TODO: check response expired
         return [
@@ -140,11 +140,11 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        assert isinstance(content, DocumentCommand), 'document command error: %s' % content
+        assert isinstance(content, DocumentCommand), f'document command error: {content}'
         identifier = content.identifier
         documents = content.documents
         if identifier is None:
-            # assert False, 'doc ID cannot be empty: %s' % content
+            # assert False, f'doc ID cannot be empty: {content}'
             text = 'Document command error.'
             return self._respond_receipt(text=text, content=content, envelope=r_msg.envelope)
         elif documents is None:
@@ -174,7 +174,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             assert last is not None, 'should not happen'
             last_time = None if last is None else last.time
             if last_time is None:
-                assert False, 'document error: %s' % last
+                assert False, f'document error: {last}'
             elif not last_time.after(query_time):
                 # document not updated
                 text = 'Document not updated.'
@@ -191,7 +191,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
     # protected
     async def _respond_documents(self, documents: List[Document], identifier: ID, receiver: ID) -> List[Content]:
         if receiver == identifier:
-            # assert False, 'cycled response: %s' % identifier
+            # assert False, f'cycled response: {identifier}'
             return []
         # TODO: check response expired
         meta = await self.facebook.get_meta(identifier=identifier)
@@ -303,10 +303,10 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             inside = doc_id.address
             outside = identifier.address
             if inside != outside:
-                # assert False, 'ID not matched: %s, %s' % (identifier, doc)
+                # assert False, f'ID not matched: {identifier}, {doc}'
                 return False
         else:
-            assert False, 'document ID not found: %s' % doc
+            assert False, f'document ID not found: {doc}'
         # NOTICE: if this is a bulletin document for group,
         #             verify it with the group owner's meta.key
         #         else (this is a visa document for user)

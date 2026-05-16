@@ -74,11 +74,11 @@ class TwinsHelper:
         elif receiver.is_group:
             members = await facebook.get_members(identifier=receiver)
             if members is None or len(members) == 0:
-                # assert False, 'failed to get group members: %s' % receiver
+                # assert False, f'failed to get group members: {receiver}'
                 return None
             me = await facebook.select_member(members=members)
         else:
-            assert False, 'unknown receiver: %s' % receiver
+            assert False, f'unknown receiver: {receiver}'
         if me is None:
             # not for me?
             return None

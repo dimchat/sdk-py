@@ -259,13 +259,13 @@ class BaseUser(BaseEntity, User):
     @property  # Override
     async def contacts(self) -> List[ID]:
         facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        assert isinstance(facebook, UserDataSource), f'user delegate error: {facebook}'
         return await facebook.get_contacts(identifier=self.identifier)
 
     @property  # Override
     async def terminals(self) -> Set[str]:
         docs = await self.documents
-        assert len(docs) > 0, 'failed to get documents: %s' % self.identifier
+        assert len(docs) > 0, f'failed to get documents: {self.identifier}'
         agent = visa_agent()
         return agent.get_terminals(documents=docs)
 
@@ -275,7 +275,7 @@ class BaseUser(BaseEntity, User):
         docs = await self.documents
         agent = visa_agent()
         keys = agent.get_verify_keys(meta=meta, documents=docs)
-        assert len(keys) > 0, 'failed to get verify keys: %s' % self.identifier
+        assert len(keys) > 0, f'failed to get verify keys: {self.identifier}'
         for key in keys:
             if key.verify(data=data, signature=signature):
                 # matched!
@@ -295,7 +295,7 @@ class BaseUser(BaseEntity, User):
     # Override
     async def sign(self, data: bytes) -> bytes:
         key = await self._private_key_for_signature()
-        assert key is not None, 'failed to get sign key for user: %s' % self.identifier
+        assert key is not None, f'failed to get sign key for user: {self.identifier}'
         return key.sign(data=data)
 
     # Override
@@ -303,13 +303,13 @@ class BaseUser(BaseEntity, User):
         # NOTICE: if you provide a public key in visa document for encryption,
         #         here you should return the private key paired with visa.key
         dictionary = bundle.to_dict()
-        assert len(dictionary) > 0, 'key data empty: %s' % bundle
+        assert len(dictionary) > 0, f'key data empty: {bundle}'
         for terminal in dictionary:
             ciphertext = dictionary.get(terminal)
             # get private keys for terminal
             decrypt_keys = await self._private_keys_for_decryption(terminal=terminal)
             if decrypt_keys is None:
-                # assert False, 'failed to get decrypt keys for user: %s, terminal: %s' % (self.identifier, terminal)
+                # assert False, f'failed to get decrypt keys for user: {self.identifier}, terminal: {terminal}'
                 continue
             # try decrypting it with each private key
             for pri_key in decrypt_keys:
@@ -326,14 +326,14 @@ class BaseUser(BaseEntity, User):
         helper = account_helper()
         info = visa.to_dict()
         did = helper.get_document_id(document=info)
-        assert did is None or did.address == uid.address, 'visa ID not match: %s, %s' % (did, uid)
+        assert did is None or did.address == uid.address, f'visa ID not match: {did}, {uid}'
         # NOTICE: only sign visa with the private key paired with your meta.key
         pri_key = await self._private_key_for_visa_signature()
         if pri_key is None:
-            # assert False, 'failed to get sign key for visa: %s' % uid
+            # assert False, f'failed to get sign key for visa: {uid}'
             return None
         if visa.sign(private_key=pri_key) is None:
-            # assert False, 'failed to sign visa: %s, %s' % (self.identifier, visa)
+            # assert False, f'failed to sign visa: {self.identifier}, {visa}'
             return None
         # OK
         return visa
@@ -346,11 +346,11 @@ class BaseUser(BaseEntity, User):
         helper = account_helper()
         info = visa.to_dict()
         did = helper.get_document_id(document=info)
-        assert did is None or did.address == uid.address, 'visa ID not match: %s, %s' % (did, uid)
+        assert did is None or did.address == uid.address, f'visa ID not match: {did}, {uid}'
         # if meta not exists, user won't be created
         meta = await self.meta
         key = meta.public_key
-        assert key is not None, 'failed to get meta key for visa: %s' % self.identifier
+        assert key is not None, f'failed to get meta key for visa: {self.identifier}'
         return visa.verify(public_key=key)
 
     #
@@ -360,7 +360,7 @@ class BaseUser(BaseEntity, User):
     # protected
     async def _private_keys_for_decryption(self, terminal: str) -> List[DecryptKey]:
         facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        assert isinstance(facebook, UserDataSource), f'user delegate error: {facebook}'
         uid = self.identifier
         if terminal is not None and len(terminal) > 0 and terminal != '*':
             uid = ID.create(name=uid.name, address=uid.address, terminal=terminal)
@@ -369,13 +369,13 @@ class BaseUser(BaseEntity, User):
     # protected
     async def _private_key_for_signature(self) -> Optional[SignKey]:
         facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        assert isinstance(facebook, UserDataSource), f'user delegate error: {facebook}'
         uid = self.identifier
         return await facebook.private_key_for_signature(identifier=uid)
 
     # protected
     async def _private_key_for_visa_signature(self) -> Optional[SignKey]:
         facebook = self.data_source
-        assert isinstance(facebook, UserDataSource), 'user delegate error: %s' % facebook
+        assert isinstance(facebook, UserDataSource), f'user delegate error: {facebook}'
         uid = self.identifier
         return await facebook.private_key_for_visa_signature(identifier=uid)

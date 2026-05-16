@@ -70,7 +70,7 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         :param receiver: user/broadcast ID
         :return: local user
         """
-        assert receiver.is_user or receiver.is_broadcast, 'user ID error: %s' % receiver
+        assert receiver.is_user or receiver.is_broadcast, f'user ID error: {receiver}'
         archivist = self.archivist
         assert archivist is not None, 'archivist not ready'
         all_users = await archivist.get_local_users()
@@ -114,7 +114,7 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
 
     # Override
     async def get_user(self, identifier: ID) -> Optional[User]:
-        assert identifier.is_user, 'user ID error: %s' % identifier
+        assert identifier.is_user, f'user ID error: {identifier}'
         barrack = self.barrack
         assert barrack is not None, 'barrack not ready'
         # get from user cache
@@ -128,7 +128,7 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
 
     # Override
     async def get_group(self, identifier: ID) -> Optional[Group]:
-        assert identifier.is_group, 'group ID error: %s' % identifier
+        assert identifier.is_group, f'group ID error: {identifier}'
         barrack = self.barrack
         assert barrack is not None, 'barrack not ready'
         # get from group cache

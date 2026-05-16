@@ -152,7 +152,7 @@ class MessageShortener(Shortener):
     def _move_key(self, from_key: str, to_key: str, info: Dict):
         value = info.get(from_key)
         if value is not None:
-            assert to_key not in info, 'keys conflicted: "%s" -> "%s", %s' % (from_key, to_key, info)
+            assert to_key not in info, f'keys conflicted: "{from_key}" -> "{to_key}", {info}'
             info.pop(from_key, None)
             info[to_key] = value
 
@@ -236,17 +236,17 @@ class MessageShortener(Shortener):
     def extract_reliable_message(self, msg: Dict) -> Dict:
         keys = msg.get('K')
         if keys is None:
-            # assert 'data' in msg, 'message data should not empty: %s' % msg
+            # assert 'data' in msg, f'message data should not empty: {msg}'
             pass
         elif isinstance(keys, Dict):
-            assert 'keys' not in msg, 'message keys duplicated: %s' % msg
+            assert 'keys' not in msg, f'message keys duplicated: {msg}'
             msg.pop('K', None)
             msg['keys'] = keys
         elif isinstance(keys, str):
-            assert 'key' not in msg, 'message key duplicated: %s' % msg
+            assert 'key' not in msg, f'message key duplicated: {msg}'
             msg.pop('K', None)
             msg['key'] = keys
         else:
-            assert False, 'message key error: %s' % msg
+            assert False, f'message key error: {msg}'
         self._restore_keys(keys=self.message_short_keys, info=msg)
         return msg

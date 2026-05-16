@@ -152,7 +152,7 @@ class BaseEntity(Entity):
         clazz = self.__class__.__name__
         identifier = self.identifier
         network = identifier.address.network
-        return '<%s id="%s" network=%d />' % (clazz, identifier, network)
+        return f'<{clazz} id="{identifier}" network={network} />'
 
     # Override
     def __eq__(self, other) -> bool:

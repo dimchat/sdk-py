@@ -94,7 +94,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         #
         password = await messenger.get_encrypt_key(msg=msg)
         if password is None:
-            # assert False, 'failed to get msg key: %s => %s, %s' % (msg.sender, receiver, msg.get('group'))
+            # assert False, f'failed to get msg key: {msg.sender} => {receiver}, {msg.get("group")}'
             return None
 
         #
@@ -105,7 +105,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
             members = await facebook.get_members(identifier=receiver)
             if members is None:
                 return None
-            assert len(members) > 0, 'group not ready: %s' % receiver
+            assert len(members) > 0, f'group not ready: {receiver}'
             # a station will never send group message, so here must be a client;
             # the client messenger should check the group's meta & members before encrypting,
             # so we can trust that the group members MUST exist here.
@@ -116,7 +116,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         if s_msg is None:
             # public key for encryption not found
             # TODO: suspend this message for waiting receiver's meta
-            # assert False, 'failed to encrypt message: %s' % msg
+            # assert False, f'failed to encrypt message: {msg}'
             return None
 
         # NOTICE: copy content type to envelope
@@ -128,7 +128,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
 
     # Override
     async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
-        assert len(msg.data) > 0, 'message data cannot be empty: %s' % msg
+        assert len(msg.data) > 0, f'message data cannot be empty: {msg}'
         # sign 'data' by sender
         return await self.secure_packer.sign_message(msg=msg)
 
@@ -149,7 +149,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
 
     # Override
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
-        assert not msg.signature.is_empty, 'message signature cannot be empty: %s' % msg
+        assert not msg.signature.is_empty, f'message signature cannot be empty: {msg}'
         # verify 'data' with 'signature'
         return await self.reliable_packer.verify_message(msg=msg)
 
@@ -162,10 +162,10 @@ class MessagePacker(TwinsHelper, Packer, ABC):
         user = await self.select_local_user(receiver=receiver)
         if user is None:
             # not for you?
-            raise LookupError('receiver error: %s, from %s, %s' % (receiver, msg.sender, msg.group))
+            raise LookupError(f'receiver error: {receiver}, from {msg.sender}, {msg.group}')
         else:
             me = user.identifier
-        assert not msg.data.is_empty, 'message data empty: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
+        assert not msg.data.is_empty, f'message data empty: {msg.sender} => {msg.receiver}, {msg.group}'
         # decrypt 'data' to 'content'
         return await self.secure_packer.decrypt_message(msg=msg, receiver=me)
         # TODO: check top-secret message

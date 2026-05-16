@@ -95,7 +95,7 @@ class BaseCommandProcessor(BaseContentProcessor):
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        assert isinstance(content, Command), 'command error: %s' % content
+        assert isinstance(content, Command), f'command error: {content}'
         text = 'Command not support.'
         return self._respond_receipt(text=text, envelope=r_msg.envelope, content=content, extra={
             'template': 'Command (name: ${command}) not support yet!',

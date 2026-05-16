@@ -41,6 +41,6 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'dimp>=2.4.0',
+        'dimp>=2.4.1',
     ]
 )

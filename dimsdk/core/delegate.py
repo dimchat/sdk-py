@@ -103,20 +103,20 @@ class CipherKeyDelegate(ABC):
         if group is None:
             # A : personal message (or hidden group message)
             # C : broadcast message for anyone
-            assert receiver.is_user, 'receiver error: %s' % receiver
+            assert receiver.is_user, f'receiver error: {receiver}'
             return receiver
-        assert group.is_group, 'group error: %s, receiver: %s' % (group, receiver)
+        assert group.is_group, f'group error: {group}, receiver: {receiver}'
         if group.is_broadcast:
             # E : unencrypted message for someone
             #     return group as broadcast ID for disable encryption
             # F : broadcast message for anyone
             # G : (receiver == group) broadcast group message
-            assert receiver.is_user or receiver == group, 'receiver error: %s' % receiver
+            assert receiver.is_user or receiver == group, f'receiver error: {receiver}'
             return group
         elif receiver.is_broadcast:
             # K : unencrypted group message, usually group command
             #     return receiver as broadcast ID for disable encryption
-            assert receiver.is_user, 'receiver error: %s, group: %s' % (receiver, group)
+            assert receiver.is_user, f'receiver error: {receiver}, group: {group}'
             return receiver
         else:
             # H    : group message split for someone

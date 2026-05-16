@@ -129,8 +129,8 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[EncryptedBundle]:
-        assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key: %s' % msg
-        assert receiver.is_user, 'receiver error: %s' % receiver
+        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
+        assert receiver.is_user, f'receiver error: {receiver}'
         # TODO: make sure the receiver's public key exists
         facebook = self.facebook
         contact = await facebook.get_user(identifier=receiver)
@@ -138,11 +138,11 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
             # encrypt with public key of the receiver (or group member)
             return await contact.encrypt_bundle(plaintext=data)
         else:
-            assert False, 'failed to encrypt message key for receiver: %s' % receiver
+            assert False, f'failed to encrypt message key for receiver: {receiver}'
 
     # Override
     async def encode_key(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
-        assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key: %s' % msg
+        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         # message key had been encrypted by a public key,
         # so the data should be encode here (with algorithm 'base64' as default).
         return bundle.encode(identifier=receiver)
@@ -154,8 +154,8 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def decode_key(self, keys: Dict, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
-        assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key: %s' % msg
-        assert receiver.is_user, 'receiver error: %s' % receiver
+        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
+        assert receiver.is_user, f'receiver error: {receiver}'
         facebook = self.facebook
         user = await facebook.get_user(identifier=receiver)
         if user is not None:
@@ -163,27 +163,27 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
             terminals = await user.terminals
             return EncryptedBundle.decode(keys=keys, identifier=receiver, terminals=terminals)
         else:
-            assert False, 'failed to decode key: %s => %s, %s' % (msg.sender, receiver, msg.group)
+            assert False, f'failed to decode key: {msg.sender} => {receiver}, {msg.group}'
 
     # Override
     async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
         # NOTICE: the receiver must be a member ID
         #         if it's a group message
         assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key'
-        assert receiver.is_user, 'receiver error: %s' % receiver
+        assert receiver.is_user, f'receiver error: {receiver}'
         facebook = self.facebook
         user = await facebook.get_user(identifier=receiver)
         if user is not None:
             # decrypt with private key of the receiver (or group member)
             return await user.decrypt_bundle(bundle=bundle)
         else:
-            assert False, 'failed to create local user: %s' % msg.receiver
+            assert False, f'failed to create local user: {msg.receiver}'
 
     # Override
     async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
-        assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key: %s' % msg
+        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         if data is None:
-            # assert False, 'reused key? get it from cache: %s => %s, %s' % (msg.sender, msg.receiver, msg.group)
+            # assert False, f'reused key? get it from cache: {msg.sender} => {msg.receiver}, {msg.group}'
             return None
         compressor = self.compressor
         info = compressor.extract_symmetric_key(data=data)
@@ -197,7 +197,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     #         if isinstance(data, str):
     #             return utf8_encode(string=data)
     #         else:
-    #             # assert False, 'content data error: %s' % data
+    #             # assert False, f'content data error: {data}'
     #             return None
     #     else:
     #         # message content had been encrypted by a symmetric key,
@@ -212,7 +212,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
-        # assert len(msg.data) > 0, 'message data empty: %s' % msg.to_dict()
+        # assert len(msg.data) > 0, f'message data empty: {msg.to_dict()}'
         key_info = key.to_dict()
         compressor = self.compressor
         info = compressor.extract_content(data=data, key=key_info)
@@ -229,7 +229,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         if user is not None:
             return await user.sign(data=data)
         else:
-            assert False, 'failed to sign message data for sender: %s' % sender
+            assert False, f'failed to sign message data for sender: {sender}'
 
     # # Override
     # async def encode_signature(self, signature: bytes, msg: SecureMessage) -> str:
@@ -251,4 +251,4 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         if contact is not None:
             return await contact.verify(data=data, signature=signature)
         else:
-            assert False, 'failed to verify signature for sender: %s' % sender
+            assert False, f'failed to verify signature for sender: {sender}'

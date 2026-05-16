@@ -85,7 +85,7 @@ class DefaultVisaAgent(VisaAgent):
             if terminal is None or len(terminal) == 0:
                 terminal = '*'
             if bundle.get(terminal) is not None:
-                # assert False, 'duplicated visa key: %s' % doc
+                # assert False, f'duplicated visa key: {doc}'
                 continue
             ciphertext = pub_key.encrypt(plaintext=plaintext)
             bundle[terminal] = ciphertext
@@ -111,7 +111,7 @@ class DefaultVisaAgent(VisaAgent):
             if pub_key is not None:
                 verify_keys.append(pub_key)
             # else:
-            #     assert False, 'failed to get visa key: %s' % doc
+            #     assert False, f'failed to get visa key: {doc}'
         # the sender may use identity key to sign message.data,
         # try to verify it with meta.key too.
         verify_keys.append(meta.public_key)
@@ -124,7 +124,7 @@ class DefaultVisaAgent(VisaAgent):
             visa_key = document.public_key
             if isinstance(visa_key, VerifyKey):
                 return visa_key
-            # assert False, 'visa key error: %s, %s' % (visa_key, document)
+            # assert False, f'visa key error: {visa_key}, {document}'
             return None
         # public key in user profile?
         key = document.get_property(name='key')
@@ -136,7 +136,7 @@ class DefaultVisaAgent(VisaAgent):
             visa_key = document.public_key
             if visa_key is not None:
                 return visa_key
-            # assert False, 'failed to get visa key: %s' % document
+            # assert False, f'failed to get visa key: {document}'
             return None
         key = document.get_property(name='key')
         pub_key = PublicKey.parse(key=key)
@@ -146,7 +146,7 @@ class DefaultVisaAgent(VisaAgent):
         elif isinstance(pub_key, EncryptKey):
             return pub_key
         # else:
-        #     assert False, 'visa key error: %s' % pub_key
+        #     assert False, f'visa key error: {pub_key}'
 
     # protected
     def get_terminal(self, document: Document) -> Optional[str]:
@@ -159,7 +159,7 @@ class DefaultVisaAgent(VisaAgent):
             if did is not None:
                 return did.terminal
             # else:
-            #     assert False, 'document ID not found: %s' % document
+            #     assert False, f'document ID not found: {document}'
             #     # TODO: get from property?
         return terminal
 

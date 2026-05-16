@@ -180,8 +180,8 @@ class UserEncryptedBundle(EncryptedBundle):
         info = self.__dictionary
         for key in info:
             value = info.get(key)
-            text += '\t"%s": %d byte(s)\n' % (key, len(value))
-        return '<%s count=%d>\n%s</%s>' % (clazz, len(info), text, clazz)
+            text += f'\t"{key}": {len(value)} byte(s)\n'
+        return f'<{clazz} count={len(info)}>\n{text}</{clazz}>'
 
     # Override
     def to_dict(self) -> Dict[str, bytes]:
@@ -302,7 +302,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
             if terminal == '' or terminal == '*':
                 target = text
             else:
-                target = '%s/%s' % (text, terminal)
+                target = f'{text}/{terminal}'
             # insert to 'message.keys' with ID + terminal
             encoded_keys[target] = base64
         # OK
@@ -328,7 +328,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
             if target == '*':
                 base64 = keys.get(text)
             else:
-                base64 = keys.get('%s/%s' % (text, target))
+                base64 = keys.get(f'{text}/{target}')
             if base64 is None:
                 # Key data not found for this terminal - skip
                 continue
@@ -344,7 +344,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
                     #
                     bundle[target] = data
                 # else:
-                #     assert False, 'key data error: %s -> %s' % (item, base64)
+                #     assert False, f'key data error: {item} -> {base64}'
         # OK
         return bundle
 
