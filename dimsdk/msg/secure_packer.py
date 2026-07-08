@@ -60,26 +60,20 @@ class SecureMessagePacker:
             | time     |  ->  | time     |
             |          |      |          |  1. PW      = decrypt(key, receiver.SK)
             | data     |      | content  |  2. content = decrypt(data, PW)
-            | key/keys |      +----------+
+            | keys     |      +----------+
             +----------+
     """
 
-    async def _decode_key(self, msg: SecureMessage, receiver: ID) -> Optional[EncryptedBundle]:
+    async def _decode_keys(self, msg: SecureMessage, receiver: ID) -> Optional[EncryptedBundle]:
         """ Decodes the encrypted key map from a SecureMessage """
         msg_keys = msg.encrypted_keys
         if msg_keys is None:
-            # get from 'key'
-            base64 = msg.get('key')
-            if base64 is None:
-                # broadcast message?
-                # reuse key?
-                return None
-            msg_keys = {
-                str(receiver): base64
-            }
+            # broadcast message?
+            # reuse key?
+            return None
         transformer = self.delegate
         assert transformer is not None, 'secure message delegate not found'
-        return await transformer.decode_key(keys=msg_keys, receiver=receiver, msg=msg)
+        return await transformer.decode_keys(keys=msg_keys, receiver=receiver, msg=msg)
 
     async def decrypt_message(self, msg: SecureMessage, receiver: ID) -> Optional[InstantMessage]:
         """
@@ -94,22 +88,22 @@ class SecureMessagePacker:
         assert transformer is not None, 'secure message delegate not found'
 
         #
-        #   1. Decode 'message.key' to encrypted symmetric key data
+        #   1. Decode 'message.keys' to encrypted symmetric key data
         #
-        bundle = await self._decode_key(msg=msg, receiver=receiver)
+        bundle = await self._decode_keys(msg=msg, receiver=receiver)
         if bundle is None or bundle.is_empty:
             # broadcast message?
             # reuse key?
             key_data = None
         else:
             #
-            #   2. Decrypt 'message.key' with receiver's private key
+            #   2. Decrypt 'message.keys' with receiver's private key
             #
             key_data = await transformer.decrypt_key(bundle=bundle, receiver=receiver, msg=msg)
             if key_data is None or len(key_data) == 0:
                 # A: my visa updated but the sender doesn't got the new one;
                 # B: key data error.
-                raise ValueError(f'failed to decrypt message key: {bundle} {msg.sender} => {receiver}, {msg.group}')
+                raise ValueError(f'failed to decrypt message keys: {bundle} {msg.sender} => {receiver}, {msg.group}')
                 # TODO: check whether my visa key is changed, push new visa to this contact
 
         #
@@ -163,7 +157,6 @@ class SecureMessagePacker:
 
         # OK, pack message
         info = msg.copy_dict()
-        info.pop('key', None)
         info.pop('keys', None)
         info.pop('data', None)
         info['content'] = content.to_dict()
@@ -179,7 +172,7 @@ class SecureMessagePacker:
             | time     |  ->  | time     |
             |          |      |          |
             | data     |      | data     |
-            | key/keys |      | key/keys |
+            | keys     |      | keys     |
             +----------+      | signature|  1. signature = sign(data, sender.SK)
                               +----------+
     """

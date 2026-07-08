@@ -304,8 +304,7 @@ class BaseUser(BaseEntity, User):
         #         here you should return the private key paired with visa.key
         dictionary = bundle.to_dict()
         assert len(dictionary) > 0, f'key data empty: {bundle}'
-        for terminal in dictionary:
-            ciphertext = dictionary.get(terminal)
+        for terminal, ciphertext in dictionary.items():
             # get private keys for terminal
             decrypt_keys = await self._private_keys_for_decryption(terminal=terminal)
             if decrypt_keys is None:
@@ -326,7 +325,7 @@ class BaseUser(BaseEntity, User):
         helper = account_helper()
         info = visa.to_dict()
         did = helper.get_document_id(document=info)
-        assert did is None or did.address == uid.address, f'visa ID not match: {did}, {uid}'
+        assert did is None or did.same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # NOTICE: only sign visa with the private key paired with your meta.key
         pri_key = await self._private_key_for_visa_signature()
         if pri_key is None:
@@ -346,7 +345,7 @@ class BaseUser(BaseEntity, User):
         helper = account_helper()
         info = visa.to_dict()
         did = helper.get_document_id(document=info)
-        assert did is None or did.address == uid.address, f'visa ID not match: {did}, {uid}'
+        assert did is None or did.same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # if meta not exists, user won't be created
         meta = await self.meta
         key = meta.public_key
@@ -362,8 +361,10 @@ class BaseUser(BaseEntity, User):
         facebook = self.data_source
         assert isinstance(facebook, UserDataSource), f'user delegate error: {facebook}'
         uid = self.identifier
-        if terminal is not None and len(terminal) > 0 and terminal != '*':
-            uid = ID.create(name=uid.name, address=uid.address, terminal=terminal)
+        if terminal == '*':
+            uid = uid.without_terminal()
+        else:
+            uid = uid.with_terminal(terminal=terminal)
         return await facebook.private_keys_for_decryption(identifier=uid)
 
     # protected

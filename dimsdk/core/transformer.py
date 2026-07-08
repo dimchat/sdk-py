@@ -141,7 +141,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
             assert False, f'failed to encrypt message key for receiver: {receiver}'
 
     # Override
-    async def encode_key(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
+    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
         assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         # message key had been encrypted by a public key,
         # so the data should be encode here (with algorithm 'base64' as default).
@@ -153,7 +153,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     #
 
     # Override
-    async def decode_key(self, keys: Dict, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+    async def decode_keys(self, keys: Dict, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
         assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         assert receiver.is_user, f'receiver error: {receiver}'
         facebook = self.facebook

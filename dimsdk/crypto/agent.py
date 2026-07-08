@@ -157,7 +157,7 @@ class DefaultVisaAgent(VisaAgent):
             info = document.to_dict()
             did = helper.get_document_id(document=info)
             if did is not None:
-                return did.terminal
+                terminal = did.terminal
             # else:
             #     assert False, f'document ID not found: {document}'
             #     # TODO: get from property?

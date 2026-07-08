@@ -44,7 +44,7 @@ class Shortener(ABC):
     "F"   |   "sender"                                       |   (From)
     "G"   |   "group"        "group"                         |
     "I"   |                                 "iv"             |
-    "K"   |   "key", "keys"                                  |
+    "K"   |   "keys"                                         |
     "M"   |   "meta"                                         |
     "N"   |                  "sn"                            |   (Number)
     "P"   |   "visa"                                         |   (Profile)
@@ -140,7 +140,7 @@ class MessageShortener(Shortener):
             "T", "type",
             "G", "group",
             # ------------------
-            "K", "key",        # or "keys"
+            "K", "keys",
             "D", "data",
             "V", "signature",  # Verification
             # ------------------
@@ -228,25 +228,10 @@ class MessageShortener(Shortener):
 
     # Override
     def compress_reliable_message(self, msg: Dict) -> Dict:
-        self._move_key(from_key='keys', to_key='K', info=msg)
         self._shorten_keys(keys=self.message_short_keys, info=msg)
         return msg
 
     # Override
     def extract_reliable_message(self, msg: Dict) -> Dict:
-        keys = msg.get('K')
-        if keys is None:
-            # assert 'data' in msg, f'message data should not empty: {msg}'
-            pass
-        elif isinstance(keys, Dict):
-            assert 'keys' not in msg, f'message keys duplicated: {msg}'
-            msg.pop('K', None)
-            msg['keys'] = keys
-        elif isinstance(keys, str):
-            assert 'key' not in msg, f'message key duplicated: {msg}'
-            msg.pop('K', None)
-            msg['key'] = keys
-        else:
-            assert False, f'message key error: {msg}'
         self._restore_keys(keys=self.message_short_keys, info=msg)
         return msg

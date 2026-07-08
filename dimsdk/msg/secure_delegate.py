@@ -51,7 +51,7 @@ class SecureMessageDelegate(ABC):
             | time     |  ->  | time     |
             |          |      |          |  1. PW      = decrypt(key, receiver.SK)
             | data     |      | content  |  2. content = decrypt(data, PW)
-            | key/keys |      +----------+
+            | keys     |      +----------+
             +----------+
     """
 
@@ -60,28 +60,28 @@ class SecureMessageDelegate(ABC):
     #
 
     @abstractmethod
-    async def decode_key(self, keys: Dict, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+    async def decode_keys(self, keys: Dict, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
         """
-        1. Decode 'message.key' to encrypted symmetric key data
+        1. Decode 'message.keys' to a bundle of encrypted symmetric key data
 
-        :param keys:     encrypted key bundle with terminal-specific data
+        :param keys:     encoded key map (terminal → base64-encoded encrypted key data)
         :param receiver: actual receiver (user, or group member)
         :param msg:      secure message object
         :return: encrypted symmetric key data
         """
         raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_key()'
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_keys()'
         )
 
     @abstractmethod
     async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
         """
-        2. Decrypt 'message.key' with receiver's private key
+        2. Decrypt key data from a bundle with receiver's private key
 
         :param bundle:   encrypted key bundle with terminal-specific data
         :param receiver: actual receiver (user, or group member)
         :param msg:      secure message object
-        :return: serialized symmetric key
+        :return: serialized data of symmetric key
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.decrypt_key()'
@@ -93,7 +93,7 @@ class SecureMessageDelegate(ABC):
         3. Deserialize message key from data (JsON / ProtoBuf / ...)
            (if key data is empty, means it should be reused, get it from key cache)
 
-        :param data:     serialized key data, None for reused key
+        :param data:     serialized key data, None for reused (or broadcast message)
         :param msg:      secure message object
         :return: symmetric key
         """
@@ -156,7 +156,7 @@ class SecureMessageDelegate(ABC):
             | time     |  ->  | time     |
             |          |      |          |
             | data     |      | data     |
-            | key/keys |      | key/keys |
+            | keys     |      | keys     |
             +----------+      | signature|  1. signature = sign(data, sender.SK)
                               +----------+
     """

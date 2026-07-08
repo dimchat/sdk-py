@@ -57,7 +57,7 @@ class ReliableMessagePacker:
             | time     |  ->  | time     |
             |          |      |          |
             | data     |      | data     |  1. verify(data, signature, sender.PK)
-            | key/keys |      | key/keys |
+            | keys     |      | keys     |
             | signature|      +----------+
             +----------+
     """

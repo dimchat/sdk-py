@@ -156,7 +156,7 @@ class MessageProcessor(TwinsHelper, Processor):
         receiver = msg.receiver
         user = await self.select_local_user(receiver=receiver)
         if user is None:
-            # assert False, 'receiver error: %s' % receiver
+            # assert False, f'receiver error: {receiver}'
             return []
         else:
             me = user.identifier

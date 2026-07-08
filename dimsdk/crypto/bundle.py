@@ -178,8 +178,7 @@ class UserEncryptedBundle(EncryptedBundle):
         clazz = self.__class__.__name__
         text = ''
         info = self.__dictionary
-        for key in info:
-            value = info.get(key)
+        for key, value in info.items():
             text += f'\t"{key}": {len(value)} byte(s)\n'
         return f'<{clazz} count={len(info)}>\n{text}</{clazz}>'
 
@@ -295,8 +294,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
         text = Identifier.concat(name=identifier.name, address=identifier.address)
         encoded_keys = {}
         info = bundle.to_dict()
-        for terminal in info:
-            data = info.get(terminal)
+        for terminal, data in info.items():
             # encode data
             base64 = base64_encode(data=data)
             if terminal == '' or terminal == '*':

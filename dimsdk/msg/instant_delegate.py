@@ -51,7 +51,7 @@ class InstantMessageDelegate(ABC):
             | time     |  ->  | time     |
             |          |      |          |
             | content  |      | data     |  1. data = encrypt(content, PW)
-            +----------+      | key/keys |  2. key  = encrypt(PW, receiver.PK)
+            +----------+      | keys     |  2. key  = encrypt(PW, receiver.PK)
                               +----------+
     """
 
@@ -120,27 +120,27 @@ class InstantMessageDelegate(ABC):
     @abstractmethod
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[EncryptedBundle]:
         """
-        5. Encrypt key data to 'message.key' with receiver's public key
+        5. Encrypt key data to a bundle with receiver's public key
 
         :param data:     serialized data of symmetric key
         :param receiver: actual receiver (user, or group member)
         :param msg:      instant message object
-        :return: encoded map (ID+terminal → base64-encoded encrypted key data)
+        :return: encrypted key bundle with terminal-specific data
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_key()'
         )
 
     @abstractmethod
-    async def encode_key(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
+    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
         """
-        6. Encode 'message.key' to String (Base64)
+        6. Encode the bundle of encrypted symmetric key data to 'message.keys'
 
         :param bundle:   encrypted key bundle with terminal-specific data
         :param receiver: actual receiver (user, or group member)
         :param msg:      instant message object
-        :return: base64 string
+        :return: encoded key map (terminal → base64-encoded encrypted key data)
         """
         raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_key()'
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_keys()'
         )

@@ -81,7 +81,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
 
     # noinspection PyMethodMayBeStatic
     async def _respond_meta(self, meta: Meta, identifier: ID, receiver: ID) -> List[Content]:
-        if receiver == identifier:
+        if receiver.same_as(other=identifier):
             # assert False, f'cycled response: {identifier}'
             return []
         # TODO: check response expired
@@ -298,15 +298,12 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         # check document ID
         helper = account_helper()
         info = doc.to_dict()
-        doc_id = helper.get_document_id(document=info)
-        if doc_id is not None:
-            inside = doc_id.address
-            outside = identifier.address
-            if inside != outside:
-                # assert False, f'ID not matched: {identifier}, {doc}'
-                return False
-        else:
+        did = helper.get_document_id(document=info)
+        if did is None:
             assert False, f'document ID not found: {doc}'
+        elif not did.same_as(other=identifier):
+            # assert False, f'ID not matched: {identifier}, {doc}'
+            return False
         # NOTICE: if this is a bulletin document for group,
         #             verify it with the group owner's meta.key
         #         else (this is a visa document for user)

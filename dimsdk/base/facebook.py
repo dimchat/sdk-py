@@ -83,7 +83,7 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
             return all_users[0]
         # personal message
         for item in all_users:
-            if receiver == item:
+            if receiver.same_as(other=item):
                 # DISCUSS: set this item to be current user?
                 return item
         # not for me?
@@ -103,9 +103,10 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
             return None
         # group message (recipient not designated)
         for item in all_users:
-            if item in members:
-                # DISCUSS: set this item to be current user?
-                return item
+            for did in members:
+                if did.same_as(other=item):
+                    # DISCUSS: set this item to be current user?
+                    return item
         # not for me?
 
     #

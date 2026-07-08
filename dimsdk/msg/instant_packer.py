@@ -62,7 +62,7 @@ class InstantMessagePacker:
             | time     |  ->  | time     |
             |          |      |          |
             | content  |      | data     |  1. data = encrypt(content, PW)
-            +----------+      | key/keys |  2. key  = encrypt(PW, receiver.PK)
+            +----------+      | keys     |  2. key  = encrypt(PW, receiver.PK)
                               +----------+
     """
 
@@ -145,7 +145,7 @@ class InstantMessagePacker:
         bundle_map: Dict[ID, EncryptedBundle] = {}
         for receiver in members:
             #
-            #   5. Encrypt key data to 'message.key/keys' with receiver's public key
+            #   5. Encrypt key data to 'message.keys' with receiver's public key
             #
             bundle = await transformer.encrypt_key(pwd, receiver=receiver, msg=msg)
             if bundle is None or bundle.is_empty:
@@ -174,9 +174,8 @@ class InstantMessagePacker:
         transformer = self.delegate
         assert transformer is not None, 'instant message delegate not found'
         msg_keys: Dict[str, Any] = {}
-        for receiver in bundle_map:
-            bundle = bundle_map.get(receiver)
-            encoded_keys = await transformer.encode_key(bundle=bundle, receiver=receiver, msg=msg)
+        for receiver, bundle in bundle_map.items():
+            encoded_keys = await transformer.encode_keys(bundle=bundle, receiver=receiver, msg=msg)
             if encoded_keys is None or len(encoded_keys) == 0:
                 # assert False, f'failed to encode key data: {receiver}'
                 continue

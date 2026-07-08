@@ -106,12 +106,13 @@ class MessageCompressor(Compressor):
     def extract_content(self, data: bytes, key: Dict) -> Optional[Dict]:
         json = utf8_decode(data=data)
         if json is None:
-            # assert False, 'content data error: %d' % len(data)
+            # assert False, f'content data error: {len(data)}'
             return None
         info = json_decode(string=json)
         if info is not None:
             info = self.shortener.extract_content(content=info)
             return info
+        assert False, f'content data error: {json}'
 
     #
     #   Compress SymmetricKey
@@ -127,12 +128,13 @@ class MessageCompressor(Compressor):
     def extract_symmetric_key(self, data: bytes) -> Optional[Dict]:
         json = utf8_decode(data=data)
         if json is None:
-            # assert False, 'symmetric key error: %d' % len(data)
+            # assert False, f'symmetric key error: {len(data)}'
             return None
         key = json_decode(string=json)
         if key is not None:
             key = self.shortener.extract_symmetric_key(key=key)
             return key
+        assert False, f'symmetric key data error: {json}'
 
     #
     #   Compress ReliableMessage
@@ -148,9 +150,10 @@ class MessageCompressor(Compressor):
     def extract_reliable_message(self, data: bytes) -> Optional[Dict]:
         json = utf8_decode(data=data)
         if json is None:
-            # assert False, 'reliable message error: %d' % len(data)
+            # assert False, f'reliable message error: {len(data)}'
             return None
         msg = json_decode(string=json)
         if msg is not None:
             msg = self.shortener.extract_reliable_message(msg=msg)
             return msg
+        assert False, f'message package error: {json}'
