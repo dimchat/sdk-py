@@ -81,7 +81,7 @@ class MetaCommandProcessor(BaseCommandProcessor):
 
     # noinspection PyMethodMayBeStatic
     async def _respond_meta(self, meta: Meta, identifier: ID, receiver: ID) -> List[Content]:
-        if receiver.same_as(other=identifier):
+        if receiver.is_same_as(other=identifier):
             # assert False, f'cycled response: {identifier}'
             return []
         # TODO: check response expired
@@ -190,7 +190,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 
     # protected
     async def _respond_documents(self, documents: List[Document], identifier: ID, receiver: ID) -> List[Content]:
-        if receiver == identifier:
+        if receiver.is_same_as(other=identifier):
             # assert False, f'cycled response: {identifier}'
             return []
         # TODO: check response expired
@@ -301,7 +301,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         did = helper.get_document_id(document=info)
         if did is None:
             assert False, f'document ID not found: {doc}'
-        elif not did.same_as(other=identifier):
+        elif not did.is_same_as(other=identifier):
             # assert False, f'ID not matched: {identifier}, {doc}'
             return False
         # NOTICE: if this is a bulletin document for group,

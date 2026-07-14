@@ -67,7 +67,7 @@ class SecureMessageDelegate(ABC):
         :param keys:     encoded key map (terminal → base64-encoded encrypted key data)
         :param receiver: actual receiver (user, or group member)
         :param msg:      secure message object
-        :return: encrypted symmetric key data
+        :return: encrypted key bundle with terminal-specific data
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_keys()'

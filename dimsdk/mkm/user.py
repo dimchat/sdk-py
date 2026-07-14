@@ -325,7 +325,7 @@ class BaseUser(BaseEntity, User):
         helper = account_helper()
         info = visa.to_dict()
         did = helper.get_document_id(document=info)
-        assert did is None or did.same_as(other=uid), f'visa ID not match: {did}, {uid}'
+        assert did is None or did.is_same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # NOTICE: only sign visa with the private key paired with your meta.key
         pri_key = await self._private_key_for_visa_signature()
         if pri_key is None:
@@ -345,7 +345,7 @@ class BaseUser(BaseEntity, User):
         helper = account_helper()
         info = visa.to_dict()
         did = helper.get_document_id(document=info)
-        assert did is None or did.same_as(other=uid), f'visa ID not match: {did}, {uid}'
+        assert did is None or did.is_same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # if meta not exists, user won't be created
         meta = await self.meta
         key = meta.public_key
