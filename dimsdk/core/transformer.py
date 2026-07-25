@@ -29,6 +29,7 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from typing import Optional, Any, Dict
 
 from dimp import SymmetricKey
@@ -153,7 +154,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     #
 
     # Override
-    async def decode_keys(self, keys: Dict, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+    async def decode_keys(self, keys: Mapping, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
         assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         assert receiver.is_user, f'receiver error: {receiver}'
         facebook = self.facebook

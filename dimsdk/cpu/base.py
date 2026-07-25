@@ -34,7 +34,8 @@
 
 """
 
-from typing import Optional, List, Dict
+from collections.abc import Mapping
+from typing import Optional, List
 
 from dimp import ReliableMessage
 from dimp import Envelope
@@ -65,14 +66,14 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     #
 
     def _respond_receipt(self, text: str, envelope: Envelope, content: Optional[Content],
-                         extra: Optional[Dict] = None) -> List[ReceiptCommand]:
+                         extra: Optional[Mapping] = None) -> List[ReceiptCommand]:
         return [
             self.create_receipt(text=text, envelope=envelope, content=content, extra=extra)
         ]
 
     @classmethod
     def create_receipt(cls, text: str, envelope: Envelope, content: Optional[Content],
-                       extra: Optional[Dict]) -> ReceiptCommand:
+                       extra: Optional[Mapping]) -> ReceiptCommand:
         """
         Receipt command with text, original envelope, serial number & group
 

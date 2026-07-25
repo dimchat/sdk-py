@@ -29,7 +29,7 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from typing import Optional, Any, Dict
 from typing import Iterator, Iterable, ItemsView, KeysView, ValuesView
 
@@ -163,7 +163,7 @@ class EncryptedBundle(ABC):
         )
 
     @classmethod
-    def decode(cls, keys: Dict, identifier: ID, terminals: Iterable[str]):  # -> EncryptedBundle:
+    def decode(cls, keys: Mapping, identifier: ID, terminals: Iterable[str]):  # -> EncryptedBundle:
         helper = bundle_helper()
         return helper.decode_bundle(keys=keys, identifier=identifier, terminals=terminals)
 
@@ -281,7 +281,7 @@ class EncryptedBundleHelper(ABC):
         )
 
     @abstractmethod
-    def decode_bundle(self, keys: Dict, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
+    def decode_bundle(self, keys: Mapping, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
         """ Decode key bundle """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_bundle()'
@@ -308,7 +308,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
         return encoded_keys
 
     # Override
-    def decode_bundle(self, keys: Dict, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
+    def decode_bundle(self, keys: Mapping, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
         bundle = UserEncryptedBundle()
         #
         #  0. ID string without terminal (base identifier)
