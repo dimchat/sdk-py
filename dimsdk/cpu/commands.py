@@ -297,7 +297,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
             return False
         # check document ID
         helper = account_helper()
-        info = doc.to_dict()
+        info = doc.to_map()
         did = helper.get_document_id(document=info)
         if did is None:
             assert False, f'document ID not found: {doc}'

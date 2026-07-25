@@ -302,7 +302,7 @@ class BaseUser(BaseEntity, User):
     async def decrypt_bundle(self, bundle: EncryptedBundle) -> Optional[bytes]:
         # NOTICE: if you provide a public key in visa document for encryption,
         #         here you should return the private key paired with visa.key
-        dictionary = bundle.to_dict()
+        dictionary = bundle.to_map()
         assert len(dictionary) > 0, f'key data empty: {bundle}'
         for terminal, ciphertext in dictionary.items():
             # get private keys for terminal
@@ -323,7 +323,7 @@ class BaseUser(BaseEntity, User):
     async def sign_visa(self, visa: Visa) -> Optional[Visa]:
         uid = self.identifier
         helper = account_helper()
-        info = visa.to_dict()
+        info = visa.to_map()
         did = helper.get_document_id(document=info)
         assert did is None or did.is_same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # NOTICE: only sign visa with the private key paired with your meta.key
@@ -343,7 +343,7 @@ class BaseUser(BaseEntity, User):
         #         (if meta not exists, user won't be created)
         uid = self.identifier
         helper = account_helper()
-        info = visa.to_dict()
+        info = visa.to_map()
         did = helper.get_document_id(document=info)
         assert did is None or did.is_same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # if meta not exists, user won't be created

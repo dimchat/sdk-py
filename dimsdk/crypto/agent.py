@@ -154,7 +154,7 @@ class DefaultVisaAgent(VisaAgent):
         if terminal is None:
             # get from document ID
             helper = account_helper()
-            info = document.to_dict()
+            info = document.to_map()
             did = helper.get_document_id(document=info)
             if did is not None:
                 terminal = did.terminal

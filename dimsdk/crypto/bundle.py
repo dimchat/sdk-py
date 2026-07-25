@@ -29,21 +29,22 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
+from collections.abc import MutableMapping
 from typing import Optional, Any, Dict
 from typing import Iterator, Iterable, ItemsView, KeysView, ValuesView
 
 from dimp import base64_encode
 from dimp import TransportableData
-from dimp import ID, Identifier
+from dimp import ID
 from dimp import shared_account_extensions
 
 
 class EncryptedBundle(ABC):
 
     @abstractmethod
-    def to_dict(self) -> Dict[str, bytes]:
+    def to_map(self) -> MutableMapping[str, bytes]:
         raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.to_dict()'
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.to_map()'
         )
 
     @property
@@ -183,7 +184,7 @@ class UserEncryptedBundle(EncryptedBundle):
         return f'<{clazz} count={len(info)}>\n{text}</{clazz}>'
 
     # Override
-    def to_dict(self) -> Dict[str, bytes]:
+    def to_map(self) -> MutableMapping[str, bytes]:
         return self.__dictionary
 
     @property  # Override
@@ -291,9 +292,9 @@ class DefaultBundleHelper(EncryptedBundleHelper):
 
     # Override
     def encode_bundle(self, bundle: EncryptedBundle, identifier: ID) -> Dict[str, Any]:
-        text = Identifier.concat(name=identifier.name, address=identifier.address)
+        text = str(identifier.without_terminal())
         encoded_keys = {}
-        info = bundle.to_dict()
+        info = bundle.to_map()
         for terminal, data in info.items():
             # encode data
             base64 = base64_encode(data=data)
@@ -312,7 +313,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
         #
         #  0. ID string without terminal (base identifier)
         #
-        text = Identifier.concat(name=identifier.name, address=identifier.address)
+        text = str(identifier.without_terminal())
         for item in terminals:
             if item == '':
                 target = '*'

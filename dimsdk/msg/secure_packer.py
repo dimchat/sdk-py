@@ -156,10 +156,10 @@ class SecureMessagePacker:
         #
 
         # OK, pack message
-        info = msg.copy_dict()
+        info = msg.copy_map()
         info.pop('keys', None)
         info.pop('data', None)
-        info['content'] = content.to_dict()
+        info['content'] = content.to_map()
         return InstantMessage.parse(msg=info)
 
     """
@@ -213,6 +213,6 @@ class SecureMessagePacker:
                                     f' {msg.sender} => {msg.receiver}, {msg.group}'
 
         # OK, pack message
-        info = msg.copy_dict()
+        info = msg.copy_map()
         info['signature'] = base64.serialize()
         return ReliableMessage.parse(msg=info)

@@ -135,7 +135,7 @@ class MessagePacker(TwinsHelper, Packer, ABC):
     # # Override
     # async def serialize_message(self, msg: ReliableMessage) -> bytes:
     #     compressor = self.compressor
-    #     return compressor.compress_reliable_message(msg=msg.to_dict())
+    #     return compressor.compress_reliable_message(msg=msg.to_map())
 
     #
     #   Data -> ReliableMessage -> SecureMessage -> InstantMessage

@@ -100,6 +100,6 @@ class ReliableMessagePacker:
             return None
 
         # OK, pack message
-        info = msg.copy_dict()
+        info = msg.copy_map()
         info.pop('signature', None)
         return SecureMessage.parse(msg=info)

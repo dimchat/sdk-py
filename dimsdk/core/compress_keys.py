@@ -29,7 +29,8 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from collections.abc import MutableMapping
+from typing import List
 
 
 class Shortener(ABC):
@@ -64,14 +65,14 @@ class Shortener(ABC):
     #
 
     @abstractmethod
-    def compress_content(self, content: Dict) -> Dict:
+    def compress_content(self, content: MutableMapping) -> MutableMapping:
         """ Shorten keys for content info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
         )
 
     @abstractmethod
-    def extract_content(self, content: Dict) -> Dict:
+    def extract_content(self, content: MutableMapping) -> MutableMapping:
         """ Restore keys for content info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
@@ -82,14 +83,14 @@ class Shortener(ABC):
     #
 
     @abstractmethod
-    def compress_symmetric_key(self, key: Dict) -> Dict:
+    def compress_symmetric_key(self, key: MutableMapping) -> MutableMapping:
         """ Shorten keys for password info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
         )
 
     @abstractmethod
-    def extract_symmetric_key(self, key: Dict) -> Dict:
+    def extract_symmetric_key(self, key: MutableMapping) -> MutableMapping:
         """ Restore keys for password info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
@@ -100,14 +101,14 @@ class Shortener(ABC):
     #
 
     @abstractmethod
-    def compress_reliable_message(self, msg: Dict) -> Dict:
+    def compress_reliable_message(self, msg: MutableMapping) -> MutableMapping:
         """ Shorten keys for message info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
         )
 
     @abstractmethod
-    def extract_reliable_message(self, msg: Dict) -> Dict:
+    def extract_reliable_message(self, msg: MutableMapping) -> MutableMapping:
         """ Restore keys for message info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
@@ -149,21 +150,21 @@ class MessageShortener(Shortener):
         ]
 
     # noinspection PyMethodMayBeStatic
-    def _move_key(self, from_key: str, to_key: str, info: Dict):
+    def _move_key(self, from_key: str, to_key: str, info: MutableMapping):
         value = info.get(from_key)
         if value is not None:
             assert to_key not in info, f'keys conflicted: "{from_key}" -> "{to_key}", {info}'
             info.pop(from_key, None)
             info[to_key] = value
 
-    def _shorten_keys(self, keys: List[str], info: Dict):
+    def _shorten_keys(self, keys: List[str], info: MutableMapping):
         size = len(keys)
         i = 1
         while i < size:
             self._move_key(from_key=keys[i], to_key=keys[i - 1], info=info)
             i += 2
 
-    def _restore_keys(self, keys: List[str], info: Dict):
+    def _restore_keys(self, keys: List[str], info: MutableMapping):
         size = len(keys)
         i = 1
         while i < size:
@@ -183,12 +184,12 @@ class MessageShortener(Shortener):
         self.__content_short_keys = keys
 
     # Override
-    def compress_content(self, content: Dict) -> Dict:
+    def compress_content(self, content: MutableMapping) -> MutableMapping:
         self._shorten_keys(keys=self.content_short_keys, info=content)
         return content
 
     # Override
-    def extract_content(self, content: Dict) -> Dict:
+    def extract_content(self, content: MutableMapping) -> MutableMapping:
         self._restore_keys(keys=self.content_short_keys, info=content)
         return content
 
@@ -205,12 +206,12 @@ class MessageShortener(Shortener):
         self.__crypto_short_keys = keys
 
     # Override
-    def compress_symmetric_key(self, key: Dict) -> Dict:
+    def compress_symmetric_key(self, key: MutableMapping) -> MutableMapping:
         self._shorten_keys(keys=self.crypto_short_keys, info=key)
         return key
 
     # Override
-    def extract_symmetric_key(self, key: Dict) -> Dict:
+    def extract_symmetric_key(self, key: MutableMapping) -> MutableMapping:
         self._restore_keys(keys=self.crypto_short_keys, info=key)
         return key
 
@@ -227,11 +228,11 @@ class MessageShortener(Shortener):
         self.__message_short_keys = keys
 
     # Override
-    def compress_reliable_message(self, msg: Dict) -> Dict:
+    def compress_reliable_message(self, msg: MutableMapping) -> MutableMapping:
         self._shorten_keys(keys=self.message_short_keys, info=msg)
         return msg
 
     # Override
-    def extract_reliable_message(self, msg: Dict) -> Dict:
+    def extract_reliable_message(self, msg: MutableMapping) -> MutableMapping:
         self._restore_keys(keys=self.message_short_keys, info=msg)
         return msg

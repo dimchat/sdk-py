@@ -117,7 +117,7 @@ class InstantMessagePacker:
         pwd = await transformer.serialize_key(key=password, msg=msg)
         # NOTICE:
         #    if the key is reused, the msg must be updated with key digest.
-        info = msg.copy_dict()
+        info = msg.copy_map()
 
         # replace 'content' with encrypted 'data
         info.pop('content', None)
