@@ -29,12 +29,69 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import MutableMapping
-from typing import List
+from collections.abc import Mapping
+from typing import List, Tuple, Dict
 
 
 class Shortener(ABC):
-    """ Short Keys
+    """ Interface for bidirectional short key mapping (long string keys ↔ single-char keys). """
+
+    #
+    #   Compress Content
+    #
+
+    @abstractmethod
+    def compress_content(self, content: Mapping) -> Mapping:
+        """ Shorten keys for content info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
+        )
+
+    @abstractmethod
+    def extract_content(self, content: Mapping) -> Mapping:
+        """ Restore keys for content info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
+        )
+
+    #
+    #   Compress SymmetricKey
+    #
+
+    @abstractmethod
+    def compress_symmetric_key(self, key: Mapping) -> Mapping:
+        """ Shorten keys for password info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
+        )
+
+    @abstractmethod
+    def extract_symmetric_key(self, key: Mapping) -> Mapping:
+        """ Restore keys for password info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
+        )
+
+    #
+    #   Compress ReliableMessage
+    #
+
+    @abstractmethod
+    def compress_reliable_message(self, msg: Mapping) -> Mapping:
+        """ Shorten keys for message info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
+        )
+
+    @abstractmethod
+    def extract_reliable_message(self, msg: Mapping) -> Mapping:
+        """ Restore keys for message info """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
+        )
+
+
+""" Short Keys
 
     ======+==================================================+==================
           |   Message        Content        Symmetric Key    |    Description
@@ -55,184 +112,155 @@ class Shortener(ABC):
     "V"   |   "signature"                                    |   (Verification)
     "W"   |   "time"         "time"                          |   (When)
     ======+==================================================+==================
-
+    
     Note:
         "S" - deprecated (ambiguous for "sender" and "signature")
-    """
+"""
 
-    #
-    #   Compress Content
-    #
 
-    @abstractmethod
-    def compress_content(self, content: MutableMapping) -> MutableMapping:
-        """ Shorten keys for content info """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
-        )
+_message_key_pairs = [
+    "F", "sender",      # From
+    "R", "receiver",    # Rcpt to
+    "W", "time",        # When
+    "T", "type",
+    "G", "group",
+    # ------------------
+    "K", "keys",
+    "D", "data",
+    "V", "signature",   # Verification
+    # ------------------
+    "M", "meta",
+    "P", "visa",        # Profile
+]
 
-    @abstractmethod
-    def extract_content(self, content: MutableMapping) -> MutableMapping:
-        """ Restore keys for content info """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
-        )
+_content_key_pairs = [
+    "T", "type",
+    "N", "sn",
+    "W", "time",        # When
+    "G", "group",
+    "C", "command",     # Command name
+]
 
-    #
-    #   Compress SymmetricKey
-    #
-
-    @abstractmethod
-    def compress_symmetric_key(self, key: MutableMapping) -> MutableMapping:
-        """ Shorten keys for password info """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
-        )
-
-    @abstractmethod
-    def extract_symmetric_key(self, key: MutableMapping) -> MutableMapping:
-        """ Restore keys for password info """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
-        )
-
-    #
-    #   Compress ReliableMessage
-    #
-
-    @abstractmethod
-    def compress_reliable_message(self, msg: MutableMapping) -> MutableMapping:
-        """ Shorten keys for message info """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
-        )
-
-    @abstractmethod
-    def extract_reliable_message(self, msg: MutableMapping) -> MutableMapping:
-        """ Restore keys for message info """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
-        )
+_crypto_key_pairs = [
+    "A", "algorithm",
+    "D", "data",
+    "I", "iv",          # Initial Vector
+]
 
 
 class MessageShortener(Shortener):
 
     def __init__(self):
         super().__init__()
-        # Compress Content
-        self.__content_short_keys = [
-            "T", "type",
-            "N", "sn",
-            "W", "time",       # When
-            "G", "group",
-            "C", "command",    # Command name
-        ]
-        # Compress SymmetricKey
-        self.__crypto_short_keys = [
-            "A", "algorithm",
-            "D", "data",
-            "I", "iv",         # Initial Vector
-        ]
-        # Compress ReliableMessage
-        self.__message_short_keys = [
-            "F", "sender",     # From
-            "R", "receiver",   # Rcpt to
-            "W", "time",       # When
-            "T", "type",
-            "G", "group",
-            # ------------------
-            "K", "keys",
-            "D", "data",
-            "V", "signature",  # Verification
-            # ------------------
-            "M", "meta",
-            "P", "visa",       # Profile
-        ]
+        # build for content
+        c2l, c2s = self._build_content_key_maps()
+        self.__content_short_to_long = c2l
+        self.__content_long_to_short = c2s
+        # build for symmetric key
+        k2l, k2s = self._build_crypto_key_maps()
+        self.__crypto_short_to_long = k2l
+        self.__crypto_long_to_short = k2s
+        # build for message
+        m2l, m2s = self._build_message_key_maps()
+        self.__message_short_to_long = m2l
+        self.__message_long_to_short = m2s
 
     # noinspection PyMethodMayBeStatic
-    def _move_key(self, from_key: str, to_key: str, info: MutableMapping):
-        value = info.get(from_key)
-        if value is not None:
-            assert to_key not in info, f'keys conflicted: "{from_key}" -> "{to_key}", {info}'
-            info.pop(from_key, None)
-            info[to_key] = value
+    def _build_content_key_maps(self) -> Tuple[Dict[str, str], Dict[str, str]]:
+        return _build(keys=_content_key_pairs)
 
-    def _shorten_keys(self, keys: List[str], info: MutableMapping):
-        size = len(keys)
-        i = 1
-        while i < size:
-            self._move_key(from_key=keys[i], to_key=keys[i - 1], info=info)
-            i += 2
+    # noinspection PyMethodMayBeStatic
+    def _build_crypto_key_maps(self) -> Tuple[Dict[str, str], Dict[str, str]]:
+        return _build(keys=_crypto_key_pairs)
 
-    def _restore_keys(self, keys: List[str], info: MutableMapping):
-        size = len(keys)
-        i = 1
-        while i < size:
-            self._move_key(from_key=keys[i - 1], to_key=keys[i], info=info)
-            i += 2
+    # noinspection PyMethodMayBeStatic
+    def _build_message_key_maps(self) -> Tuple[Dict[str, str], Dict[str, str]]:
+        return _build(keys=_message_key_pairs)
 
     #
     #   Compress Content
     #
 
     @property
-    def content_short_keys(self) -> List[str]:
-        return self.__content_short_keys
+    def content_short_to_long(self) -> Dict[str, str]:
+        return self.__content_short_to_long
 
-    @content_short_keys.setter
-    def content_short_keys(self, keys: List[str]):
-        self.__content_short_keys = keys
-
-    # Override
-    def compress_content(self, content: MutableMapping) -> MutableMapping:
-        self._shorten_keys(keys=self.content_short_keys, info=content)
-        return content
+    @property
+    def content_long_to_short(self) -> Dict[str, str]:
+        return self.__content_long_to_short
 
     # Override
-    def extract_content(self, content: MutableMapping) -> MutableMapping:
-        self._restore_keys(keys=self.content_short_keys, info=content)
-        return content
+    def compress_content(self, content: Mapping) -> Mapping:
+        return _trans(content, dictionary=self.content_long_to_short)
+
+    # Override
+    def extract_content(self, content: Mapping) -> Mapping:
+        return _trans(content, dictionary=self.content_short_to_long)
 
     #
     #   Compress SymmetricKey
     #
 
     @property
-    def crypto_short_keys(self) -> List[str]:
-        return self.__crypto_short_keys
+    def crypto_short_to_long(self) -> Dict[str, str]:
+        return self.__crypto_short_to_long
 
-    @crypto_short_keys.setter
-    def crypto_short_keys(self, keys: List[str]):
-        self.__crypto_short_keys = keys
-
-    # Override
-    def compress_symmetric_key(self, key: MutableMapping) -> MutableMapping:
-        self._shorten_keys(keys=self.crypto_short_keys, info=key)
-        return key
+    @property
+    def crypto_long_to_short(self) -> Dict[str, str]:
+        return self.__crypto_long_to_short
 
     # Override
-    def extract_symmetric_key(self, key: MutableMapping) -> MutableMapping:
-        self._restore_keys(keys=self.crypto_short_keys, info=key)
-        return key
+    def compress_symmetric_key(self, key: Mapping) -> Mapping:
+        return _trans(key, dictionary=self.crypto_long_to_short)
+
+    # Override
+    def extract_symmetric_key(self, key: Mapping) -> Mapping:
+        return _trans(key, dictionary=self.crypto_short_to_long)
 
     #
     #   Compress ReliableMessage
     #
 
     @property
-    def message_short_keys(self) -> List[str]:
-        return self.__message_short_keys
+    def message_short_to_long(self) -> Dict[str, str]:
+        return self.__message_short_to_long
 
-    @message_short_keys.setter
-    def message_short_keys(self, keys: List[str]):
-        self.__message_short_keys = keys
-
-    # Override
-    def compress_reliable_message(self, msg: MutableMapping) -> MutableMapping:
-        self._shorten_keys(keys=self.message_short_keys, info=msg)
-        return msg
+    @property
+    def message_long_to_short(self) -> Dict[str, str]:
+        return self.__message_long_to_short
 
     # Override
-    def extract_reliable_message(self, msg: MutableMapping) -> MutableMapping:
-        self._restore_keys(keys=self.message_short_keys, info=msg)
-        return msg
+    def compress_reliable_message(self, msg: Mapping) -> Mapping:
+        return _trans(msg, dictionary=self.message_long_to_short)
+
+    # Override
+    def extract_reliable_message(self, msg: Mapping) -> Mapping:
+        return _trans(msg, dictionary=self.message_short_to_long)
+
+
+def _build(keys: List[str]) -> Tuple[Dict[str, str], Dict[str, str]]:
+    """ Build key table """
+    short_to_long = {}
+    long_to_short = {}
+    size = len(keys)
+    i = 1
+    while i < size:
+        k1 = keys[i - 1]
+        k2 = keys[i]
+        assert len(k1) < len(k2), f'key pair error: {k1}, {k2}'
+        short_to_long[k1] = k2
+        long_to_short[k2] = k1
+        i += 2
+    return short_to_long, long_to_short
+
+
+def _trans(info: Mapping, dictionary: Dict[str, str]) -> Mapping:
+    """ Translate """
+    result = {}
+    for key, value in info.items():
+        name = dictionary.get(key)
+        if name is None:
+            name = key
+        result[name] = value
+    # OK
+    return result
