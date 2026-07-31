@@ -29,7 +29,6 @@
 # ==============================================================================
 
 import weakref
-from abc import abstractmethod
 from typing import Optional
 
 from dimp import SecureMessage, ReliableMessage
@@ -62,7 +61,6 @@ class ReliableMessagePacker:
             +----------+
     """
 
-    @abstractmethod
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         """
         Verify 'data' and 'signature' field with sender's public key

@@ -29,9 +29,9 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
-from typing import Optional, Any, Dict
+from typing import Optional
 
+from dimp import StrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
@@ -142,7 +142,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
             assert False, f'failed to encrypt message key for receiver: {receiver}'
 
     # Override
-    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
+    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> StrMap:
         assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         # message key had been encrypted by a public key,
         # so the data should be encode here (with algorithm 'base64' as default).
@@ -154,7 +154,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     #
 
     # Override
-    async def decode_keys(self, keys: Mapping, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+    async def decode_keys(self, keys: StrMap, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
         assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         assert receiver.is_user, f'receiver error: {receiver}'
         facebook = self.facebook

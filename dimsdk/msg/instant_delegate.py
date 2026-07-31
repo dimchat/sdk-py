@@ -29,8 +29,9 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Dict
+from typing import Optional
 
+from dimp import StrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
@@ -132,7 +133,7 @@ class InstantMessageDelegate(ABC):
         )
 
     @abstractmethod
-    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> Dict[str, Any]:
+    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> StrMap:
         """
         6. Encode the bundle of encrypted symmetric key data to 'message.keys'
 

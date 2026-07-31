@@ -28,6 +28,8 @@
 # SOFTWARE.
 # ==============================================================================
 
+from .bundle import BytesMap
+
 from .bundle import EncryptedBundle, UserEncryptedBundle
 from .bundle import EncryptedBundleHelper, DefaultBundleHelper
 from .bundle import EncryptedBundleExtension
@@ -37,6 +39,8 @@ from .agent import VisaAgentExtension
 
 
 __all__ = [
+
+    'BytesMap',
 
     'EncryptedBundle', 'UserEncryptedBundle',
     'EncryptedBundleHelper', 'DefaultBundleHelper',

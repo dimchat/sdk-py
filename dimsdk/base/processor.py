@@ -28,7 +28,7 @@
 # SOFTWARE.
 # ==============================================================================
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import List
 
 from dimp import ContentType
@@ -43,7 +43,7 @@ from .messenger import Messenger
 from .twins import TwinsHelper
 
 
-class MessageProcessor(TwinsHelper, Processor):
+class MessageProcessor(TwinsHelper, Processor, ABC):
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)

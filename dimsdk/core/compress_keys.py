@@ -30,7 +30,20 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import List, Tuple, Dict
+from typing import List, Tuple
+
+from dimp import StrMap
+
+
+"""
+    Generic for Keys Map
+    ~~~~~~~~~~~~~~~~~~~~
+"""
+try:
+    StringPairing = Mapping[str, str]
+except TypeError:
+    import typing
+    StringPairing = typing.Mapping[str, str]
 
 
 class Shortener(ABC):
@@ -41,14 +54,14 @@ class Shortener(ABC):
     #
 
     @abstractmethod
-    def compress_content(self, content: Mapping) -> Mapping:
+    def compress_content(self, content: StrMap) -> StrMap:
         """ Shorten keys for content info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
         )
 
     @abstractmethod
-    def extract_content(self, content: Mapping) -> Mapping:
+    def extract_content(self, content: StrMap) -> StrMap:
         """ Restore keys for content info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
@@ -59,14 +72,14 @@ class Shortener(ABC):
     #
 
     @abstractmethod
-    def compress_symmetric_key(self, key: Mapping) -> Mapping:
+    def compress_symmetric_key(self, key: StrMap) -> StrMap:
         """ Shorten keys for password info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
         )
 
     @abstractmethod
-    def extract_symmetric_key(self, key: Mapping) -> Mapping:
+    def extract_symmetric_key(self, key: StrMap) -> StrMap:
         """ Restore keys for password info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
@@ -77,14 +90,14 @@ class Shortener(ABC):
     #
 
     @abstractmethod
-    def compress_reliable_message(self, msg: Mapping) -> Mapping:
+    def compress_reliable_message(self, msg: StrMap) -> StrMap:
         """ Shorten keys for message info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
         )
 
     @abstractmethod
-    def extract_reliable_message(self, msg: Mapping) -> Mapping:
+    def extract_reliable_message(self, msg: StrMap) -> StrMap:
         """ Restore keys for message info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
@@ -166,15 +179,15 @@ class MessageShortener(Shortener):
         self.__message_long_to_short = m2s
 
     # noinspection PyMethodMayBeStatic
-    def _build_content_key_maps(self) -> Tuple[Dict[str, str], Dict[str, str]]:
+    def _build_content_key_maps(self) -> Tuple[StringPairing, StringPairing]:
         return _build(keys=_content_key_pairs)
 
     # noinspection PyMethodMayBeStatic
-    def _build_crypto_key_maps(self) -> Tuple[Dict[str, str], Dict[str, str]]:
+    def _build_crypto_key_maps(self) -> Tuple[StringPairing, StringPairing]:
         return _build(keys=_crypto_key_pairs)
 
     # noinspection PyMethodMayBeStatic
-    def _build_message_key_maps(self) -> Tuple[Dict[str, str], Dict[str, str]]:
+    def _build_message_key_maps(self) -> Tuple[StringPairing, StringPairing]:
         return _build(keys=_message_key_pairs)
 
     #
@@ -182,19 +195,19 @@ class MessageShortener(Shortener):
     #
 
     @property
-    def content_short_to_long(self) -> Dict[str, str]:
+    def content_short_to_long(self) -> StringPairing:
         return self.__content_short_to_long
 
     @property
-    def content_long_to_short(self) -> Dict[str, str]:
+    def content_long_to_short(self) -> StringPairing:
         return self.__content_long_to_short
 
     # Override
-    def compress_content(self, content: Mapping) -> Mapping:
+    def compress_content(self, content: StrMap) -> StrMap:
         return _trans(content, dictionary=self.content_long_to_short)
 
     # Override
-    def extract_content(self, content: Mapping) -> Mapping:
+    def extract_content(self, content: StrMap) -> StrMap:
         return _trans(content, dictionary=self.content_short_to_long)
 
     #
@@ -202,19 +215,19 @@ class MessageShortener(Shortener):
     #
 
     @property
-    def crypto_short_to_long(self) -> Dict[str, str]:
+    def crypto_short_to_long(self) -> StringPairing:
         return self.__crypto_short_to_long
 
     @property
-    def crypto_long_to_short(self) -> Dict[str, str]:
+    def crypto_long_to_short(self) -> StringPairing:
         return self.__crypto_long_to_short
 
     # Override
-    def compress_symmetric_key(self, key: Mapping) -> Mapping:
+    def compress_symmetric_key(self, key: StrMap) -> StrMap:
         return _trans(key, dictionary=self.crypto_long_to_short)
 
     # Override
-    def extract_symmetric_key(self, key: Mapping) -> Mapping:
+    def extract_symmetric_key(self, key: StrMap) -> StrMap:
         return _trans(key, dictionary=self.crypto_short_to_long)
 
     #
@@ -222,23 +235,23 @@ class MessageShortener(Shortener):
     #
 
     @property
-    def message_short_to_long(self) -> Dict[str, str]:
+    def message_short_to_long(self) -> StringPairing:
         return self.__message_short_to_long
 
     @property
-    def message_long_to_short(self) -> Dict[str, str]:
+    def message_long_to_short(self) -> StringPairing:
         return self.__message_long_to_short
 
     # Override
-    def compress_reliable_message(self, msg: Mapping) -> Mapping:
+    def compress_reliable_message(self, msg: StrMap) -> StrMap:
         return _trans(msg, dictionary=self.message_long_to_short)
 
     # Override
-    def extract_reliable_message(self, msg: Mapping) -> Mapping:
+    def extract_reliable_message(self, msg: StrMap) -> StrMap:
         return _trans(msg, dictionary=self.message_short_to_long)
 
 
-def _build(keys: List[str]) -> Tuple[Dict[str, str], Dict[str, str]]:
+def _build(keys: List[str]) -> Tuple[StringPairing, StringPairing]:
     """ Build key table """
     short_to_long = {}
     long_to_short = {}
@@ -254,7 +267,7 @@ def _build(keys: List[str]) -> Tuple[Dict[str, str], Dict[str, str]]:
     return short_to_long, long_to_short
 
 
-def _trans(info: Mapping, dictionary: Dict[str, str]) -> Mapping:
+def _trans(info: StrMap, dictionary: StringPairing) -> StrMap:
     """ Translate """
     result = {}
     for key, value in info.items():

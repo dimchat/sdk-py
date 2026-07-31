@@ -29,9 +29,9 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from typing import Optional
 
+from dimp import StrMap
 from dimp import json_encode, json_decode
 from dimp import utf8_encode, utf8_decode
 
@@ -41,42 +41,42 @@ from .compress_keys import Shortener
 class Compressor(ABC):
 
     @abstractmethod
-    def compress_content(self, content: Mapping, key: Mapping) -> bytes:
+    def compress_content(self, content: StrMap, key: StrMap) -> bytes:
         """ Compress content info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
         )
 
     @abstractmethod
-    def extract_content(self, data: bytes, key: Mapping) -> Optional[Mapping]:
+    def extract_content(self, data: bytes, key: StrMap) -> Optional[StrMap]:
         """ Extract content info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
         )
 
     @abstractmethod
-    def compress_symmetric_key(self, key: Mapping) -> bytes:
+    def compress_symmetric_key(self, key: StrMap) -> bytes:
         """ Compress password info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
         )
 
     @abstractmethod
-    def extract_symmetric_key(self, data: bytes) -> Optional[Mapping]:
+    def extract_symmetric_key(self, data: bytes) -> Optional[StrMap]:
         """ Extract password info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
         )
 
     @abstractmethod
-    def compress_reliable_message(self, msg: Mapping) -> bytes:
+    def compress_reliable_message(self, msg: StrMap) -> bytes:
         """ Compress message info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
         )
 
     @abstractmethod
-    def extract_reliable_message(self, data: bytes) -> Optional[Mapping]:
+    def extract_reliable_message(self, data: bytes) -> Optional[StrMap]:
         """ Extract message info """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
@@ -98,13 +98,13 @@ class MessageCompressor(Compressor):
     #
 
     # Override
-    def compress_content(self, content: Mapping, key: Mapping) -> bytes:
+    def compress_content(self, content: StrMap, key: StrMap) -> bytes:
         content = self.shortener.compress_content(content=content)
         json = json_encode(container=content)
         return utf8_encode(string=json)
 
     # Override
-    def extract_content(self, data: bytes, key: Mapping) -> Optional[Mapping]:
+    def extract_content(self, data: bytes, key: StrMap) -> Optional[StrMap]:
         json = utf8_decode(data=data)
         if json is None:
             # assert False, f'content data error: {len(data)}'
@@ -120,13 +120,13 @@ class MessageCompressor(Compressor):
     #
 
     # Override
-    def compress_symmetric_key(self, key: Mapping) -> bytes:
+    def compress_symmetric_key(self, key: StrMap) -> bytes:
         key = self.shortener.compress_symmetric_key(key=key)
         json = json_encode(container=key)
         return utf8_encode(string=json)
 
     # Override
-    def extract_symmetric_key(self, data: bytes) -> Optional[Mapping]:
+    def extract_symmetric_key(self, data: bytes) -> Optional[StrMap]:
         json = utf8_decode(data=data)
         if json is None:
             # assert False, f'symmetric key error: {len(data)}'
@@ -142,13 +142,13 @@ class MessageCompressor(Compressor):
     #
 
     # Override
-    def compress_reliable_message(self, msg: Mapping) -> bytes:
+    def compress_reliable_message(self, msg: StrMap) -> bytes:
         msg = self.shortener.compress_reliable_message(msg=msg)
         json = json_encode(container=msg)
         return utf8_encode(string=json)
 
     # Override
-    def extract_reliable_message(self, data: bytes) -> Optional[Mapping]:
+    def extract_reliable_message(self, data: bytes) -> Optional[StrMap]:
         json = utf8_decode(data=data)
         if json is None:
             # assert False, f'reliable message error: {len(data)}'

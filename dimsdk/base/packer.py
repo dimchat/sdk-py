@@ -28,7 +28,6 @@
 # SOFTWARE.
 # ==============================================================================
 
-from abc import ABC
 from typing import Optional
 
 from dimp import InstantMessage, SecureMessage, ReliableMessage
@@ -42,7 +41,7 @@ from .messenger import Messenger
 from .twins import TwinsHelper
 
 
-class MessagePacker(TwinsHelper, Packer, ABC):
+class MessagePacker(TwinsHelper, Packer):
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)

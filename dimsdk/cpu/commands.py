@@ -28,7 +28,8 @@
 # SOFTWARE.
 # ==============================================================================
 
-from typing import Optional, List, Iterable
+from typing import Optional, List
+from typing import Iterable
 
 from dimp import ID, Address, Meta, Document
 from dimp import ReliableMessage
@@ -249,7 +250,7 @@ class DocumentCommandProcessor(MetaCommandProcessor):
         errors = []
         for doc in documents:
             array = await self._save_document(doc, meta=meta, identifier=identifier, content=content, envelope=envelope)
-            if isinstance(array, List):
+            if isinstance(array, list):
                 # failed
                 errors.extend(array)
         if len(errors) > 0:

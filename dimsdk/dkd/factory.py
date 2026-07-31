@@ -34,7 +34,8 @@
 
 """
 
-from typing import Optional, Dict
+from collections.abc import MutableMapping
+from typing import Optional
 
 from dimp import Content, Command, GroupCommand
 
@@ -43,14 +44,25 @@ from .proc import ContentProcessorCreator
 from .proc import ContentProcessorFactory
 
 
+"""
+    Generic for CPU
+    ~~~~~~~~~~~~~~~
+"""
+try:
+    CpuMap = MutableMapping[str, ContentProcessor]
+except TypeError:
+    import typing
+    CpuMap = typing.MutableMapping[str, ContentProcessor]
+
+
 class GeneralContentProcessorFactory(ContentProcessorFactory):
     """ General ContentProcessor Factory """
 
     def __init__(self, creator: ContentProcessorCreator):
         super().__init__()
         self.__creator = creator
-        self.__content_processors: Dict[str, ContentProcessor] = {}
-        self.__command_processors: Dict[str, ContentProcessor] = {}
+        self.__content_processors: CpuMap = {}
+        self.__command_processors: CpuMap = {}
 
     @property  # protected
     def creator(self) -> ContentProcessorCreator:

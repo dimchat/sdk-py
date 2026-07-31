@@ -29,9 +29,9 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from typing import Optional
 
+from dimp import StrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
@@ -61,7 +61,7 @@ class SecureMessageDelegate(ABC):
     #
 
     @abstractmethod
-    async def decode_keys(self, keys: Mapping, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+    async def decode_keys(self, keys: StrMap, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
         """
         1. Decode 'message.keys' to a bundle of encrypted symmetric key data
 

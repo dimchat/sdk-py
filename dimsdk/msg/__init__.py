@@ -28,6 +28,8 @@
 # SOFTWARE.
 # ==============================================================================
 
+from .instant_packer import BundleMap
+
 from .instant_delegate import InstantMessageDelegate
 from .secure_delegate import SecureMessageDelegate
 from .reliable_delegate import ReliableMessageDelegate
@@ -41,6 +43,8 @@ from .helpers import MessagePackerExtension
 
 
 __all__ = [
+
+    'BundleMap',
 
     #
     #   Message Transformers (DaoKeDao)

@@ -29,8 +29,10 @@
 # ==============================================================================
 
 import weakref
-from typing import Optional, Any, List, Dict
+from collections.abc import MutableMapping
+from typing import Optional, List
 
+from dimp import StrMap, MutableStrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import InstantMessage, SecureMessage
@@ -40,6 +42,17 @@ from dimp import PlainData, Base64Data
 from ..crypto import EncryptedBundle
 
 from .instant_delegate import InstantMessageDelegate
+
+
+"""
+    Generic for Encrypted Bundle
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
+try:
+    BundleMap = MutableMapping[ID, EncryptedBundle]
+except TypeError:
+    import typing
+    BundleMap = typing.MutableMapping[ID, EncryptedBundle]
 
 
 class InstantMessagePacker:
@@ -142,7 +155,7 @@ class InstantMessagePacker:
             assert receiver.is_group, f'message.receiver error: {receiver}'
             assert len(members) > 0, f'group members empty: {receiver}'
 
-        bundle_map: Dict[ID, EncryptedBundle] = {}
+        bundle_map: BundleMap = {}
         for receiver in members:
             #
             #   5. Encrypt key data to 'message.keys' with receiver's public key
@@ -169,11 +182,11 @@ class InstantMessagePacker:
         # OK, pack message
         return SecureMessage.parse(msg=info)
 
-    async def _encode_keys(self, bundle_map: Dict[ID, EncryptedBundle], msg: InstantMessage) -> Dict[str, Any]:
+    async def _encode_keys(self, bundle_map: BundleMap, msg: InstantMessage) -> StrMap:
         """ Encodes encrypted key bundles to a message-compatible map """
         transformer = self.delegate
         assert transformer is not None, 'instant message delegate not found'
-        msg_keys: Dict[str, Any] = {}
+        msg_keys: MutableStrMap = {}
         for receiver, bundle in bundle_map.items():
             encoded_keys = await transformer.encode_keys(bundle=bundle, receiver=receiver, msg=msg)
             if encoded_keys is None or len(encoded_keys) == 0:

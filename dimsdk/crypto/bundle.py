@@ -29,20 +29,33 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, MutableMapping
-from typing import Optional, Any, Dict
-from typing import Iterator, Iterable, ItemsView, KeysView, ValuesView
+from collections.abc import MutableMapping
+from typing import Optional, Tuple
+from typing import Iterator, Iterable
+from typing import AbstractSet, ValuesView
 
+from dimp import StrMap
 from dimp import base64_encode
 from dimp import TransportableData
 from dimp import ID
 from dimp import shared_account_extensions
 
 
+"""
+    Generic for Bytes Map
+    ~~~~~~~~~~~~~~~~~~~~~
+"""
+try:
+    BytesMap = MutableMapping[str, bytes]
+except TypeError:
+    import typing
+    BytesMap = typing.MutableMapping[str, bytes]
+
+
 class EncryptedBundle(ABC):
 
     @abstractmethod
-    def to_map(self) -> MutableMapping[str, bytes]:
+    def to_map(self) -> BytesMap:
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.to_map()'
         )
@@ -69,14 +82,14 @@ class EncryptedBundle(ABC):
         )
 
     @abstractmethod
-    def items(self) -> ItemsView[str, bytes]:
+    def items(self) -> AbstractSet[Tuple[str, bytes]]:
         """ D.items() -> a set-like object providing a view on D's items """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.items()'
         )
 
     @abstractmethod
-    def keys(self) -> KeysView[str]:
+    def keys(self) -> AbstractSet[str]:
         """ D.keys() -> a set-like object providing a view on D's keys """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.keys()'
@@ -156,14 +169,14 @@ class EncryptedBundle(ABC):
     __hash__ = None
 
     @abstractmethod
-    def encode(self, identifier: ID) -> Dict[str, Any]:
+    def encode(self, identifier: ID) -> StrMap:
         """ Encode for user id """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode()'
         )
 
     @classmethod
-    def decode(cls, keys: Mapping, identifier: ID, terminals: Iterable[str]):  # -> EncryptedBundle:
+    def decode(cls, keys: StrMap, identifier: ID, terminals: Iterable[str]):  # -> EncryptedBundle:
         helper = bundle_helper()
         return helper.decode_bundle(keys=keys, identifier=identifier, terminals=terminals)
 
@@ -172,7 +185,7 @@ class UserEncryptedBundle(EncryptedBundle):
 
     def __init__(self):
         super().__init__()
-        self.__dictionary: Dict[str, bytes] = {}
+        self.__dictionary: BytesMap = {}
 
     # private
     def to_str(self) -> str:
@@ -184,7 +197,7 @@ class UserEncryptedBundle(EncryptedBundle):
         return f'<{clazz} count={len(info)}>\n{text}</{clazz}>'
 
     # Override
-    def to_map(self) -> MutableMapping[str, bytes]:
+    def to_map(self) -> BytesMap:
         return self.__dictionary
 
     @property  # Override
@@ -200,11 +213,11 @@ class UserEncryptedBundle(EncryptedBundle):
         return self.__dictionary.get(key, default)
 
     # Override
-    def items(self) -> ItemsView[str, bytes]:
+    def items(self) -> AbstractSet[Tuple[str, bytes]]:
         return self.__dictionary.items()
 
     # Override
-    def keys(self) -> KeysView[str]:
+    def keys(self) -> AbstractSet[str]:
         return self.__dictionary.keys()
 
     # Override
@@ -261,7 +274,7 @@ class UserEncryptedBundle(EncryptedBundle):
         return self.__dictionary.__sizeof__()
 
     # Override
-    def encode(self, identifier: ID) -> Dict[str, Any]:
+    def encode(self, identifier: ID) -> StrMap:
         helper = bundle_helper()
         return helper.encode_bundle(bundle=self, identifier=identifier)
 
@@ -274,14 +287,14 @@ class UserEncryptedBundle(EncryptedBundle):
 class EncryptedBundleHelper(ABC):
 
     @abstractmethod
-    def encode_bundle(self, bundle: EncryptedBundle, identifier: ID) -> Dict[str, Any]:
+    def encode_bundle(self, bundle: EncryptedBundle, identifier: ID) -> StrMap:
         """ Encode key bundle """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_bundle()'
         )
 
     @abstractmethod
-    def decode_bundle(self, keys: Mapping, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
+    def decode_bundle(self, keys: StrMap, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
         """ Decode key bundle """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_bundle()'
@@ -291,7 +304,7 @@ class EncryptedBundleHelper(ABC):
 class DefaultBundleHelper(EncryptedBundleHelper):
 
     # Override
-    def encode_bundle(self, bundle: EncryptedBundle, identifier: ID) -> Dict[str, Any]:
+    def encode_bundle(self, bundle: EncryptedBundle, identifier: ID) -> StrMap:
         text = str(identifier.without_terminal())
         encoded_keys = {}
         info = bundle.to_map()
@@ -308,7 +321,7 @@ class DefaultBundleHelper(EncryptedBundleHelper):
         return encoded_keys
 
     # Override
-    def decode_bundle(self, keys: Mapping, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
+    def decode_bundle(self, keys: StrMap, identifier: ID, terminals: Iterable[str]) -> EncryptedBundle:
         bundle = UserEncryptedBundle()
         #
         #  0. ID string without terminal (base identifier)
