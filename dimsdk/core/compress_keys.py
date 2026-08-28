@@ -29,7 +29,6 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from typing import List, Tuple
 
 from dimp import StrMap
@@ -40,7 +39,8 @@ from dimp import StrMap
     ~~~~~~~~~~~~~~~~~~~~
 """
 try:
-    StringPairing = Mapping[str, str]
+    import collections.abc as abc
+    StringPairing = abc.Mapping[str, str]
 except TypeError:
     import typing
     StringPairing = typing.Mapping[str, str]

@@ -191,7 +191,8 @@ class DocumentCommandProcessor(MetaCommandProcessor):
 
     # protected
     async def _respond_documents(self, documents: List[Document], identifier: ID, receiver: ID) -> List[Content]:
-        if receiver.is_same_as(other=identifier):
+        # if receiver.is_same_as(other=identifier):
+        if receiver == identifier:
             # assert False, f'cycled response: {identifier}'
             return []
         # TODO: check response expired

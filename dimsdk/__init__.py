@@ -52,7 +52,6 @@ __all__ = [
 
     'final',
 
-    'Mapping', 'MutableMapping',
     'StrMap', 'MutableStrMap',
     'AnyList', 'StrList',
 
@@ -87,6 +86,8 @@ __all__ = [
 
     'TransportableDataHelper',
     'FormatExtensions', 'shared_format_extensions',
+
+    'StringPairing', 'MutableStringPairing',
 
     'Header', 'DataURI',
 

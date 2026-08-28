@@ -29,7 +29,6 @@
 # ==============================================================================
 
 import weakref
-from collections.abc import MutableMapping
 from typing import Optional, List
 
 from dimp import StrMap, MutableStrMap
@@ -49,7 +48,8 @@ from .instant_delegate import InstantMessageDelegate
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 try:
-    BundleMap = MutableMapping[ID, EncryptedBundle]
+    import collections.abc as abc
+    BundleMap = abc.MutableMapping[ID, EncryptedBundle]
 except TypeError:
     import typing
     BundleMap = typing.MutableMapping[ID, EncryptedBundle]

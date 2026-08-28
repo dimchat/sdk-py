@@ -29,7 +29,6 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from collections.abc import MutableMapping
 from typing import Optional, Tuple
 from typing import Iterator, Iterable
 from typing import AbstractSet, ValuesView
@@ -46,7 +45,8 @@ from dimp import shared_account_extensions
     ~~~~~~~~~~~~~~~~~~~~~
 """
 try:
-    BytesMap = MutableMapping[str, bytes]
+    import collections.abc as abc
+    BytesMap = abc.MutableMapping[str, bytes]
 except TypeError:
     import typing
     BytesMap = typing.MutableMapping[str, bytes]

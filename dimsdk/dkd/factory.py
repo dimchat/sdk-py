@@ -34,7 +34,6 @@
 
 """
 
-from collections.abc import MutableMapping
 from typing import Optional
 
 from dimp import Content, Command, GroupCommand
@@ -49,7 +48,8 @@ from .proc import ContentProcessorFactory
     ~~~~~~~~~~~~~~~
 """
 try:
-    CpuMap = MutableMapping[str, ContentProcessor]
+    import collections.abc as abc
+    CpuMap = abc.MutableMapping[str, ContentProcessor]
 except TypeError:
     import typing
     CpuMap = typing.MutableMapping[str, ContentProcessor]
