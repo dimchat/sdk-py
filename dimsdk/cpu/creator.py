@@ -37,7 +37,7 @@
 
 from typing import Optional
 
-from dimp import ContentType, Command
+from dimp import ContentType
 
 from ..dkd import ContentProcessor, ContentProcessorCreator
 
@@ -46,24 +46,12 @@ from ..base import TwinsHelper
 from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
 
-from .contents import ForwardContentProcessor
-from .contents import ArrayContentProcessor
-from .commands import MetaCommandProcessor
-from .commands import DocumentCommandProcessor
-
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
     """ Base ContentProcessor Creator """
 
     # Override
     def create_content_processor(self, msg_type: str) -> Optional[ContentProcessor]:
-        # forward content
-        if msg_type == ContentType.FORWARD:
-            return ForwardContentProcessor(facebook=self.facebook, messenger=self.messenger)
-        # array content
-        if msg_type == ContentType.ARRAY:
-            return ArrayContentProcessor(facebook=self.facebook, messenger=self.messenger)
-
         # default commands
         if msg_type == ContentType.COMMAND:
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
@@ -76,10 +64,7 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
 
     # Override
     def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
-        # meta command
-        if cmd == Command.META:
-            return MetaCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        # document command
-        if cmd == Command.DOCUMENTS:
-            return DocumentCommandProcessor(facebook=self.facebook, messenger=self.messenger)
-        # assert False, f'unsupported command: {cmd}'
+        # raise NotImplementedError(
+        #     f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_command_processor()'
+        # )
+        return None

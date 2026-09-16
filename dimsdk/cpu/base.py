@@ -40,7 +40,9 @@ from dimp import StrMap
 from dimp import ReliableMessage
 from dimp import Envelope
 from dimp import Content, Command
-from dimp import ReceiptCommand
+
+from dimp import CommandHandler, GeneralCommandExtension
+from dimp import shared_message_extensions
 
 from ..dkd import ContentProcessor
 
@@ -66,14 +68,14 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     #
 
     def _respond_receipt(self, text: str, envelope: Envelope, content: Optional[Content],
-                         extra: Optional[StrMap] = None) -> List[ReceiptCommand]:
+                         extra: Optional[StrMap] = None) -> List[Content]:
         return [
             self.create_receipt(text=text, envelope=envelope, content=content, extra=extra)
         ]
 
     @classmethod
     def create_receipt(cls, text: str, envelope: Envelope, content: Optional[Content],
-                       extra: Optional[StrMap]) -> ReceiptCommand:
+                       extra: Optional[StrMap]) -> Content:
         """
         Receipt command with text, original envelope, serial number & group
 
@@ -84,11 +86,21 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         :return: receipt command
         """
         # create base receipt command with text, original envelope, serial number & group ID
-        res = ReceiptCommand.create(text=text, envelope=envelope, content=content)
+        helper = command_handler()
+        res = helper.create_receipt(text=text, envelope=envelope, content=content)
         # add extra key-values
         if extra is not None:
             res.update(extra)
         return res
+
+
+def command_extensions() -> GeneralCommandExtension:
+    return shared_message_extensions
+
+
+def command_handler() -> CommandHandler:
+    ext = command_extensions()
+    return ext.command_handler
 
 
 class BaseCommandProcessor(BaseContentProcessor):

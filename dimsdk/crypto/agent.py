@@ -33,11 +33,10 @@ from typing import Optional, Union, Set, List
 
 from dimp import VerifyKey, EncryptKey
 from dimp import PublicKey
-from dimp import Meta, Document, Visa
-from dimp import GeneralAccountHelper
+from dimp import Meta, Document
+from dimp import AccountHandler
 from dimp import GeneralAccountExtension, shared_account_extensions
-
-from .bundle import EncryptedBundle, UserEncryptedBundle
+from dimp import EncryptedBundle, UserEncryptedBundle
 
 
 class VisaAgent(ABC):
@@ -120,24 +119,12 @@ class DefaultVisaAgent(VisaAgent):
 
     # protected
     def get_verify_key(self, document: Document) -> Optional[VerifyKey]:
-        if isinstance(document, Visa):
-            visa_key = document.public_key
-            if isinstance(visa_key, VerifyKey):
-                return visa_key
-            # assert False, f'visa key error: {visa_key}, {document}'
-            return None
         # public key in user profile?
         key = document.get_property(name='key')
         return PublicKey.parse(key=key)
 
     # protected
     def get_encrypt_key(self, document: Document) -> Optional[EncryptKey]:
-        if isinstance(document, Visa):
-            visa_key = document.public_key
-            if visa_key is not None:
-                return visa_key
-            # assert False, f'failed to get visa key: {document}'
-            return None
         key = document.get_property(name='key')
         pub_key = PublicKey.parse(key=key)
         if pub_key is None:
@@ -153,7 +140,7 @@ class DefaultVisaAgent(VisaAgent):
         terminal = document.get_str(key='terminal')
         if terminal is None:
             # get from document ID
-            helper = account_helper()
+            helper = account_handler()
             info = document.to_map()
             did = helper.get_document_id(document=info)
             if did is not None:
@@ -209,6 +196,6 @@ def visa_agent() -> VisaAgent:
     return ext.visa_agent
 
 
-def account_helper() -> GeneralAccountHelper:
+def account_handler() -> AccountHandler:
     ext = account_extensions()
-    return ext.helper
+    return ext.handler

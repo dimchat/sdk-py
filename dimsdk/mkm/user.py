@@ -32,11 +32,10 @@ from abc import ABC, abstractmethod
 from typing import Optional, Set, List
 
 from dimp import DecryptKey, SignKey
-from dimp import ID
-from dimp import Visa
+from dimp import ID, Document
+from dimp import EncryptedBundle
 
-from ..crypto import EncryptedBundle
-from ..crypto.agent import visa_agent, account_helper
+from ..crypto.agent import visa_agent, account_handler
 
 from .entity import EntityDataSource, Entity, BaseEntity
 
@@ -224,22 +223,22 @@ class User(Entity, ABC):
         )
 
     #
-    #   Interfaces for Visa
+    #   Interfaces for Visa Document
     #
 
     @abstractmethod
-    async def sign_visa(self, visa: Visa) -> Optional[Visa]:
-        # NOTICE: only sign visa with the private key paired with your meta.key
+    async def sign_document(self, document: Document) -> Optional[Document]:
+        # NOTICE: only sign visa document with the private key paired with your meta.key
         raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.sign_visa()'
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.sign_document()'
         )
 
     @abstractmethod
-    async def verify_visa(self, visa: Visa) -> bool:
-        # NOTICE: only verify visa with meta.key
+    async def verify_document(self, document: Document) -> bool:
+        # NOTICE: only verify visa document with meta.key
         #         (if meta not exists, user won't be created)
         raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.verify_visa()'
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.verify_document()'
         )
 
 
@@ -320,10 +319,10 @@ class BaseUser(BaseEntity, User):
         # TODO: check whether my visa key is changed, push new visa to this contact
 
     # Override
-    async def sign_visa(self, visa: Visa) -> Optional[Visa]:
+    async def sign_document(self, document: Document) -> Optional[Document]:
         uid = self.identifier
-        helper = account_helper()
-        info = visa.to_map()
+        helper = account_handler()
+        info = document.to_map()
         did = helper.get_document_id(document=info)
         assert did is None or did.is_same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # NOTICE: only sign visa with the private key paired with your meta.key
@@ -331,26 +330,26 @@ class BaseUser(BaseEntity, User):
         if pri_key is None:
             # assert False, f'failed to get sign key for visa: {uid}'
             return None
-        if visa.sign(private_key=pri_key) is None:
+        if document.sign(private_key=pri_key) is None:
             # assert False, f'failed to sign visa: {self.identifier}, {visa}'
             return None
         # OK
-        return visa
+        return document
 
     # Override
-    async def verify_visa(self, visa: Visa) -> bool:
+    async def verify_document(self, document: Document) -> bool:
         # NOTICE: only verify visa with meta.key
         #         (if meta not exists, user won't be created)
         uid = self.identifier
-        helper = account_helper()
-        info = visa.to_map()
+        helper = account_handler()
+        info = document.to_map()
         did = helper.get_document_id(document=info)
         assert did is None or did.is_same_as(other=uid), f'visa ID not match: {did}, {uid}'
         # if meta not exists, user won't be created
         meta = await self.meta
         key = meta.public_key
         assert key is not None, f'failed to get meta key for visa: {self.identifier}'
-        return visa.verify(public_key=key)
+        return document.verify(public_key=key)
 
     #
     #   Private Keys

@@ -36,7 +36,7 @@
 
 from typing import Optional
 
-from dimp import Content, Command, GroupCommand
+from dimp import Content, Command
 
 from .proc import ContentProcessor
 from .proc import ContentProcessorCreator
@@ -80,10 +80,7 @@ class GeneralContentProcessorFactory(ContentProcessorFactory):
             cpu = self._get_command_processor(msg_type, cmd=name)
             if cpu is not None:
                 return cpu
-            elif isinstance(content, GroupCommand):  # or 'group' in content:
-                cpu = self._get_command_processor(msg_type, cmd='group')
-                if cpu is not None:
-                    return cpu
+            # TODO: check for group command
         # content processor
         return self.get_content_processor_for_type(msg_type)
 
