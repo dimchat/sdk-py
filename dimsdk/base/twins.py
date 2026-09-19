@@ -72,7 +72,10 @@ class TwinsHelper:
             # check local users
             me = await facebook.select_user(receiver=receiver)
         elif receiver.is_group:
+            # check local users for the group members
             members = await facebook.get_members(identifier=receiver)
+            # the messenger will check group info before decrypting message,
+            # so we can trust that the group's meta & members MUST exist here.
             if members is None or len(members) == 0:
                 # assert False, f'failed to get group members: {receiver}'
                 return None

@@ -47,7 +47,16 @@ except TypeError:
 
 
 class Shortener(ABC):
-    """ Interface for bidirectional short key mapping (long string keys ↔ single-char keys). """
+    """ Interface for bidirectional short key mapping (long string keys ↔ single-char keys).
+
+        Core function: Replace system-defined long string keys with pre-defined single-character
+        short keys (and vice versa) to reduce the size of JSON-serialized data.
+
+        Key features:
+        - Bi-directional conversion (compress → extract)
+        - Preserves data structure, only replaces key names
+        - Maintains compatibility with core message components
+    """
 
     #
     #   Compress Content
@@ -103,6 +112,42 @@ class Shortener(ABC):
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
         )
 
+    #
+    #   Short Keys
+    #
+
+    # Compress ReliableMessage
+    message_short_keys = [
+        "F", "sender",      # From
+        "R", "receiver",    # Rcpt to
+        "W", "time",        # When
+        "T", "type",
+        "G", "group",
+        # ------------------
+        "K", "keys",
+        "D", "data",
+        "V", "signature",   # Verification
+        # ------------------
+        "M", "meta",
+        "P", "visa",        # Profile
+    ]
+
+    # Compress Content
+    content_short_keys = [
+        "T", "type",
+        "N", "sn",
+        "W", "time",        # When
+        "G", "group",
+        "C", "command",     # Command name
+    ]
+
+    # Compress SymmetricKey
+    crypto_short_keys = [
+        "A", "algorithm",
+        "D", "data",
+        "I", "iv",          # Initial Vector
+    ]
+
 
 """ Short Keys
 
@@ -125,114 +170,88 @@ class Shortener(ABC):
     "V"   |   "signature"                                    |   (Verification)
     "W"   |   "time"         "time"                          |   (When)
     ======+==================================================+==================
-    
+
     Note:
         "S" - deprecated (ambiguous for "sender" and "signature")
 """
 
 
-_message_key_pairs = [
-    "F", "sender",      # From
-    "R", "receiver",    # Rcpt to
-    "W", "time",        # When
-    "T", "type",
-    "G", "group",
-    # ------------------
-    "K", "keys",
-    "D", "data",
-    "V", "signature",   # Verification
-    # ------------------
-    "M", "meta",
-    "P", "visa",        # Profile
-]
-
-_content_key_pairs = [
-    "T", "type",
-    "N", "sn",
-    "W", "time",        # When
-    "G", "group",
-    "C", "command",     # Command name
-]
-
-_crypto_key_pairs = [
-    "A", "algorithm",
-    "D", "data",
-    "I", "iv",          # Initial Vector
-]
-
-
 class MessageShortener(Shortener):
+    """ Concrete implementation of Shortener for message/content/key short key mapping.
+
+        Implements fixed key pair conversion with new Map creation
+        (does not modify the original one).
+    """
 
     def __init__(self):
         super().__init__()
-        # build for content
-        c2l, c2s = self._build_content_key_maps()
-        self.__content_short_to_long = c2l
-        self.__content_long_to_short = c2s
-        # build for symmetric key
-        k2l, k2s = self._build_crypto_key_maps()
-        self.__crypto_short_to_long = k2l
-        self.__crypto_long_to_short = k2s
+
         # build for message
         m2l, m2s = self._build_message_key_maps()
         self.__message_short_to_long = m2l
         self.__message_long_to_short = m2s
 
-    # noinspection PyMethodMayBeStatic
-    def _build_content_key_maps(self) -> Tuple[StringPairing, StringPairing]:
-        return _build(keys=_content_key_pairs)
+        # build for content
+        c2l, c2s = self._build_content_key_maps()
+        self.__content_short_to_long = c2l
+        self.__content_long_to_short = c2s
 
-    # noinspection PyMethodMayBeStatic
-    def _build_crypto_key_maps(self) -> Tuple[StringPairing, StringPairing]:
-        return _build(keys=_crypto_key_pairs)
+        # build for symmetric key
+        k2l, k2s = self._build_crypto_key_maps()
+        self.__crypto_short_to_long = k2l
+        self.__crypto_long_to_short = k2s
 
-    # noinspection PyMethodMayBeStatic
+    # protected
     def _build_message_key_maps(self) -> Tuple[StringPairing, StringPairing]:
-        return _build(keys=_message_key_pairs)
+        """ Builds the short-to-long and long-to-short maps for message keys. """
+        return self._build(keys=self.message_short_keys)
 
-    #
-    #   Compress Content
-    #
+    # protected
+    def _build_content_key_maps(self) -> Tuple[StringPairing, StringPairing]:
+        """ Builds the short-to-long and long-to-short maps for content keys. """
+        return self._build(keys=self.content_short_keys)
 
-    @property
-    def content_short_to_long(self) -> StringPairing:
-        return self.__content_short_to_long
+    # protected
+    def _build_crypto_key_maps(self) -> Tuple[StringPairing, StringPairing]:
+        """ Builds the short-to-long and long-to-short maps for symmetric key fields. """
+        return self._build(keys=self.crypto_short_keys)
 
-    @property
-    def content_long_to_short(self) -> StringPairing:
-        return self.__content_long_to_short
+    # protected
+    # noinspection PyMethodMayBeStatic
+    def _build(self, keys: List[str]) -> Tuple[StringPairing, StringPairing]:
+        """ Builds two mapping tables from a list of (shortKey, longKey) pairs. """
+        short_to_long = {}
+        long_to_short = {}
+        size = len(keys)
+        i = 1
+        while i < size:
+            k1 = keys[i - 1]
+            k2 = keys[i]
+            assert len(k1) < len(k2), f'key pair error: {k1}, {k2}'
+            short_to_long[k1] = k2
+            long_to_short[k2] = k1
+            i += 2
+        return short_to_long, long_to_short
 
-    # Override
-    def compress_content(self, content: StrMap) -> StrMap:
-        return _trans(content, dictionary=self.content_long_to_short)
+    # protected
+    # noinspection PyMethodMayBeStatic
+    def _translate(self, info: StrMap, dictionary: StringPairing) -> StrMap:
+        """ Translates the keys of info using the given dictionary.
 
-    # Override
-    def extract_content(self, content: StrMap) -> StrMap:
-        return _trans(content, dictionary=self.content_short_to_long)
+            NOTICE: does not modify the original map, creates a new one instead.
+        """
+        result = {}
+        for key, value in info.items():
+            name = dictionary.get(key)
+            if name is None:
+                name = key
+            result[name] = value
+        # OK
+        return result
 
-    #
-    #   Compress SymmetricKey
-    #
-
-    @property
-    def crypto_short_to_long(self) -> StringPairing:
-        return self.__crypto_short_to_long
-
-    @property
-    def crypto_long_to_short(self) -> StringPairing:
-        return self.__crypto_long_to_short
-
-    # Override
-    def compress_symmetric_key(self, key: StrMap) -> StrMap:
-        return _trans(key, dictionary=self.crypto_long_to_short)
-
-    # Override
-    def extract_symmetric_key(self, key: StrMap) -> StrMap:
-        return _trans(key, dictionary=self.crypto_short_to_long)
-
-    #
-    #   Compress ReliableMessage
-    #
+    # -------------------------------------------------------------------------
+    #  ReliableMessage Key Mapping
+    # -------------------------------------------------------------------------
 
     @property
     def message_short_to_long(self) -> StringPairing:
@@ -244,36 +263,48 @@ class MessageShortener(Shortener):
 
     # Override
     def compress_reliable_message(self, msg: StrMap) -> StrMap:
-        return _trans(msg, dictionary=self.message_long_to_short)
+        return self._translate(info=msg, dictionary=self.message_long_to_short)
 
     # Override
     def extract_reliable_message(self, msg: StrMap) -> StrMap:
-        return _trans(msg, dictionary=self.message_short_to_long)
+        return self._translate(info=msg, dictionary=self.message_short_to_long)
 
+    # -------------------------------------------------------------------------
+    #  Content Key Mapping
+    # -------------------------------------------------------------------------
 
-def _build(keys: List[str]) -> Tuple[StringPairing, StringPairing]:
-    """ Build key table """
-    short_to_long = {}
-    long_to_short = {}
-    size = len(keys)
-    i = 1
-    while i < size:
-        k1 = keys[i - 1]
-        k2 = keys[i]
-        assert len(k1) < len(k2), f'key pair error: {k1}, {k2}'
-        short_to_long[k1] = k2
-        long_to_short[k2] = k1
-        i += 2
-    return short_to_long, long_to_short
+    @property
+    def content_short_to_long(self) -> StringPairing:
+        return self.__content_short_to_long
 
+    @property
+    def content_long_to_short(self) -> StringPairing:
+        return self.__content_long_to_short
 
-def _trans(info: StrMap, dictionary: StringPairing) -> StrMap:
-    """ Translate """
-    result = {}
-    for key, value in info.items():
-        name = dictionary.get(key)
-        if name is None:
-            name = key
-        result[name] = value
-    # OK
-    return result
+    # Override
+    def compress_content(self, content: StrMap) -> StrMap:
+        return self._translate(info=content, dictionary=self.content_long_to_short)
+
+    # Override
+    def extract_content(self, content: StrMap) -> StrMap:
+        return self._translate(info=content, dictionary=self.content_short_to_long)
+
+    # -------------------------------------------------------------------------
+    #  Symmetric Key Mapping
+    # -------------------------------------------------------------------------
+
+    @property
+    def crypto_short_to_long(self) -> StringPairing:
+        return self.__crypto_short_to_long
+
+    @property
+    def crypto_long_to_short(self) -> StringPairing:
+        return self.__crypto_long_to_short
+
+    # Override
+    def compress_symmetric_key(self, key: StrMap) -> StrMap:
+        return self._translate(info=key, dictionary=self.crypto_long_to_short)
+
+    # Override
+    def extract_symmetric_key(self, key: StrMap) -> StrMap:
+        return self._translate(info=key, dictionary=self.crypto_short_to_long)

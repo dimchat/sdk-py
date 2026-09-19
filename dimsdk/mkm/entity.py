@@ -188,7 +188,10 @@ class BaseEntity(Entity):
 
     @data_source.setter  # Override
     def data_source(self, facebook: EntityDataSource):
-        self.__facebook = weakref.ref(facebook)
+        if facebook is None:
+            self.__facebook = None
+        else:
+            self.__facebook = weakref.ref(facebook)
 
     @property  # Override
     def identifier(self) -> ID:
@@ -202,11 +205,11 @@ class BaseEntity(Entity):
     @property  # Override
     async def meta(self) -> Meta:
         delegate = self.data_source
-        # assert delegate is not None, 'entity delegate not set yet'
+        assert delegate is not None, 'entity data source not set yet'
         return await delegate.get_meta(identifier=self.__id)
 
     @property  # Override
     async def documents(self) -> List[Document]:
         delegate = self.data_source
-        # assert delegate is not None, 'entity delegate not set yet'
+        assert delegate is not None, 'entity data source not set yet'
         return await delegate.get_documents(identifier=self.__id)

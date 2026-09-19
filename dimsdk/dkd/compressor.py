@@ -32,13 +32,33 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from dimp import StrMap
-from dimp import json_encode, json_decode
-from dimp import utf8_encode, utf8_decode
+from dimp import JSONMap
+from dimp import UTF8
 
 from .compress_keys import Shortener
 
 
+# -----------------------------------------------------------------------------
+#  Compressor (Short Key + JSON + UTF8 Encoding)
+# -----------------------------------------------------------------------------
+
 class Compressor(ABC):
+    """ Interface for message data compression (short key mapping + JSON serialization + UTF8 encoding).
+
+        Core workflow:
+        1. Shorten keys via Shortener
+        2. Serialize to JSON string
+        3. Encode to UTF8 binary bytes
+
+        Extraction workflow (reverse):
+        1. Decode UTF8 bytes to JSON string
+        2. Deserialize to Map
+        3. Restore long keys via Shortener
+    """
+
+    # -------------------------------------------------------------------------
+    #  Content Compression/Extraction
+    # -------------------------------------------------------------------------
 
     @abstractmethod
     def compress_content(self, content: StrMap, key: StrMap) -> bytes:
@@ -54,6 +74,10 @@ class Compressor(ABC):
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
         )
 
+    # -------------------------------------------------------------------------
+    #  Symmetric Key Compression/Extraction
+    # -------------------------------------------------------------------------
+
     @abstractmethod
     def compress_symmetric_key(self, key: StrMap) -> bytes:
         """ Compress password info """
@@ -67,6 +91,10 @@ class Compressor(ABC):
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
         )
+
+    # -------------------------------------------------------------------------
+    #  ReliableMessage Compression/Extraction
+    # -------------------------------------------------------------------------
 
     @abstractmethod
     def compress_reliable_message(self, msg: StrMap) -> bytes:
@@ -84,6 +112,11 @@ class Compressor(ABC):
 
 
 class MessageCompressor(Compressor):
+    """ Concrete implementation of Compressor (Shortener + JSON + UTF8).
+
+        Uses MessageShortener for key mapping, JSON for serialization,
+        and UTF8 for binary encoding/decoding.
+    """
 
     def __init__(self, shortener: Shortener):
         super().__init__()
@@ -93,68 +126,68 @@ class MessageCompressor(Compressor):
     def shortener(self) -> Shortener:
         return self.__shortener
 
-    #
-    #   Compress Content
-    #
+    # -------------------------------------------------------------------------
+    #  Content Compression/Extraction
+    # -------------------------------------------------------------------------
 
     # Override
     def compress_content(self, content: StrMap, key: StrMap) -> bytes:
         content = self.shortener.compress_content(content=content)
-        json = json_encode(container=content)
-        return utf8_encode(string=json)
+        json = JSONMap.encode(container=content)
+        return UTF8.encode(string=json)
 
     # Override
     def extract_content(self, data: bytes, key: StrMap) -> Optional[StrMap]:
-        json = utf8_decode(data=data)
+        json = UTF8.decode(data=data)
         if json is None:
             # assert False, f'content data error: {len(data)}'
             return None
-        info = json_decode(string=json)
-        if info is not None:
-            info = self.shortener.extract_content(content=info)
-            return info
-        assert False, f'content data error: {json}'
+        info = JSONMap.decode(string=json)
+        if info is None:
+            # assert False, f'failed to decode content: {json}'
+            return None
+        return self.shortener.extract_content(content=info)
 
-    #
-    #   Compress SymmetricKey
-    #
+    # -------------------------------------------------------------------------
+    #  Symmetric Key Compression/Extraction
+    # -------------------------------------------------------------------------
 
     # Override
     def compress_symmetric_key(self, key: StrMap) -> bytes:
         key = self.shortener.compress_symmetric_key(key=key)
-        json = json_encode(container=key)
-        return utf8_encode(string=json)
+        json = JSONMap.encode(container=key)
+        return UTF8.encode(string=json)
 
     # Override
     def extract_symmetric_key(self, data: bytes) -> Optional[StrMap]:
-        json = utf8_decode(data=data)
+        json = UTF8.decode(data=data)
         if json is None:
-            # assert False, f'symmetric key error: {len(data)}'
+            # assert False, f'symmetric key data error: {len(data)}'
             return None
-        key = json_decode(string=json)
-        if key is not None:
-            key = self.shortener.extract_symmetric_key(key=key)
-            return key
-        assert False, f'symmetric key data error: {json}'
+        key = JSONMap.decode(string=json)
+        if key is None:
+            # assert False, f'failed to decode symmetric key: {json}'
+            return None
+        return self.shortener.extract_symmetric_key(key=key)
 
-    #
-    #   Compress ReliableMessage
-    #
+    # -------------------------------------------------------------------------
+    #  ReliableMessage Compression/Extraction
+    # -------------------------------------------------------------------------
 
     # Override
     def compress_reliable_message(self, msg: StrMap) -> bytes:
         msg = self.shortener.compress_reliable_message(msg=msg)
-        json = json_encode(container=msg)
-        return utf8_encode(string=json)
+        json = JSONMap.encode(container=msg)
+        return UTF8.encode(string=json)
 
     # Override
     def extract_reliable_message(self, data: bytes) -> Optional[StrMap]:
-        json = utf8_decode(data=data)
+        json = UTF8.decode(data=data)
         if json is None:
-            # assert False, f'reliable message error: {len(data)}'
+            # assert False, f'message data error: {len(data)}'
             return None
-        msg = json_decode(string=json)
-        if msg is not None:
-            msg = self.shortener.extract_reliable_message(msg=msg)
-            return msg
-        assert False, f'message package error: {json}'
+        msg = JSONMap.decode(string=json)
+        if msg is None:
+            # assert False, f'failed to decode message: {json}'
+            return None
+        return self.shortener.extract_reliable_message(msg=msg)

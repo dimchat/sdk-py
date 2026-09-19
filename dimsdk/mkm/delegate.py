@@ -38,6 +38,11 @@ from .group import Group
 
 
 class EntityDelegate(ABC):
+    """ Delegate for creating User/Group instances
+
+        Provides a factory pattern for entity instantiation,
+        enabling centralized management of user/group creation logic.
+    """
 
     @abstractmethod
     async def get_user(self, identifier: ID) -> Optional[User]:

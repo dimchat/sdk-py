@@ -31,18 +31,17 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from dimp import StrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
 from dimp import InstantMessage, SecureMessage, ReliableMessage
-from dimp import BaseMessage
+from dimp import EncryptedBundle
+from dimp import shared_message_extensions
 
-from ..crypto import EncryptedBundle
 from ..mkm import EntityDelegate
 from ..msg import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 
-from .compressor import Compressor
+from ..dkd import Compressor
 
 
 class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate, ABC):
@@ -105,13 +104,13 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def encrypt_content(self, data: bytes, key: SymmetricKey, msg: InstantMessage) -> bytes:
-        # store 'IV' in msg for AES encryption
+        # store 'IV' in msg for AES decryption
         msg_info = msg.to_map()
         return key.encrypt(plaintext=data, extra=msg_info)
 
     # # Override
     # async def encode_data(self, data: bytes, msg: InstantMessage) -> Any:
-    #     if BaseMessage.is_broadcast(msg=msg):
+    #     if shared_message_extensions.handler.is_broadcast(msg):
     #         # broadcast message content will not be encrypted (just encoded to JsON),
     #         # so no need to encode to Base64 here
     #         return utf8_decode(data=data)
@@ -121,7 +120,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def serialize_key(self, key: SymmetricKey, msg: InstantMessage) -> Optional[bytes]:
-        if BaseMessage.is_broadcast(msg=msg):
+        if shared_message_extensions.handler.is_broadcast(msg):
             # broadcast message has no key
             return None
         key_info = key.to_map()
@@ -130,7 +129,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[EncryptedBundle]:
-        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
+        assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
         assert receiver.is_user, f'receiver error: {receiver}'
         # TODO: make sure the receiver's public key exists
         facebook = self.facebook
@@ -141,36 +140,36 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         else:
             assert False, f'failed to encrypt message key for receiver: {receiver}'
 
-    # Override
-    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> StrMap:
-        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
-        # message key had been encrypted by a public key,
-        # so the data should be encode here (with algorithm 'base64' as default).
-        return bundle.encode(identifier=receiver)
-        # TODO: check for wildcard
+    # # Override
+    # async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> StrMap:
+    #     assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
+    #     # message key had been encrypted by a public key,
+    #     # so the data should be encode here (with algorithm 'base64' as default).
+    #     return bundle.encode(identifier=receiver)
+    #     # TODO: check for wildcard
 
     #
     #   SecureMessageDelegate
     #
 
-    # Override
-    async def decode_keys(self, keys: StrMap, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
-        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
-        assert receiver.is_user, f'receiver error: {receiver}'
-        facebook = self.facebook
-        user = await facebook.get_user(identifier=receiver)
-        if user is not None:
-            # decode key bundle for all terminals
-            terminals = await user.terminals
-            return EncryptedBundle.decode(keys=keys, identifier=receiver, terminals=terminals)
-        else:
-            assert False, f'failed to decode key: {msg.sender} => {receiver}, {msg.group}'
+    # # Override
+    # async def decode_keys(self, keys: StrMap, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+    #     assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
+    #     assert receiver.is_user, f'receiver error: {receiver}'
+    #     facebook = self.facebook
+    #     user = await facebook.get_user(identifier=receiver)
+    #     if user is None:
+    #         assert False, f'failed to decode key: {msg.sender} => {receiver}, {msg.group}'
+    #         return None
+    #     # decode key bundle for all terminals
+    #     terminals = await user.terminals
+    #     return EncryptedBundle.decode(keys=keys, identifier=receiver, terminals=terminals)
 
     # Override
     async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
         # NOTICE: the receiver must be a member ID
         #         if it's a group message
-        assert not BaseMessage.is_broadcast(msg=msg), 'broadcast message has no key'
+        assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
         assert receiver.is_user, f'receiver error: {receiver}'
         facebook = self.facebook
         user = await facebook.get_user(identifier=receiver)
@@ -182,7 +181,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
-        assert not BaseMessage.is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
+        assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
         if data is None:
             # assert False, f'reused key? get it from cache: {msg.sender} => {msg.receiver}, {msg.group}'
             return None
@@ -192,7 +191,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # # Override
     # async def decode_data(self, data: Any, msg: SecureMessage) -> Optional[bytes]:
-    #     if BaseMessage.is_broadcast(msg=msg):
+    #     if shared_message_extensions.handler.is_broadcast(msg):
     #         # broadcast message content will not be encrypted (just encoded to JsON),
     #         # so return the string data directly
     #         if isinstance(data, str):
@@ -222,7 +221,6 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         #         after deserialize content, this job should be do in subclass
 
     # Override
-    # noinspection PyUnusedLocal
     async def sign_data(self, data: bytes, msg: SecureMessage) -> bytes:
         sender = msg.sender
         facebook = self.facebook

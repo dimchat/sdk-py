@@ -31,11 +31,10 @@
 import weakref
 from typing import Optional
 
-from dimp import Base64Data
 from dimp import ID
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 
-from ..crypto import EncryptedBundle
+from ..crypto.agent import visa_agent
 
 from .secure_delegate import SecureMessageDelegate
 
@@ -64,17 +63,6 @@ class SecureMessagePacker:
             +----------+
     """
 
-    async def _decode_keys(self, msg: SecureMessage, receiver: ID) -> Optional[EncryptedBundle]:
-        """ Decodes the encrypted key map from a SecureMessage """
-        msg_keys = msg.encrypted_keys
-        if msg_keys is None:
-            # broadcast message?
-            # reuse key?
-            return None
-        transformer = self.delegate
-        assert transformer is not None, 'secure message delegate not found'
-        return await transformer.decode_keys(keys=msg_keys, receiver=receiver, msg=msg)
-
     async def decrypt_message(self, msg: SecureMessage, receiver: ID) -> Optional[InstantMessage]:
         """
         Decrypt message, replace encrypted 'data' with 'content' field
@@ -86,14 +74,16 @@ class SecureMessagePacker:
         assert receiver.is_user, f'receiver error: {receiver}'
         transformer = self.delegate
         assert transformer is not None, 'secure message delegate not found'
+        # key_data = None  # serialized symmetric key data
 
         #
         #   1. Decode 'message.keys' to encrypted symmetric key data
         #
-        bundle = await self._decode_keys(msg=msg, receiver=receiver)
+        agent = visa_agent()
+        bundle = agent.decode_bundle(msg, receiver=receiver)
         if bundle is None or bundle.is_empty:
             # broadcast message?
-            # reuse key?
+            # reused key?
             key_data = None
         else:
             #
@@ -123,26 +113,25 @@ class SecureMessagePacker:
         #
         msg_data = msg.data
         ciphertext = None if msg_data is None else msg_data.to_bytes()
-        if ciphertext is None:
+        if ciphertext is None or len(ciphertext) == 0:
+            # assert False, f'failed to decode message data: {msg.sender} => {receiver}, {msg.group}'
             return None
-        assert len(ciphertext) > 0, f'failed to decode message data: {msg.sender} => {receiver}, {msg.group}'
 
         #
         #   5. Decrypt 'message.data' with symmetric key
         #
-        body = await transformer.decrypt_content(data=ciphertext, key=password, msg=msg)
+        body = await transformer.decrypt_content(data=ciphertext, password=password, msg=msg)
         if body is None or len(body) == 0:
             # A: password is a reused key loaded from local storage, but it's expired;
             # B: key error.
             raise ValueError(f'failed to decrypt message data with key: {password},'
-                             f' data length: {len(ciphertext)} bytes {msg.sender} => {receiver}, {msg.group}')
+                             f' data length: {len(ciphertext)} byte(s) {msg.sender} => {receiver}, {msg.group}')
             # TODO: ask the sender to send again
-        assert len(body) > 0, f'message data should not be empty: {msg.sender} => {receiver}, {msg.group}'
 
         #
         #   6. Deserialize message content from data (JsON / ProtoBuf / ...)
         #
-        content = await transformer.deserialize_content(data=body, key=password, msg=msg)
+        content = await transformer.deserialize_content(data=body, password=password, msg=msg)
         if content is None:
             # assert False, f'failed to deserialize content: {len(body)} bytes {msg.sender} => {receiver}, {msg.group}'
             return None
@@ -166,15 +155,15 @@ class SecureMessagePacker:
         Sign the Secure Message to Reliable Message
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-            +----------+      +----------+
-            | sender   |      | sender   |
-            | receiver |      | receiver |
-            | time     |  ->  | time     |
-            |          |      |          |
-            | data     |      | data     |
-            | keys     |      | keys     |
-            +----------+      | signature|  1. signature = sign(data, sender.SK)
-                              +----------+
+            +----------+      +-----------+
+            | sender   |      | sender    |
+            | receiver |      | receiver  |
+            | time     |  ->  | time      |
+            |          |      |           |
+            | data     |      | data      |
+            | keys     |      | keys      |
+            +----------+      | signature |  1. signature = sign(data, sender.SK)
+                              +-----------+
     """
 
     async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
@@ -193,6 +182,7 @@ class SecureMessagePacker:
         msg_data = msg.data
         ciphertext = None if msg_data is None else msg_data.to_bytes()
         if ciphertext is None:
+            # assert False, f'failed to decode message data: {msg.sender} => {msg.receiver}, {msg.group}'
             return None
         assert len(ciphertext) > 0, f'failed to decode message data: {msg.sender} => {msg.receiver}, {msg.group}'
 
@@ -201,6 +191,8 @@ class SecureMessagePacker:
         #
         signature = await transformer.sign_data(data=ciphertext, msg=msg)
         if signature is None:
+            # assert False, f'failed to sign message: {len(ciphertext)} byte(s) ' \
+            #               f'{msg.sender} => {msg.receiver}, {msg.group}'
             return None
         assert len(signature) > 0, f'failed to sign message: {len(ciphertext)} byte(s)' \
                                    f' {msg.sender} => {msg.receiver}, {msg.group}'
@@ -208,11 +200,7 @@ class SecureMessagePacker:
         #
         #   2. Encode 'message.signature' to String (Base64)
         #
-        base64 = Base64Data.create(binary=signature)
-        assert not base64.is_empty, f'failed to encode signature: {len(signature)} byte(s)' \
-                                    f' {msg.sender} => {msg.receiver}, {msg.group}'
+        # ... do it in ReliableMessage.from_secure_message()
 
         # OK, pack message
-        info = msg.copy_map()
-        info['signature'] = base64.serialize()
-        return ReliableMessage.parse(msg=info)
+        return ReliableMessage.from_secure_message(s_msg=msg, signature=signature)

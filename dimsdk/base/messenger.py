@@ -50,10 +50,10 @@ class Messenger(Transformer, Packer, Processor, ABC):
 
     @property  # protected
     @abstractmethod
-    def key_cache(self) -> Optional[CipherKeyDelegate]:
+    def cipher_key_delegate(self) -> Optional[CipherKeyDelegate]:
         """ Delegate for Cipher Key """
         raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.key_cache getter'
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.cipher_key_delegate getter'
         )
 
     @property  # protected
@@ -95,19 +95,19 @@ class Messenger(Transformer, Packer, Processor, ABC):
     async def get_encrypt_key(self, msg: InstantMessage) -> Optional[SymmetricKey]:
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
-        db = self.key_cache
+        db = self.cipher_key_delegate
         return await db.get_cipher_key(sender=sender, receiver=target, generate=True)
 
     async def get_decrypt_key(self, msg: SecureMessage) -> Optional[SymmetricKey]:
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
-        db = self.key_cache
+        db = self.cipher_key_delegate
         return await db.get_cipher_key(sender=sender, receiver=target, generate=False)
 
     async def cache_decrypt_key(self, key: SymmetricKey, msg: SecureMessage):
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
-        db = self.key_cache
+        db = self.cipher_key_delegate
         return await db.cache_cipher_key(key=key, sender=sender, receiver=target)
 
     #

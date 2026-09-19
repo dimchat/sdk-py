@@ -31,12 +31,9 @@
 import weakref
 from typing import Optional, List
 
-from dimp import StrMap, MutableStrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import InstantMessage, SecureMessage
-from dimp import BaseMessage
-from dimp import PlainData, Base64Data
 
 from ..crypto import EncryptedBundle
 
@@ -82,8 +79,7 @@ class InstantMessagePacker:
     async def encrypt_message(self, msg: InstantMessage, password: SymmetricKey,
                               members: List[ID] = None) -> Optional[SecureMessage]:
         """
-        1. Encrypt message, replace 'content' field with encrypted 'data'
-        2. Encrypt group message, replace 'content' field with encrypted 'data'
+        Encrypt message, replace 'content' field with encrypted 'data'
 
         :param msg:      plain message
         :param password: symmetric key
@@ -98,50 +94,39 @@ class InstantMessagePacker:
         #
         #   1. Serialize 'message.content' to data (JsON / ProtoBuf / ...)
         #
-        body = await transformer.serialize_content(content=msg.content, key=password, msg=msg)
+        body = await transformer.serialize_content(content=msg.content, password=password, msg=msg)
         if body is None:
+            # assert False, f'failed to serialize content: {msg.content}'
             return None
         assert len(body) > 0, f'failed to serialize content: {msg.content}'
 
         #
         #   2. Encrypt content data to 'message.data' with symmetric key
         #
-        ciphertext = await transformer.encrypt_content(data=body, key=password, msg=msg)
+        ciphertext = await transformer.encrypt_content(data=body, password=password, msg=msg)
         if ciphertext is None:
+            # assert False, f'failed to encrypt content with key: {password}'
             return None
         assert len(ciphertext) > 0, f'failed to encrypt content with key: {password}'
 
         #
         #   3. Encode 'message.data' to String (Base64)
         #
-        if BaseMessage.is_broadcast(msg=msg):
-            # broadcast message content will not be encrypted (just encoded to JsON),
-            # so no need to encode to Base64 here
-            encoded_data = PlainData.create(binary=ciphertext)
-        else:
-            # message content had been encrypted by a symmetric key,
-            # so the data should be encoded here (with algorithm 'base64' as default).
-            encoded_data = Base64Data.create(binary=ciphertext)
-        assert not encoded_data.is_empty, f'failed to encode content data: {ciphertext}'
+        # ... do it in SecureMessage.from_instant_message()
 
         #
         #   4. Serialize message key to data (JsON / ProtoBuf / ...)
         #
-        pwd = await transformer.serialize_key(key=password, msg=msg)
+        pwd = await transformer.serialize_key(password=password, msg=msg)
         # NOTICE:
         #    if the key is reused, the msg must be updated with key digest.
-        info = msg.copy_map()
-
-        # replace 'content' with encrypted 'data
-        info.pop('content', None)
-        info['data'] = encoded_data.serialize()
 
         # check serialized key data,
         # if key data is null here, build the secure message directly.
         if pwd is None:
             # A) broadcast message has no key
             # B) reused key
-            return SecureMessage.parse(msg=info)
+            return SecureMessage.from_instant_message(i_msg=msg, data=ciphertext, bundles=None)
         # encrypt + encode key
 
         if members is None:
@@ -149,50 +134,29 @@ class InstantMessagePacker:
             receiver = msg.receiver
             assert receiver.is_user, f'message.receiver error: {receiver}'
             members = [receiver]
-        else:
-            # group message
-            receiver = msg.receiver
-            assert receiver.is_group, f'message.receiver error: {receiver}'
-            assert len(members) > 0, f'group members empty: {receiver}'
+        # else:
+        #     # group message
+        #     receiver = msg.receiver
+        #     assert receiver.is_group, f'message.receiver error: {receiver}'
+        #     assert len(members) > 0, f'group members empty: {receiver}'
 
         bundle_map: BundleMap = {}
         for receiver in members:
             #
-            #   5. Encrypt key data to 'message.keys' with receiver's public key
+            #   5. Encrypt key data to 'message.keys' with member's public key
             #
-            bundle = await transformer.encrypt_key(pwd, receiver=receiver, msg=msg)
+            bundle = await transformer.encrypt_key(data=pwd, receiver=receiver, msg=msg)
             if bundle is None or bundle.is_empty:
-                # public key for encryption not found
-                # TODO: suspend this message for waiting receiver's visa
+                # public key for member not found
+                # TODO: suspend this message for waiting member's visa
                 continue
             bundle_map[receiver] = bundle
 
         #
         #   6. Encode message key to String (Base64)
         #
-        msg_keys = await self._encode_keys(bundle_map=bundle_map, msg=msg)
-        # if msg_keys is None or len(msg_keys) == 0:
-        #     # public key for member(s) not found
-        #     # TODO: suspend this message for waiting member's visa
-        #     return None
-
-        # insert as 'keys'
-        info['keys'] = msg_keys
+        # ... do it in SecureMessage.from_instant_message()
 
         # OK, pack message
-        return SecureMessage.parse(msg=info)
-
-    async def _encode_keys(self, bundle_map: BundleMap, msg: InstantMessage) -> StrMap:
-        """ Encodes encrypted key bundles to a message-compatible map """
-        transformer = self.delegate
-        assert transformer is not None, 'instant message delegate not found'
-        msg_keys: MutableStrMap = {}
-        for receiver, bundle in bundle_map.items():
-            encoded_keys = await transformer.encode_keys(bundle=bundle, receiver=receiver, msg=msg)
-            if encoded_keys is None or len(encoded_keys) == 0:
-                # assert False, f'failed to encode key data: {receiver}'
-                continue
-            # insert to 'message.keys' with ID + terminal
-            msg_keys.update(encoded_keys)
+        return SecureMessage.from_instant_message(i_msg=msg, data=ciphertext, bundles=bundle_map)
         # TODO: put key digest
-        return msg_keys

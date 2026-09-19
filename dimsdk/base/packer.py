@@ -48,7 +48,7 @@ class MessagePacker(TwinsHelper, Packer):
         factory = packer_factory()
         self.__instant_packer = factory.create_instant_message_packer(messenger=messenger)
         self.__secure_packer = factory.create_secure_message_packer(messenger=messenger)
-        self.__reliablePacker = factory.create_reliable_message_packer(messenger=messenger)
+        self.__reliable_packer = factory.create_reliable_message_packer(messenger=messenger)
 
     @property  # protected
     def instant_packer(self) -> InstantMessagePacker:
@@ -60,7 +60,7 @@ class MessagePacker(TwinsHelper, Packer):
 
     @property  # protected
     def reliable_packer(self) -> ReliableMessagePacker:
-        return self.__reliablePacker
+        return self.__reliable_packer
 
     #
     #   InstantMessage -> SecureMessage -> ReliableMessage -> Data
@@ -102,9 +102,9 @@ class MessagePacker(TwinsHelper, Packer):
         if receiver.is_group:
             # group message
             members = await facebook.get_members(identifier=receiver)
-            if members is None:
+            if members is None or len(members) == 0:
+                # assert False, f'group not ready: {receiver}'
                 return None
-            assert len(members) > 0, f'group not ready: {receiver}'
             # a station will never send group message, so here must be a client;
             # the client messenger should check the group's meta & members before encrypting,
             # so we can trust that the group members MUST exist here.
@@ -115,7 +115,7 @@ class MessagePacker(TwinsHelper, Packer):
         if s_msg is None:
             # public key for encryption not found
             # TODO: suspend this message for waiting receiver's meta
-            # assert False, f'failed to encrypt message: {msg}'
+            # assert False, f"failed to encrypt message: {msg.sender} => {receiver}, {msg.get('group')}"
             return None
 
         # NOTICE: copy content type to envelope

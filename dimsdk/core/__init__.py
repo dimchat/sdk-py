@@ -28,17 +28,21 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .barrack import Archivist
 from .barrack import Barrack
-
-from .compress_keys import Shortener, MessageShortener
-from .compressor import Compressor, MessageCompressor
 
 from .packer import Packer
 from .processor import Processor
 from .transformer import Transformer
 
 from .delegate import CipherKeyDelegate
+
+#
+#   Dao-Ke-Dao (shortener / compressor)
+#   NOTE: physically located in `dkd/`; re-exported here to match the Dart
+#         barrel (lib/core.dart exports src/dkd/compress_keys.dart & compressor.dart)
+#
+from ..dkd.compress_keys import Shortener, MessageShortener
+from ..dkd.compressor import Compressor, MessageCompressor
 
 
 __all__ = [
@@ -47,16 +51,15 @@ __all__ = [
     #   Core Interfaces
     #
 
-    'Archivist',
     'Barrack',
-
-    'Shortener', 'MessageShortener',
-    'Compressor', 'MessageCompressor',
 
     'Packer',
     'Processor',
     'Transformer',
 
     'CipherKeyDelegate',
+
+    'Shortener', 'MessageShortener',
+    'Compressor', 'MessageCompressor',
 
 ]

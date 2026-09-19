@@ -76,25 +76,28 @@ class ReliableMessagePacker:
         #
         msg_data = msg.data
         ciphertext = None if msg_data is None else msg_data.to_bytes()
-        if ciphertext is None:
+        if ciphertext is None or len(ciphertext) == 0:
+            # assert False, f'failed to decode message data: ' \
+            #               f'{msg.sender} => {msg.receiver}, {msg.group}'
             return None
-        assert len(ciphertext) > 0, f'failed to decode message data: {msg.sender} => {msg.receiver}, {msg.group}'
 
         #
         #   1. Decode 'message.signature' from String (Base64)
         #
         msg_sig = msg.signature
         signature = None if msg_sig is None else msg_sig.to_bytes()
-        if signature is None:
+        if signature is None or len(signature) == 0:
+            # assert False, f'failed to decode message signature: ' \
+            #               f'{msg.sender} => {msg.receiver}, {msg.group}'
             return None
-        assert len(signature) > 0, f'failed to decode message signature: {msg.sender} => {msg.receiver}, {msg.group}'
 
         #
         #   2. Verify the message data and signature with sender's public key
         #
         ok = await transformer.verify_data_signature(data=ciphertext, signature=signature, msg=msg)
         if not ok:
-            # assert False, f'message signature not match: {msg.sender} => {msg.receiver}, {msg.group}'
+            # assert False, f'message signature not match: ' \
+            #               f'{msg.sender} => {msg.receiver}, {msg.group}'
             return None
 
         # OK, pack message

@@ -56,11 +56,11 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         if msg_type == ContentType.COMMAND:
             return BaseCommandProcessor(facebook=self.facebook, messenger=self.messenger)
 
-        # unknown content
         if msg_type == ContentType.ANY:
-            # must return a default processor for unknown type
+            # must return a default processor for type==0
             return BaseContentProcessor(facebook=self.facebook, messenger=self.messenger)
         # assert False, f'unsupported content: {msg_type}'
+        return None
 
     # Override
     def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:

@@ -31,7 +31,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from dimp import StrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
@@ -61,12 +60,12 @@ class InstantMessageDelegate(ABC):
     #
 
     @abstractmethod
-    async def serialize_content(self, content: Content, key: SymmetricKey, msg: InstantMessage) -> bytes:
+    async def serialize_content(self, content: Content, password: SymmetricKey, msg: InstantMessage) -> bytes:
         """
         1. Serialize 'message.content' to data (JsON / ProtoBuf / ...)
 
         :param content:  message content
-        :param key:      symmetric key (includes data compression algorithm)
+        :param password: symmetric key (includes data compression algorithm)
         :param msg:      instant message object
         :return: serialized content data
         """
@@ -75,12 +74,12 @@ class InstantMessageDelegate(ABC):
         )
 
     @abstractmethod
-    async def encrypt_content(self, data: bytes, key: SymmetricKey, msg: InstantMessage) -> bytes:
+    async def encrypt_content(self, data: bytes, password: SymmetricKey, msg: InstantMessage) -> bytes:
         """
         2. Encrypt content data to 'message.data' with symmetric key
 
         :param data:     serialized data of message.content
-        :param key:      symmetric key
+        :param password: symmetric key
         :param msg:      instant message object
         :return: encrypted message content data
         """
@@ -106,11 +105,11 @@ class InstantMessageDelegate(ABC):
     #
 
     @abstractmethod
-    async def serialize_key(self, key: SymmetricKey, msg: InstantMessage) -> Optional[bytes]:
+    async def serialize_key(self, password: SymmetricKey, msg: InstantMessage) -> Optional[bytes]:
         """
         4. Serialize message key to data (JsON / ProtoBuf / ...)
 
-        :param key:      symmetric key
+        :param password: symmetric key
         :param msg:      instant message object
         :return: serialized key data, None for reused (or broadcast message)
         """
@@ -132,16 +131,16 @@ class InstantMessageDelegate(ABC):
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_key()'
         )
 
-    @abstractmethod
-    async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> StrMap:
-        """
-        6. Encode the bundle of encrypted symmetric key data to 'message.keys'
-
-        :param bundle:   encrypted key bundle with terminal-specific data
-        :param receiver: actual receiver (user, or group member)
-        :param msg:      instant message object
-        :return: encoded key map (terminal → base64-encoded encrypted key data)
-        """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_keys()'
-        )
+    # @abstractmethod
+    # async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> StrMap:
+    #     """
+    #     6. Encode the bundle of encrypted symmetric key data to 'message.keys'
+    #
+    #     :param bundle:   encrypted key bundle with terminal-specific data
+    #     :param receiver: actual receiver (user, or group member)
+    #     :param msg:      instant message object
+    #     :return: encoded key map (terminal → base64-encoded encrypted key data)
+    #     """
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.encode_keys()'
+    #     )

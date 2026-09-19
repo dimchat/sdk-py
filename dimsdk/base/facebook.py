@@ -40,7 +40,7 @@ from typing import Optional, List
 
 from dimp import ID
 
-from ..core import Barrack, Archivist
+from ..core import Barrack
 from ..mkm import EntityDelegate, User, Group
 from ..mkm import UserDataSource, GroupDataSource
 
@@ -55,13 +55,9 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.barrack getter'
         )
 
-    @property
-    @abstractmethod
-    def archivist(self) -> Optional[Archivist]:
-        """ Entity database """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.archivist getter'
-        )
+    #
+    #   Entity Delegate
+    #
 
     async def select_user(self, receiver: ID) -> Optional[ID]:
         """
@@ -71,15 +67,15 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         :return: local user
         """
         assert receiver.is_user or receiver.is_broadcast, f'user ID error: {receiver}'
-        archivist = self.archivist
+        archivist = self.barrack
         assert archivist is not None, 'archivist not ready'
         all_users = await archivist.get_local_users()
         if all_users is None or len(all_users) == 0:
             # assert False, 'local users should not be empty'
             return None
         elif receiver.is_broadcast:
-            # broadcast message can decrypt by anyone, so
-            # just return current user
+            # broadcast message can be decrypted by anyone, so
+            # just return current user here
             return all_users[0]
         # personal message
         for item in all_users:
@@ -95,7 +91,8 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         :param members: group member list
         :return: local user
         """
-        archivist = self.archivist
+        assert members is not None and len(members) > 0, 'group members not found'
+        archivist = self.barrack
         assert archivist is not None, 'archivist not ready'
         all_users = await archivist.get_local_users()
         if all_users is None or len(all_users) == 0:

@@ -31,7 +31,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from dimp import StrMap
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
@@ -60,19 +59,19 @@ class SecureMessageDelegate(ABC):
     #   Decrypt Key
     #
 
-    @abstractmethod
-    async def decode_keys(self, keys: StrMap, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
-        """
-        1. Decode 'message.keys' to a bundle of encrypted symmetric key data
-
-        :param keys:     encoded key map (terminal → base64-encoded encrypted key data)
-        :param receiver: actual receiver (user, or group member)
-        :param msg:      secure message object
-        :return: encrypted key bundle with terminal-specific data
-        """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_keys()'
-        )
+    # @abstractmethod
+    # async def decode_keys(self, keys: StrMap, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
+    #     """
+    #     1. Decode 'message.keys' to a bundle of encrypted symmetric key data
+    #
+    #     :param keys:     encoded key map (terminal → base64-encoded encrypted key data)
+    #     :param receiver: actual receiver (user, or group member)
+    #     :param msg:      secure message object
+    #     :return: encrypted key bundle with terminal-specific data
+    #     """
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_keys()'
+    #     )
 
     @abstractmethod
     async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
@@ -120,12 +119,12 @@ class SecureMessageDelegate(ABC):
     #     )
 
     @abstractmethod
-    async def decrypt_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[bytes]:
+    async def decrypt_content(self, data: bytes, password: SymmetricKey, msg: SecureMessage) -> Optional[bytes]:
         """
         5. Decrypt 'message.data' with symmetric key
 
         :param data:     encrypted content data
-        :param key:      symmetric key
+        :param password: symmetric key
         :param msg:      secure message object
         :return: serialized message content
         """
@@ -134,12 +133,12 @@ class SecureMessageDelegate(ABC):
         )
 
     @abstractmethod
-    async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
+    async def deserialize_content(self, data: bytes, password: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
         """
         6. Deserialize message content from data (JsON / ProtoBuf / ...)
 
         :param data:     serialized content data
-        :param key:      symmetric key (includes data compression algorithm)
+        :param password: symmetric key (includes data compression algorithm)
         :param msg:      secure message object
         :return: message content
         """
@@ -151,15 +150,15 @@ class SecureMessageDelegate(ABC):
         Sign the Secure Message to Reliable Message
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-            +----------+      +----------+
-            | sender   |      | sender   |
-            | receiver |      | receiver |
-            | time     |  ->  | time     |
-            |          |      |          |
-            | data     |      | data     |
-            | keys     |      | keys     |
-            +----------+      | signature|  1. signature = sign(data, sender.SK)
-                              +----------+
+            +----------+      +-----------+
+            | sender   |      | sender    |
+            | receiver |      | receiver  |
+            | time     |  ->  | time      |
+            |          |      |           |
+            | data     |      | data      |
+            | keys     |      | keys      |
+            +----------+      | signature |  1. signature = sign(data, sender.SK)
+                              +-----------+
     """
 
     #

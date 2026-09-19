@@ -75,7 +75,7 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
 
     @classmethod
     def create_receipt(cls, text: str, envelope: Envelope, content: Optional[Content],
-                       extra: Optional[StrMap]) -> Content:
+                       extra: Optional[StrMap] = None) -> Command:
         """
         Receipt command with text, original envelope, serial number & group
 

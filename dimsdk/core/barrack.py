@@ -29,9 +29,9 @@
 # ==============================================================================
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import List, Optional
 
-from dimp import ID, Meta, Document
+from dimp import ID
 
 from ..mkm import User, Group
 
@@ -45,28 +45,46 @@ class Barrack(ABC):
 
     @abstractmethod
     def cache_user(self, user: User):
-        """ User pool """
+        """
+        Cache user in memory (overwrite the old one)
+
+        :param user: user entity
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.cache_user()'
         )
 
     @abstractmethod
     def cache_group(self, group: Group):
-        """ Group pool """
+        """
+        Cache group in memory (overwrite the old one)
+
+        :param group: group entity
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.cache_group()'
         )
 
     @abstractmethod
     def get_user(self, identifier: ID) -> Optional[User]:
-        """ User factory """
+        """
+        Get user entity from cache
+
+        :param identifier: user ID
+        :return: user entity
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_user()'
         )
 
     @abstractmethod
     def get_group(self, identifier: ID) -> Optional[Group]:
-        """ Group factory """
+        """
+        Get group entity from cache
+
+        :param identifier: group ID
+        :return: group entity
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_group()'
         )
@@ -93,39 +111,6 @@ class Barrack(ABC):
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_group()'
-        )
-
-
-class Archivist(ABC):
-    """
-        Entity Database
-        ~~~~~~~~~~~~~~~
-    """
-
-    @abstractmethod
-    async def save_meta(self, meta: Meta, identifier: ID) -> bool:
-        """
-        Save meta for entity ID (must verify first)
-
-        :param meta:       entity meta
-        :param identifier: entity ID
-        :return: True on success
-        """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.save_meta()'
-        )
-
-    @abstractmethod
-    async def save_document(self, document: Document, identifier: ID) -> bool:
-        """
-        Save entity document with ID (must verify first)
-
-        :param document:   entity document
-        :param identifier: entity ID
-        :return: True on success
-        """
-        raise NotImplementedError(
-            f'Not implemented: {type(self).__module__}.{type(self).__name__}.save_document()'
         )
 
     #

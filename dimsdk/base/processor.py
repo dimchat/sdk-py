@@ -142,9 +142,8 @@ class MessageProcessor(TwinsHelper, Processor, ABC):
 
     # Override
     async def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
-        facebook = self.facebook
         transceiver = self.messenger
-        assert facebook is not None and transceiver is not None, 'twins not ready'
+        assert transceiver is not None, 'messenger not ready'
         # 1. process content from sender
         responses = await transceiver.process_content(content=msg.content, r_msg=r_msg)
         if len(responses) == 0:

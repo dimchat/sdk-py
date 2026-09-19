@@ -34,6 +34,7 @@ from typing import Optional, Union, Set, List
 from dimp import VerifyKey, EncryptKey
 from dimp import PublicKey
 from dimp import Meta, Document
+from dimp import ID, SecureMessage
 from dimp import AccountHandler
 from dimp import GeneralAccountExtension, shared_account_extensions
 from dimp import EncryptedBundle, UserEncryptedBundle
@@ -42,7 +43,14 @@ from dimp import EncryptedBundle, UserEncryptedBundle
 class VisaAgent(ABC):
 
     @abstractmethod
-    def encrypt_bundle(self, plaintext: bytes, meta: Meta, documents: List[Document]) -> EncryptedBundle:
+    def decode_bundle(self, s_msg: SecureMessage, receiver: ID) -> Optional[EncryptedBundle]:
+        """ Decrypt key bundle for the receiver """
+        raise NotImplementedError(
+            f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_bundle()'
+        )
+
+    @abstractmethod
+    def encrypt_bundle(self, data: bytes, meta: Meta, documents: List[Document]) -> EncryptedBundle:
         """ Encrypt key bundle with public key """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_bundle()'
@@ -67,7 +75,23 @@ class VisaAgent(ABC):
 class DefaultVisaAgent(VisaAgent):
 
     # Override
-    def encrypt_bundle(self, plaintext: bytes, meta: Meta, documents: List[Document]) -> EncryptedBundle:
+    def decode_bundle(self, s_msg: SecureMessage, receiver: ID) -> Optional[EncryptedBundle]:
+        # TODO: check key digest
+        keys = s_msg.encrypted_keys
+        if keys is None or len(keys) == 0:
+            return None
+        # TODO: get terminal(s) for local user
+        terminal = receiver.terminal
+        if terminal is None or len(terminal) == 0:
+            # get full bundle
+            return EncryptedBundle.decode(encoded_keys=keys, receiver=receiver, terminals=None)
+        # get single bundle
+        devices = {terminal}
+        receiver = receiver.without_terminal()
+        return EncryptedBundle.decode(encoded_keys=keys, receiver=receiver, terminals=devices)
+
+    # Override
+    def encrypt_bundle(self, data: bytes, meta: Meta, documents: List[Document]) -> EncryptedBundle:
         # NOTICE: meta.key will never changed, so use visa.key to encrypt message
         #         is a better way
         bundle = UserEncryptedBundle()
@@ -81,12 +105,13 @@ class DefaultVisaAgent(VisaAgent):
                 continue
             # get visa.terminal
             terminal = self.get_terminal(document=doc)
-            if terminal is None or len(terminal) == 0:
-                terminal = '*'
+            # if (terminal is None || terminal.isEmpty) {
+            #   terminal = '/';
+            # }
             if bundle.get(terminal) is not None:
                 # assert False, f'duplicated visa key: {doc}'
                 continue
-            ciphertext = pub_key.encrypt(plaintext=plaintext)
+            ciphertext = pub_key.encrypt(plaintext=data)
             bundle[terminal] = ciphertext
         if bundle.is_empty:
             #
@@ -94,9 +119,9 @@ class DefaultVisaAgent(VisaAgent):
             #
             meta_key = meta.public_key
             if isinstance(meta_key, EncryptKey):
-                # terminal = '*
-                ciphertext = meta_key.encrypt(plaintext=plaintext)
-                bundle['*'] = ciphertext
+                # terminal = '/'
+                ciphertext = meta_key.encrypt(plaintext=data)
+                bundle['/'] = ciphertext
         # OK
         return bundle
 
@@ -134,9 +159,10 @@ class DefaultVisaAgent(VisaAgent):
             return pub_key
         # else:
         #     assert False, f'visa key error: {pub_key}'
+        return None
 
     # protected
-    def get_terminal(self, document: Document) -> Optional[str]:
+    def get_terminal(self, document: Document) -> str:
         terminal = document.get_str(key='terminal')
         if terminal is None:
             # get from document ID
@@ -148,6 +174,8 @@ class DefaultVisaAgent(VisaAgent):
             # else:
             #     assert False, f'document ID not found: {document}'
             #     # TODO: get from property?
+        if terminal is None or len(terminal) == 0 or terminal == '*':
+            terminal = '/'
         return terminal
 
     # Override
@@ -155,8 +183,9 @@ class DefaultVisaAgent(VisaAgent):
         devices = set()
         for doc in documents:
             terminal = self.get_terminal(document=doc)
-            if terminal is None or len(terminal) == 0:
-                terminal = '*'
+            # if (terminal is None || terminal.isEmpty) {
+            #   terminal = '/';
+            # }
             devices.add(terminal)
         # OK
         return devices
