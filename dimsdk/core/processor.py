@@ -35,15 +35,18 @@ from dimp import Content, InstantMessage, SecureMessage, ReliableMessage
 
 
 class Processor(ABC):
-    """
-        Message Processor
-        ~~~~~~~~~~~~~~~~~
+    """Message processing interface (handles received messages and generates responses).
+
+    Processes messages through a layered pipeline:
+    Binary package → ReliableMessage → SecureMessage → InstantMessage → Content
+
+    Generates response messages by reversing the pipeline.
     """
 
     @abstractmethod
     async def process_package(self, data: bytes) -> List[bytes]:
         """
-        Process data package
+        Processes a binary data package to generate response packages.
 
         :param data: data to be processed
         :return: responses
@@ -55,7 +58,7 @@ class Processor(ABC):
     @abstractmethod
     async def process_reliable_message(self, msg: ReliableMessage) -> List[ReliableMessage]:
         """
-        Process network message
+        Processes a reliable message to generate response reliable messages.
 
         :param msg: message to be processed
         :return: response messages
@@ -67,7 +70,7 @@ class Processor(ABC):
     @abstractmethod
     async def process_secure_message(self, msg: SecureMessage, r_msg: ReliableMessage) -> List[SecureMessage]:
         """
-        Process encrypted message
+        Processes a secure message to generate response secure messages.
 
         :param msg:   message to be processed
         :param r_msg: message received
@@ -80,7 +83,7 @@ class Processor(ABC):
     @abstractmethod
     async def process_instant_message(self, msg: InstantMessage, r_msg: ReliableMessage) -> List[InstantMessage]:
         """
-        Process plain message
+        Processes a plain instant message to generate response instant messages.
 
         :param msg:   message to be processed
         :param r_msg: message received
@@ -93,7 +96,7 @@ class Processor(ABC):
     @abstractmethod
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
         """
-        Process message content
+        Processes message content to generate response content items.
 
         :param content: content to be processed
         :param r_msg: message received

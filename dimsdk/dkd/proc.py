@@ -41,41 +41,51 @@ from dimp import ReliableMessage
 from dimp import Content
 
 
+# -----------------------------------------------------------------------------
+#  ContentProcessor (CPU: Content Processing Unit)
+# -----------------------------------------------------------------------------
+
 class ContentProcessor(ABC):
-    """
-        CPU: Content Processing Unit
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """Content processing unit (CPU) - core interface for handling message content.
+
+    Defines the standard interface for processing different types of message content
+    (e.g., text, commands, files, ...) and generating response content.
+
+    Each implementation handles a specific content type or command, following the
+    single responsibility principle.
     """
 
     @abstractmethod
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
-        """
-        Process message content
+        """Processes incoming message content and generates response contents.
 
-        :param content: content received
-        :param r_msg:   reliable message
-        :return: responses to sender
+        :param content: incoming message content to process (e.g., text, command, file, ...)
+        :param r_msg:   original reliable message (provides context: sender, receiver, envelope)
+        :return: list of response content items (empty list if no response is needed)
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.process_content()'
         )
 
 
-class ContentProcessorCreator(ABC):
-    """
-        CPU Creator
-        ~~~~~~~~~~~
+# -----------------------------------------------------------------------------
+#  ContentProcessorCreator (CPU Creator)
+# -----------------------------------------------------------------------------
 
-        Delegate for CPU Factory
+class ContentProcessorCreator(ABC):
+    """Creator interface for instantiating content/command processors.
+
+    Implements the Factory Method pattern to create specific
+    :class:`ContentProcessor` instances based on content type or command name,
+    decoupling creation logic from usage logic.
     """
 
     @abstractmethod
     def create_content_processor(self, msg_type: str) -> Optional[ContentProcessor]:
-        """
-        Create content processor with type
+        """Creates a content processor for a specific content type.
 
-        :param msg_type: content type
-        :return ContentProcessor
+        :param msg_type: content type identifier (e.g., "text", "command", "file", ...)
+        :return: specific :class:`ContentProcessor` instance (null if type is unsupported)
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_content_processor()'
@@ -83,33 +93,39 @@ class ContentProcessorCreator(ABC):
 
     @abstractmethod
     def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
-        """
-        Create command processor with name
+        """Creates a command processor for a specific content type and command name.
 
-        :param msg_type: content type
-        :param cmd:      command name
-        :return CommandProcessor
+        :param msg_type: content type identifier (typically "command" for command content)
+        :param cmd:      command name (e.g., "meta", "documents", "group", ...)
+        :return: specific command processor instance (null if command is unsupported)
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_command_processor()'
         )
 
 
-class ContentProcessorFactory(ABC):
-    """
-        CPU Factory
-        ~~~~~~~~~~~
+# -----------------------------------------------------------------------------
+#  ContentProcessorFactory (CPU Factory)
+# -----------------------------------------------------------------------------
 
-        Delegate for Message Processor
+class ContentProcessorFactory(ABC):
+    """Factory interface for retrieving cached content/command processors.
+
+    Manages a cache of :class:`ContentProcessor` instances to avoid repeated creation,
+    and provides unified access to processors for different content types/commands.
     """
 
     @abstractmethod
     def get_content_processor(self, content: Content) -> Optional[ContentProcessor]:
-        """
-        Get content/command processor
+        """Retrieves the appropriate processor for a given content instance.
 
-        :param content: Content/Command
-        :return: ContentProcessor
+        For command content:
+        1. First tries to get a processor for the specific command name
+        2. Falls back to group command processor (if applicable)
+        3. Finally uses the default content processor for the content type
+
+        :param content: content instance to get processor for (can be regular content or command)
+        :return: matching :class:`ContentProcessor` instance (null if no processor found)
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_content_processor()'
@@ -117,11 +133,10 @@ class ContentProcessorFactory(ABC):
 
     @abstractmethod
     def get_content_processor_for_type(self, msg_type: str) -> Optional[ContentProcessor]:
-        """
-        Get content/command processor
+        """Retrieves a content processor for a specific content type.
 
-        :param msg_type: content type
-        :return: ContentProcessor
+        :param msg_type: content type identifier (e.g., "text", "command", "file", ...)
+        :return: :class:`ContentProcessor` instance for the type (null if type is unsupported)
         """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_content_processor_for_type()'

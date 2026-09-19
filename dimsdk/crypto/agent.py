@@ -40,32 +40,81 @@ from dimp import GeneralAccountExtension, shared_account_extensions
 from dimp import EncryptedBundle, UserEncryptedBundle
 
 
+# -----------------------------------------------------------------------------
+#  Visa Agent (Visa-based Encryption/Verification)
+# -----------------------------------------------------------------------------
+
+
 class VisaAgent(ABC):
+    """Agent interface for Visa-based cryptographic operations.
+
+    Provides core functionality for working with user Visa documents:
+    - Encrypting data for multiple user terminals using Visa/Meta public keys
+    - Extracting verification keys from Meta/Visa documents
+    - Collecting terminal identifiers from Visa documents
+
+    Acts as a helper to abstract complex Visa-based encryption logic from User entity.
+    """
 
     @abstractmethod
     def decode_bundle(self, s_msg: SecureMessage, receiver: ID) -> Optional[EncryptedBundle]:
-        """ Decrypt key bundle for the receiver """
+        """Decrypts key bundle for the receiver.
+
+        `s_msg` is the received message.
+        `receiver` is the actual receiver (user, or group member).
+
+        Returns the encrypted bundle with terminals.
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.decode_bundle()'
         )
 
     @abstractmethod
     def encrypt_bundle(self, data: bytes, meta: Meta, documents: List[Document]) -> EncryptedBundle:
-        """ Encrypt key bundle with public key """
+        """Encrypts plaintext data using all available Visa/Meta public keys.
+
+        Creates an :class:`EncryptedBundle` with terminal-specific encrypted data, using:
+        1. Visa public keys for terminal-specific encryption
+        2. Meta public key as fallback for wildcard (*) encryption
+
+        `data` is the raw data to encrypt (usually a symmetric message key).
+        `meta` is the user's core Meta (contains fallback public key).
+        `documents` is the list of user Visa documents (contains terminal-specific public keys).
+
+        Returns an EncryptedBundle with terminal-specific encrypted data.
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.encrypt_bundle()'
         )
 
     @abstractmethod
     def get_verify_keys(self, meta: Meta, documents: List[Document]) -> List[VerifyKey]:
-        """ Get public keys """
+        """Extracts all verification keys from Meta and Visa documents.
+
+        Collects public verification keys from:
+        1. User's Meta (core identity key)
+        2. All Visa documents (terminal-specific keys)
+
+        `meta` is the user's core Meta.
+        `documents` is the list of user Visa documents.
+
+        Returns the list of VerifyKey instances for signature verification.
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_verify_keys()'
         )
 
     @abstractmethod
     def get_terminals(self, documents: List[Document]) -> Set[str]:
-        """ Get login points """
+        """Extracts all terminal identifiers from user Visa documents.
+
+        Collects unique terminal strings (e.g., "mobile", "desktop") from Visa documents,
+        representing all devices the user is logged into.
+
+        `documents` is the list of user Visa documents.
+
+        Returns the set of unique terminal identifiers (empty set if none).
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.get_terminals()'
         )
@@ -144,12 +193,29 @@ class DefaultVisaAgent(VisaAgent):
 
     # protected
     def get_verify_key(self, document: Document) -> Optional[VerifyKey]:
+        """Extracts the public verification key from a user document (Visa).
+
+        Parses the "key" property of the document as a :class:`PublicKey`.
+
+        `document` is the user document (Visa) containing the public key.
+
+        Returns the verification key (null if the document has no valid key).
+        """
         # public key in user profile?
         key = document.get_property(name='key')
         return PublicKey.parse(key=key)
 
     # protected
     def get_encrypt_key(self, document: Document) -> Optional[EncryptKey]:
+        """Extracts the public encryption key from a user document (Visa).
+
+        Parses the "key" property of the document as a :class:`PublicKey`; only keys
+        implementing :class:`EncryptKey` can be used for encryption.
+
+        `document` is the user document (Visa) containing the public key.
+
+        Returns the encryption key (null if not an encryptable key).
+        """
         key = document.get_property(name='key')
         pub_key = PublicKey.parse(key=key)
         if pub_key is None:
@@ -163,6 +229,15 @@ class DefaultVisaAgent(VisaAgent):
 
     # protected
     def get_terminal(self, document: Document) -> str:
+        """Determines the terminal identifier for a user document (Visa).
+
+        Reads the "terminal" property from the document; if missing, extracts it
+        from the document ID. Falls back to "/" (wildcard) when empty or "*".
+
+        `document` is the user document (Visa) to get terminal from.
+
+        Returns the terminal string ("/" for wildcard).
+        """
         terminal = document.get_str(key='terminal')
         if terminal is None:
             # get from document ID

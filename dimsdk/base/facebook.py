@@ -46,11 +46,23 @@ from ..mkm import UserDataSource, GroupDataSource
 
 
 class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
+    """Unified manager for user/group entity operations (combines caching + data access).
+
+    Implements core entity management workflows:
+    1. Selects the correct local user for message decryption
+    2. Retrieves/creates user/group entities (combines Barrack cache + lazy creation)
+    3. Integrates with Archivist for persistent data access
+
+    Implements: :class:`EntityDelegate`, :class:`UserDataSource`, :class:`GroupDataSource`
+    """
 
     @property  # protected
     @abstractmethod
     def barrack(self) -> Optional[Barrack]:
-        """ Entity factory """
+        """Returns the entity cache manager (Barrack) - internal use only.
+
+        None if the barrack is not initialized/ready for use.
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.barrack getter'
         )
@@ -60,8 +72,19 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
     #
 
     async def select_user(self, receiver: ID) -> Optional[ID]:
-        """
-        Select local user for receiver
+        """Selects a local user for decrypting messages to a user/broadcast receiver.
+
+        Core logic:
+          0. Validates receiver type (only user/broadcast allowed)
+          1. If receiver is broadcast -> returns first local user (any user can decrypt)
+          2. If receiver is user -> returns matching local user (personal message target)
+          3. Returns None if no matching local user is found
+
+        `receiver` is the target receiver ID (must be user or broadcast type).
+
+        Returns a local user ID for decryption (None if no match).
+
+        Raises an assertion error if receiver is invalid (group) or local users are empty.
 
         :param receiver: user/broadcast ID
         :return: local user
@@ -85,8 +108,18 @@ class Facebook(EntityDelegate, UserDataSource, GroupDataSource, ABC):
         # not for me?
 
     async def select_member(self, members: List[ID]) -> Optional[ID]:
-        """
-        Select local user for group members
+        """Selects a local user who is a member of a specific group (for group message decryption).
+
+        Core logic:
+          0. Validates group member list is non-empty
+          1. Finds the first local user that exists in the group member list
+          2. Returns None if no local user is a group member
+
+        `members` is the list of group member IDs (must be non-empty).
+
+        Returns a local user ID who is a group member (None if no match).
+
+        Raises an assertion error if members are empty or local users are empty.
 
         :param members: group member list
         :return: local user

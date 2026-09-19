@@ -35,25 +35,29 @@ from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
 from dimp import SecureMessage
-
-from ..crypto import EncryptedBundle
+from dimp import EncryptedBundle
 
 
 class SecureMessageDelegate(ABC):
 
-    """
-        Decrypt the Secure Message to Instant Message
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """Delegate interface for decrypting SecureMessage and signing to ReliableMessage.
 
-            +----------+      +----------+
-            | sender   |      | sender   |
-            | receiver |      | receiver |
-            | time     |  ->  | time     |
-            |          |      |          |  1. PW      = decrypt(key, receiver.SK)
-            | data     |      | content  |  2. content = decrypt(data, PW)
-            | keys     |      +----------+
-            +----------+
+    Handles two core workflows:
+    1. Decryption: SecureMessage -> InstantMessage (reverse of encryption pipeline)
+    2. Signing: SecureMessage -> ReliableMessage (add sender signature)
     """
+
+    #
+    #   Decrypt the Secure Message to Instant Message
+    #
+    #     +----------+      +----------+
+    #     | sender   |      | sender   |
+    #     | receiver |      | receiver |
+    #     | time     |  ->  | time     |
+    #     |          |      |          |  1. PW      = decrypt(key, receiver.SK)
+    #     | data     |      | content  |  2. content = decrypt(data, PW)
+    #     | keys     |      +----------+
+    #     +----------+
 
     #
     #   Decrypt Key
@@ -75,8 +79,10 @@ class SecureMessageDelegate(ABC):
 
     @abstractmethod
     async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
-        """
-        2. Decrypt key data from a bundle with receiver's private key
+        """Decrypts encrypted key bundle with receiver's private key (Step 2).
+
+        Uses the receiver's private key to decrypt the EncryptedBundle,
+        retrieving the serialized symmetric key data.
 
         :param bundle:   encrypted key bundle with terminal-specific data
         :param receiver: actual receiver (user, or group member)
@@ -89,9 +95,10 @@ class SecureMessageDelegate(ABC):
 
     @abstractmethod
     async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
-        """
-        3. Deserialize message key from data (JsON / ProtoBuf / ...)
-           (if key data is empty, means it should be reused, get it from key cache)
+        """Deserializes symmetric key from binary data (Step 3).
+
+        Converts serialized key data back to a SymmetricKey object. If key is null,
+        retrieves the reused key from cache (for broadcast/reused keys).
 
         :param data:     serialized key data, None for reused (or broadcast message)
         :param msg:      secure message object
@@ -120,8 +127,10 @@ class SecureMessageDelegate(ABC):
 
     @abstractmethod
     async def decrypt_content(self, data: bytes, password: SymmetricKey, msg: SecureMessage) -> Optional[bytes]:
-        """
-        5. Decrypt 'message.data' with symmetric key
+        """Decrypts encrypted content data with symmetric key (Step 5).
+
+        Uses the symmetric key to decrypt the SecureMessage's 'data' field,
+        retrieving the serialized content data.
 
         :param data:     encrypted content data
         :param password: symmetric key
@@ -134,8 +143,10 @@ class SecureMessageDelegate(ABC):
 
     @abstractmethod
     async def deserialize_content(self, data: bytes, password: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
-        """
-        6. Deserialize message content from data (JsON / ProtoBuf / ...)
+        """Deserializes content from binary data (Step 6).
+
+        Converts decrypted serialized content data back to a structured Content object,
+        using compression algorithm specified in the symmetric key.
 
         :param data:     serialized content data
         :param password: symmetric key (includes data compression algorithm)
@@ -146,20 +157,18 @@ class SecureMessageDelegate(ABC):
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.deserialize_content()'
         )
 
-    """
-        Sign the Secure Message to Reliable Message
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-            +----------+      +-----------+
-            | sender   |      | sender    |
-            | receiver |      | receiver  |
-            | time     |  ->  | time      |
-            |          |      |           |
-            | data     |      | data      |
-            | keys     |      | keys      |
-            +----------+      | signature |  1. signature = sign(data, sender.SK)
-                              +-----------+
-    """
+    #
+    #   Sign the Secure Message to Reliable Message
+    #
+    #     +----------+      +-----------+
+    #     | sender   |      | sender    |
+    #     | receiver |      | receiver  |
+    #     | time     |  ->  | time      |
+    #     |          |      |           |
+    #     | data     |      | data      |
+    #     | keys     |      | keys      |
+    #     +----------+      | signature |  1. signature = sign(data, sender.SK)
+    #                       +-----------+
 
     #
     #   Signature
@@ -167,8 +176,10 @@ class SecureMessageDelegate(ABC):
 
     @abstractmethod
     async def sign_data(self, data: bytes, msg: SecureMessage) -> bytes:
-        """
-        1. Sign 'message.data' with sender's private key
+        """Signs encrypted content data with sender's private key (Step 1).
+
+        Generates a digital signature for the SecureMessage's 'data' field
+        using the sender's private key (Meta/Visa), for non-repudiation.
 
         :param data:      encrypted message data
         :param msg:       secure message object

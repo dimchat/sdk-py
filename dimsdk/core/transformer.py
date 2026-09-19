@@ -45,16 +45,18 @@ from ..dkd import Compressor
 
 
 class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate, ABC):
-    """
-        Message Transformer
-        ~~~~~~~~~~~~~~~~~~~
-        Converting message format between PlainMessage and NetworkMessage
+    """Message format transformer (converts between plain/encrypted/signed formats).
+
+    Implements low-level serialization/deserialization, encryption/decryption,
+    and signature/verification logic for different message types.
+
+    Implements: :class:`InstantMessageDelegate`, :class:`SecureMessageDelegate`, :class:`ReliableMessageDelegate`
     """
 
     @property  # protected
     @abstractmethod
     def facebook(self) -> EntityDelegate:
-        """ Entity delegate """
+        """Entity management service (user/group operations) - internal use only."""
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.facebook getter'
         )
@@ -62,14 +64,14 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     @property  # protected
     @abstractmethod
     def compressor(self) -> Compressor:
-        """ Message compressor """
+        """Data compression service (short key + JSON + UTF8) - internal use only."""
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compressor getter'
         )
 
     async def serialize_message(self, msg: ReliableMessage) -> Optional[bytes]:
         """
-        Serialize network message
+        Serializes a reliable message to binary data (uses compressor).
 
         :param msg: network message
         :return: data package
@@ -80,7 +82,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     async def deserialize_message(self, data: bytes) -> Optional[ReliableMessage]:
         """
-        Deserialize network message
+        Deserializes binary data back to a reliable message (uses compressor).
 
         :param data: data package
         :return: network message
@@ -136,7 +138,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
         contact = await facebook.get_user(identifier=receiver)
         if contact is not None:
             # encrypt with public key of the receiver (or group member)
-            return await contact.encrypt_bundle(plaintext=data)
+            return await contact.encrypt_bundle(data=data)
         else:
             assert False, f'failed to encrypt message key for receiver: {receiver}'
 

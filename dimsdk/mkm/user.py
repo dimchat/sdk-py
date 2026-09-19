@@ -28,6 +28,12 @@
 # SOFTWARE.
 # ==============================================================================
 
+"""
+    User Entity (with Visa-based Crypto)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+"""
+
 from abc import ABC, abstractmethod
 from typing import Optional, Set, List
 
@@ -41,28 +47,18 @@ from .entity import EntityDataSource, Entity, BaseEntity
 
 
 class UserDataSource(EntityDataSource, ABC):
-    """ This interface is for getting information for user
+    """Data source interface for user-specific data and cryptographic keys.
 
-        User Data Source
-        ~~~~~~~~~~~~~~~~
+    Extends :class:`EntityDataSource` with user-specific key management, defining the contract
+    for fetching private keys (local user only) and contact information.
 
-        (Encryption/decryption)
-        1. public key for encryption
-           if visa.key not exists, means it is the same key with meta.key
-        2. private keys for decryption
-           the private keys paired with [visa.key, meta.key]
-
-        (Signature/Verification)
-        3. private key for signature
-           the private key paired with visa.key or meta.key
-        4. public keys for verification
-           [visa.key, meta.key]
-
-        (Visa Document)
-        5. private key for visa signature
-           the private key paired with meta.key
-        6. public key for visa verification
-           meta.key only
+    Core cryptographic responsibilities (Visa/Meta key pairs):
+    1. Encryption        : Use Visa public key (terminal-specific) or Meta key (fallback)
+    2. Decryption        : Use private keys paired with Visa/Meta public keys
+    3. Signing           : Use private key paired with Visa/Meta public key
+    4. Verification      : Use Visa/Meta public keys
+    5. Visa Signing      : Use private key paired with Meta public key (only)
+    6. Visa Verification : Use Meta public key (only)
     """
 
     @abstractmethod
@@ -117,18 +113,16 @@ class UserDataSource(EntityDataSource, ABC):
 
 
 class User(Entity, ABC):
-    """ This class is for creating user
+    """User account interface for secure communication (with Visa terminal support).
 
-        User for communication
-        ~~~~~~~~~~~~~~~~~~~~~~
+    Extends :class:`Entity` with user-specific cryptographic operations, contact management,
+    and Visa-based terminal encryption.
 
-        functions:
-            (User)
-            1. verify(data, signature) - verify (encrypted content) data and signature
-            2. encrypt(data)           - encrypt (symmetric key) data
-            (LocalUser)
-            3. sign(data)    - calculate signature of (encrypted content) data
-            4. decrypt(data) - decrypt (symmetric key) data
+    Supports core secure communication functions:
+      1. Verification : Verify message signatures using Meta/Visa public keys
+      2. Encryption   : Encrypt data for specific user terminals (via EncryptedBundle)
+      3. Signing      : Generate message signatures (local user only)
+      4. Decryption   : Decrypt terminal-specific data (local user only)
     """
 
     # @property
@@ -359,6 +353,15 @@ class BaseUser(BaseEntity, User):
 
     # protected
     async def _private_keys_for_decryption(self, terminal: str) -> List[DecryptKey]:
+        """Retrieves the decryption private keys for a specific terminal (async).
+
+        Queries the :class:`UserDataSource` for private keys paired with the public keys
+        in the user's Visa/Meta documents, targeting the given terminal.
+
+        The ``terminal`` is the device terminal string (empty or "/" for wildcard).
+
+        Returns the list of decryption private keys (null if data source is missing).
+        """
         facebook = self.data_source
         assert isinstance(facebook, UserDataSource), f'user data source error: {facebook}'
         uid = self.identifier
@@ -371,6 +374,13 @@ class BaseUser(BaseEntity, User):
 
     # protected
     async def _private_key_for_signature(self) -> Optional[SignKey]:
+        """Retrieves the private key for message signing (async).
+
+        Returns the private key paired with the user's Visa/Meta public key,
+        used to generate digital signatures for outgoing messages.
+
+        Returns the signing key (null if data source is missing).
+        """
         facebook = self.data_source
         assert isinstance(facebook, UserDataSource), f'user data source error: {facebook}'
         uid = self.identifier
@@ -378,6 +388,13 @@ class BaseUser(BaseEntity, User):
 
     # protected
     async def _private_key_for_visa_signature(self) -> Optional[SignKey]:
+        """Retrieves the private key for Visa document signing (async).
+
+        Returns the private key paired with the user's Meta public key (only),
+        used to sign the user's Visa documents (identity verification).
+
+        Returns the signing key for Visa documents (null if data source is missing).
+        """
         facebook = self.data_source
         assert isinstance(facebook, UserDataSource), f'user data source error: {facebook}'
         uid = self.identifier

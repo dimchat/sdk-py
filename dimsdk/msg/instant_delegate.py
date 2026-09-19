@@ -35,25 +35,29 @@ from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
 from dimp import InstantMessage
-
-from ..crypto import EncryptedBundle
+from dimp import EncryptedBundle
 
 
 class InstantMessageDelegate(ABC):
 
-    """
-        Encrypt the Instant Message to Secure Message
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """Delegate interface for encrypting InstantMessage to SecureMessage.
 
-            +----------+      +----------+
-            | sender   |      | sender   |
-            | receiver |      | receiver |
-            | time     |  ->  | time     |
-            |          |      |          |
-            | content  |      | data     |  1. data = encrypt(content, PW)
-            +----------+      | keys     |  2. key  = encrypt(PW, receiver.PK)
-                              +----------+
+    Handles the full encryption pipeline for instant messages, including:
+    1. Serialization/encryption of message content (with symmetric key)
+    2. Encryption of symmetric key (with receiver's public key)
     """
+
+    #
+    #   Encrypt the Instant Message to Secure Message
+    #
+    #     +----------+      +----------+
+    #     | sender   |      | sender   |
+    #     | receiver |      | receiver |
+    #     | time     |  ->  | time     |
+    #     |          |      |          |
+    #     | content  |      | data     |  1. data = encrypt(content, PW)
+    #     +----------+      | keys     |  2. key  = encrypt(PW, receiver.PK)
+    #                       +----------+
 
     #
     #   Encrypt Content
@@ -61,8 +65,10 @@ class InstantMessageDelegate(ABC):
 
     @abstractmethod
     async def serialize_content(self, content: Content, password: SymmetricKey, msg: InstantMessage) -> bytes:
-        """
-        1. Serialize 'message.content' to data (JsON / ProtoBuf / ...)
+        """Serializes message content to raw bytes (Step 1).
+
+        Converts structured Content object to binary format (JSON/Protobuf/etc.),
+        using compression algorithm specified in the symmetric key.
 
         :param content:  message content
         :param password: symmetric key (includes data compression algorithm)
@@ -75,8 +81,10 @@ class InstantMessageDelegate(ABC):
 
     @abstractmethod
     async def encrypt_content(self, data: bytes, password: SymmetricKey, msg: InstantMessage) -> bytes:
-        """
-        2. Encrypt content data to 'message.data' with symmetric key
+        """Encrypts serialized content data with symmetric key (Step 2).
+
+        Uses the symmetric key to encrypt the serialized content data,
+        producing the final 'data' field for SecureMessage.
 
         :param data:     serialized data of message.content
         :param password: symmetric key
@@ -106,8 +114,10 @@ class InstantMessageDelegate(ABC):
 
     @abstractmethod
     async def serialize_key(self, password: SymmetricKey, msg: InstantMessage) -> Optional[bytes]:
-        """
-        4. Serialize message key to data (JsON / ProtoBuf / ...)
+        """Serializes symmetric key to raw bytes (Step 4).
+
+        Converts the symmetric key to binary format for encryption. Returns null
+        if key is reused (e.g., broadcast messages) or not needed.
 
         :param password: symmetric key
         :param msg:      instant message object
@@ -119,8 +129,10 @@ class InstantMessageDelegate(ABC):
 
     @abstractmethod
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[EncryptedBundle]:
-        """
-        5. Encrypt key data to a bundle with receiver's public key
+        """Encrypts serialized key with receiver's public key (Step 5).
+
+        Uses the receiver's public key (from Visa/Meta) to encrypt the symmetric key,
+        producing terminal-specific encrypted data (EncryptedBundle).
 
         :param data:     serialized data of symmetric key
         :param receiver: actual receiver (user, or group member)

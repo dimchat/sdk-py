@@ -35,9 +35,13 @@ from dimp import InstantMessage, SecureMessage, ReliableMessage
 
 
 class Packer(ABC):
-    """
-        Message Packer
-        ~~~~~~~~~~~~~~
+    """Message packing/unpacking interface (encryption → signature → serialization).
+
+    Core workflow (packing):
+    `InstantMessage` (plain) → `SecureMessage` (encrypted) → `ReliableMessage` (signed) → `Uint8List` (binary)
+
+    Core workflow (unpacking):
+    `Uint8List` (binary) → `ReliableMessage` (signed) → `SecureMessage` (encrypted) → `InstantMessage` (plain)
     """
 
     #
@@ -47,7 +51,7 @@ class Packer(ABC):
     @abstractmethod
     async def encrypt_message(self, msg: InstantMessage) -> Optional[SecureMessage]:
         """
-        Encrypt message content
+        Encrypts the content of a plain instant message to create a secure message.
 
         :param msg: plain message
         :return: encrypted message
@@ -59,7 +63,7 @@ class Packer(ABC):
     @abstractmethod
     async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
         """
-        Sign content data
+        Signs the encrypted data of a secure message to create a reliable message.
 
         :param msg: encrypted message
         :return: network message
@@ -99,7 +103,7 @@ class Packer(ABC):
     @abstractmethod
     async def verify_message(self, msg: ReliableMessage) -> Optional[SecureMessage]:
         """
-        Verify encrypted content data
+        Verifies the signature of a reliable message to retrieve the secure message.
 
         :param msg: network message
         :return: encrypted message
@@ -111,7 +115,7 @@ class Packer(ABC):
     @abstractmethod
     async def decrypt_message(self, msg: SecureMessage) -> Optional[InstantMessage]:
         """
-        Decrypt message content
+        Decrypts the data of a secure message to retrieve the plain instant message.
 
         :param msg: encrypted message
         :return: plain message

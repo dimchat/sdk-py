@@ -34,8 +34,7 @@ from typing import Optional, List
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import InstantMessage, SecureMessage
-
-from ..crypto import EncryptedBundle
+from dimp import EncryptedBundle
 
 from .instant_delegate import InstantMessageDelegate
 
@@ -54,6 +53,14 @@ except TypeError:
 
 class InstantMessagePacker:
 
+    """Packer class for encrypting InstantMessage to SecureMessage.
+
+    Implements the full encryption pipeline for instant messages, including:
+    1. Content serialization/encryption (symmetric key)
+    2. Key encryption (asymmetric, receiver's public key)
+    3. Format conversion to SecureMessage structure
+    """
+
     def __init__(self, messenger: InstantMessageDelegate):
         super().__init__()
         self.__transformer = weakref.ref(messenger)
@@ -62,24 +69,24 @@ class InstantMessagePacker:
     def delegate(self) -> Optional[InstantMessageDelegate]:
         return self.__transformer()
 
-    """
-        Encrypt the Instant Message to Secure Message
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-            +----------+      +----------+
-            | sender   |      | sender   |
-            | receiver |      | receiver |
-            | time     |  ->  | time     |
-            |          |      |          |
-            | content  |      | data     |  1. data = encrypt(content, PW)
-            +----------+      | keys     |  2. key  = encrypt(PW, receiver.PK)
-                              +----------+
-    """
+    #
+    #   Encrypt the Instant Message to Secure Message
+    #
+    #     +----------+      +----------+
+    #     | sender   |      | sender   |
+    #     | receiver |      | receiver |
+    #     | time     |  ->  | time     |
+    #     |          |      |          |
+    #     | content  |      | data     |  1. data = encrypt(content, PW)
+    #     +----------+      | keys     |  2. key  = encrypt(PW, receiver.PK)
+    #                       +----------+
 
     async def encrypt_message(self, msg: InstantMessage, password: SymmetricKey,
                               members: List[ID] = None) -> Optional[SecureMessage]:
-        """
-        Encrypt message, replace 'content' field with encrypted 'data'
+        """Encrypts an InstantMessage to a SecureMessage (supports personal/group messages).
+
+        Replaces the plaintext 'content' field with encrypted 'data', and encrypts the
+        symmetric key for target recipients (personal: single user, group: multiple members).
 
         :param msg:      plain message
         :param password: symmetric key

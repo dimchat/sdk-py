@@ -43,17 +43,17 @@ from .compress_keys import Shortener
 # -----------------------------------------------------------------------------
 
 class Compressor(ABC):
-    """ Interface for message data compression (short key mapping + JSON serialization + UTF8 encoding).
+    """Interface for message data compression (short key mapping + JSON serialization + UTF8 encoding).
 
-        Core workflow:
-        1. Shorten keys via Shortener
-        2. Serialize to JSON string
-        3. Encode to UTF8 binary bytes
+    Core workflow:
+    1. Shorten keys via :class:`Shortener`
+    2. Serialize to JSON string
+    3. Encode to UTF8 binary bytes
 
-        Extraction workflow (reverse):
-        1. Decode UTF8 bytes to JSON string
-        2. Deserialize to Map
-        3. Restore long keys via Shortener
+    Extraction workflow (reverse):
+    1. Decode UTF8 bytes to JSON string
+    2. Deserialize to Map
+    3. Restore long keys via :class:`Shortener`
     """
 
     # -------------------------------------------------------------------------
@@ -62,14 +62,24 @@ class Compressor(ABC):
 
     @abstractmethod
     def compress_content(self, content: StrMap, key: StrMap) -> bytes:
-        """ Compress content info """
+        """Compresses content map to UTF8 binary bytes (short keys + JSON + UTF8).
+
+        :param content: original content map with long keys
+        :param key: symmetric key map (reserved parameter, not used in implementation)
+        :return: UTF8 encoded binary bytes of compressed content
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_content()'
         )
 
     @abstractmethod
     def extract_content(self, data: bytes, key: StrMap) -> Optional[StrMap]:
-        """ Extract content info """
+        """Extracts content map from UTF8 binary bytes (UTF8 → JSON → long keys).
+
+        :param data: UTF8 encoded binary bytes of compressed content
+        :param key: symmetric key map (reserved parameter, not used in implementation)
+        :return: restored content map with long keys (null if decoding/deserialization fails)
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_content()'
         )
@@ -80,14 +90,22 @@ class Compressor(ABC):
 
     @abstractmethod
     def compress_symmetric_key(self, key: StrMap) -> bytes:
-        """ Compress password info """
+        """Compresses symmetric key map to UTF8 binary bytes (short keys + JSON + UTF8).
+
+        :param key: original symmetric key map with long keys
+        :return: UTF8 encoded binary bytes of compressed symmetric key
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_symmetric_key()'
         )
 
     @abstractmethod
     def extract_symmetric_key(self, data: bytes) -> Optional[StrMap]:
-        """ Extract password info """
+        """Extracts symmetric key map from UTF8 binary bytes (UTF8 → JSON → long keys).
+
+        :param data: UTF8 encoded binary bytes of compressed symmetric key
+        :return: restored symmetric key map with long keys (null if decoding/deserialization fails)
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_symmetric_key()'
         )
@@ -98,24 +116,32 @@ class Compressor(ABC):
 
     @abstractmethod
     def compress_reliable_message(self, msg: StrMap) -> bytes:
-        """ Compress message info """
+        """Compresses ReliableMessage map to UTF8 binary bytes (short keys + JSON + UTF8).
+
+        :param msg: original ReliableMessage map with long keys
+        :return: UTF8 encoded binary bytes of compressed message
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.compress_reliable_message()'
         )
 
     @abstractmethod
     def extract_reliable_message(self, data: bytes) -> Optional[StrMap]:
-        """ Extract message info """
+        """Extracts ReliableMessage map from UTF8 binary bytes (UTF8 → JSON → long keys).
+
+        :param data: UTF8 encoded binary bytes of compressed message
+        :return: restored message map with long keys (null if decoding/deserialization fails)
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.extract_reliable_message()'
         )
 
 
 class MessageCompressor(Compressor):
-    """ Concrete implementation of Compressor (Shortener + JSON + UTF8).
+    """Concrete implementation of :class:`Compressor` (Shortener + JSON + UTF8).
 
-        Uses MessageShortener for key mapping, JSON for serialization,
-        and UTF8 for binary encoding/decoding.
+    Uses :class:`MessageShortener` for key mapping, JSON for serialization,
+    and UTF8 for binary encoding/decoding.
     """
 
     def __init__(self, shortener: Shortener):
@@ -124,6 +150,7 @@ class MessageCompressor(Compressor):
 
     @property  # protected
     def shortener(self) -> Shortener:
+        """Short key mapper used for key conversion."""
         return self.__shortener
 
     # -------------------------------------------------------------------------

@@ -48,7 +48,11 @@ from .base import BaseCommandProcessor
 
 
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
-    """ Base ContentProcessor Creator """
+    """Base implementation of :class:`ContentProcessorCreator` for standard content/command types.
+
+    Creates concrete processors for standard commands (meta, documents, ...),
+    falling back to base processors for unsupported types/commands.
+    """
 
     # Override
     def create_content_processor(self, msg_type: str) -> Optional[ContentProcessor]:

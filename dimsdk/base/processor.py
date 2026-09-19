@@ -44,6 +44,11 @@ from .twins import TwinsHelper
 
 
 class MessageProcessor(TwinsHelper, Processor, ABC):
+    """Concrete implementation of :class:`Processor` with twin dependencies (Facebook + Messenger).
+
+    Implements the full message processing pipeline, delegating content processing
+    to a :class:`ContentProcessorFactory` for different content types.
+    """
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)
@@ -51,12 +56,21 @@ class MessageProcessor(TwinsHelper, Processor, ABC):
 
     @property  # private
     def factory(self) -> ContentProcessorFactory:
-        """ CPU Factory """
+        """Factory for creating content processors (internal use only).
+
+        CPU = Content Processor Unit
+        """
         return self.__factory
 
     @abstractmethod  # protected
     def _create_factory(self, facebook: Facebook, messenger: Messenger) -> ContentProcessorFactory:
-        """ Create CPU factory """
+        """Creates a :class:`ContentProcessorFactory` instance (must be overridden by subclasses).
+
+        `facebook` is the entity management service.
+        `messenger` is the messaging service.
+
+        Returns a new :class:`ContentProcessorFactory` instance.
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}._create_factory()'
         )

@@ -42,6 +42,11 @@ from .twins import TwinsHelper
 
 
 class MessagePacker(TwinsHelper, Packer):
+    """Concrete implementation of :class:`Packer` with twin dependencies (Facebook + Messenger).
+
+    Handles message encryption/decryption with directional symmetric keys,
+    supports both personal and group message encryption logic.
+    """
 
     def __init__(self, facebook: Facebook, messenger: Messenger):
         super().__init__(facebook=facebook, messenger=messenger)

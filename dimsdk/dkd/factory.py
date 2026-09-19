@@ -55,13 +55,23 @@ except TypeError:
     CpuMap = typing.MutableMapping[str, ContentProcessor]
 
 
+# -----------------------------------------------------------------------------
+#  GeneralContentProcessorFactory (Concrete CPU Factory)
+# -----------------------------------------------------------------------------
+
 class GeneralContentProcessorFactory(ContentProcessorFactory):
-    """ General ContentProcessor Factory """
+    """General implementation of :class:`ContentProcessorFactory` with caching support.
+
+    Maintains caches for content processors and command processors to reuse instances,
+    delegating creation to a :class:`ContentProcessorCreator` when cache misses occur.
+    """
 
     def __init__(self, creator: ContentProcessorCreator):
         super().__init__()
         self.__creator = creator
+        # Cache of content processors (key: content type).
         self.__content_processors: CpuMap = {}
+        # Cache of command processors (key: command name).
         self.__command_processors: CpuMap = {}
 
     @property  # protected
@@ -95,6 +105,15 @@ class GeneralContentProcessorFactory(ContentProcessorFactory):
 
     # private
     def _get_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
+        """Retrieves a command processor from cache (or creates it).
+
+        Private helper method - internal use only.
+
+        `msg_type` is the content type identifier (typically "command").
+        `cmd` is the command name (e.g., "meta", "documents", "group", ...).
+
+        Returns the command processor instance (null if unsupported).
+        """
         cpu = self.__command_processors.get(cmd)
         if cpu is None:
             cpu = self.creator.create_command_processor(msg_type, cmd=cmd)

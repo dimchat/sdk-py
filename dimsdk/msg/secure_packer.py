@@ -41,6 +41,13 @@ from .secure_delegate import SecureMessageDelegate
 
 class SecureMessagePacker:
 
+    """Packer class for decrypting SecureMessage and signing to ReliableMessage.
+
+    Implements two core workflows:
+    1. Decryption: SecureMessage -> InstantMessage (reverse of encryption)
+    2. Signing: SecureMessage -> ReliableMessage (add sender signature)
+    """
+
     def __init__(self, messenger: SecureMessageDelegate):
         super().__init__()
         self.__transformer = weakref.ref(messenger)
@@ -49,23 +56,23 @@ class SecureMessagePacker:
     def delegate(self) -> Optional[SecureMessageDelegate]:
         return self.__transformer()
 
-    """
-        Decrypt the Secure Message to Instant Message
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-            +----------+      +----------+
-            | sender   |      | sender   |
-            | receiver |      | receiver |
-            | time     |  ->  | time     |
-            |          |      |          |  1. PW      = decrypt(key, receiver.SK)
-            | data     |      | content  |  2. content = decrypt(data, PW)
-            | keys     |      +----------+
-            +----------+
-    """
+    #
+    #   Decrypt the Secure Message to Instant Message
+    #
+    #     +----------+      +----------+
+    #     | sender   |      | sender   |
+    #     | receiver |      | receiver |
+    #     | time     |  ->  | time     |
+    #     |          |      |          |  1. PW      = decrypt(key, receiver.SK)
+    #     | data     |      | content  |  2. content = decrypt(data, PW)
+    #     | keys     |      +----------+
+    #     +----------+
 
     async def decrypt_message(self, msg: SecureMessage, receiver: ID) -> Optional[InstantMessage]:
-        """
-        Decrypt message, replace encrypted 'data' with 'content' field
+        """Decrypts a SecureMessage back to an InstantMessage (for local user).
+
+        Replaces the encrypted 'data' field with plaintext 'content' by decrypting the
+        symmetric key (with receiver's private key) and then decrypting the content.
 
         :param msg:      encrypted message
         :param receiver: actual receiver (local user)
@@ -151,24 +158,24 @@ class SecureMessagePacker:
         info['content'] = content.to_map()
         return InstantMessage.parse(msg=info)
 
-    """
-        Sign the Secure Message to Reliable Message
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-            +----------+      +-----------+
-            | sender   |      | sender    |
-            | receiver |      | receiver  |
-            | time     |  ->  | time      |
-            |          |      |           |
-            | data     |      | data      |
-            | keys     |      | keys      |
-            +----------+      | signature |  1. signature = sign(data, sender.SK)
-                              +-----------+
-    """
+    #
+    #   Sign the Secure Message to Reliable Message
+    #
+    #     +----------+      +-----------+
+    #     | sender   |      | sender    |
+    #     | receiver |      | receiver  |
+    #     | time     |  ->  | time      |
+    #     |          |      |           |
+    #     | data     |      | data      |
+    #     | keys     |      | keys      |
+    #     +----------+      | signature |  1. signature = sign(data, sender.SK)
+    #                       +-----------+
 
     async def sign_message(self, msg: SecureMessage) -> Optional[ReliableMessage]:
-        """
-        Sign message.data, add 'signature' field
+        """Signs a SecureMessage to create a ReliableMessage (adds sender signature).
+
+        Generates a digital signature for the encrypted 'data' field using the sender's
+        private key, and adds it as the 'signature' field in ReliableMessage.
 
         :param msg: encrypted message
         :return: ReliableMessage object

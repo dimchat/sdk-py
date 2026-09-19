@@ -28,6 +28,12 @@
 # SOFTWARE.
 # ==============================================================================
 
+"""
+    Group Entity
+    ~~~~~~~~~~~~
+
+"""
+
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
@@ -37,13 +43,14 @@ from .entity import EntityDataSource, Entity, BaseEntity
 
 
 class GroupDataSource(EntityDataSource, ABC):
-    """ This interface is for getting information for group
+    """Data source interface for retrieving group-specific data.
 
-        Group Data Source
-        ~~~~~~~~~~~~~~~~~
+    Extends :class:`EntityDataSource` with group role and membership management, defining
+    the contract for fetching group-specific data (founder, owner, members).
 
-        1. founder has the same public key with the group's meta.key
-        2. owner and members should be set complying with the consensus algorithm
+    Key rules:
+    1. Founder's public key matches the group Meta's public key
+    2. Owner/members must be managed according to the system's consensus algorithm
     """
 
     @abstractmethod
@@ -84,16 +91,17 @@ class GroupDataSource(EntityDataSource, ABC):
 
 
 class Group(Entity, ABC):
-    """ This class is for creating group
+    """Group entity interface representing a chat group.
 
-        Group for organizing users
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Extends :class:`Entity` with group-specific properties and role management.
 
-            roles:
-                founder
-                owner
-                members
-                administrators - Optional
+    Groups have a hierarchical role structure:
+    - Founder        : Original creator of the group (immutable)
+    - Owner          : Current administrator of the group (can be transferred)
+    - Members        : Regular participants in the group
+    - Administrators : Optional role for privileged members (assistants)
+
+    Important note: The group owner must always be a member of the group (usually the first member).
     """
 
     # @property
@@ -113,7 +121,13 @@ class Group(Entity, ABC):
     @property
     @abstractmethod
     async def founder(self) -> ID:
-        """ Group founder """
+        """Founder ID of the group (async).
+
+        The original creator of the group (cannot be changed after group creation).
+        The founder's private key is used to generate the group's Meta.
+
+        Returns the group founder's ID.
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.founder getter'
         )
@@ -121,7 +135,13 @@ class Group(Entity, ABC):
     @property
     @abstractmethod
     async def owner(self) -> ID:
-        """ Group owner(founder) """
+        """Current owner ID of the group (async).
+
+        The user with administrative control over the group (can be transferred via abdicate command).
+        Must be a member of the group.
+
+        Returns the current group owner's ID.
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.owner getter'
         )
@@ -129,8 +149,14 @@ class Group(Entity, ABC):
     @property
     @abstractmethod
     async def members(self) -> List[ID]:
-        """ NOTICE: the owner must be a member
-            (usually the first one) """
+        """List of all member IDs in the group (async).
+
+        Includes the owner and all regular members (excludes founder if not a member).
+
+        Returns the list of group member IDs (empty list if none).
+
+        NOTICE: the owner must be a member (usually the first one).
+        """
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.members getter'
         )

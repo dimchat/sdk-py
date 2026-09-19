@@ -47,15 +47,15 @@ except TypeError:
 
 
 class Shortener(ABC):
-    """ Interface for bidirectional short key mapping (long string keys ↔ single-char keys).
+    """Interface for bidirectional short key mapping (long string keys ↔ single-char keys).
 
-        Core function: Replace system-defined long string keys with pre-defined single-character
-        short keys (and vice versa) to reduce the size of JSON-serialized data.
+    Core function: Replace system-defined long string keys with pre-defined single-character
+    short keys (and vice versa) to reduce the size of JSON-serialized data.
 
-        Key features:
-        - Bi-directional conversion (compress → extract)
-        - Preserves data structure, only replaces key names
-        - Maintains compatibility with core message components
+    Key features:
+    - Bi-directional conversion (compress → extract)
+    - Preserves data structure, only replaces key names
+    - Maintains compatibility with core message components
     """
 
     #
@@ -177,10 +177,10 @@ class Shortener(ABC):
 
 
 class MessageShortener(Shortener):
-    """ Concrete implementation of Shortener for message/content/key short key mapping.
+    """Concrete implementation of :class:`Shortener` for message/content/key short key mapping.
 
-        Implements fixed key pair conversion with new Map creation
-        (does not modify the original one).
+    Implements fixed key pair conversion with new Map creation
+    (does not modify the original one).
     """
 
     def __init__(self):
@@ -203,23 +203,47 @@ class MessageShortener(Shortener):
 
     # protected
     def _build_message_key_maps(self) -> Tuple[StringPairing, StringPairing]:
-        """ Builds the short-to-long and long-to-short maps for message keys. """
+        """Builds the short-to-long and long-to-short maps for message keys.
+
+        Uses the standard message key pairs defined in
+        :attr:`~Shortener.message_short_keys`.
+
+        Returns a record of (shortToLong, longToShort) mapping tables.
+        """
         return self._build(keys=self.message_short_keys)
 
     # protected
     def _build_content_key_maps(self) -> Tuple[StringPairing, StringPairing]:
-        """ Builds the short-to-long and long-to-short maps for content keys. """
+        """Builds the short-to-long and long-to-short maps for content keys.
+
+        Uses the standard content key pairs defined in
+        :attr:`~Shortener.content_short_keys`.
+
+        Returns a record of (shortToLong, longToShort) mapping tables.
+        """
         return self._build(keys=self.content_short_keys)
 
     # protected
     def _build_crypto_key_maps(self) -> Tuple[StringPairing, StringPairing]:
-        """ Builds the short-to-long and long-to-short maps for symmetric key fields. """
+        """Builds the short-to-long and long-to-short maps for symmetric key fields.
+
+        Uses the standard crypto key pairs defined in
+        :attr:`~Shortener.crypto_short_keys`.
+
+        Returns a record of (shortToLong, longToShort) mapping tables.
+        """
         return self._build(keys=self.crypto_short_keys)
 
     # protected
     # noinspection PyMethodMayBeStatic
     def _build(self, keys: List[str]) -> Tuple[StringPairing, StringPairing]:
-        """ Builds two mapping tables from a list of (shortKey, longKey) pairs. """
+        """Builds two mapping tables from a list of (shortKey, longKey) pairs.
+
+        The ``keys`` list must contain pairs in order: short key followed by long key.
+
+        :param keys: flattened list of (short, long) key pairs
+        :return: record of (shortToLong, longToShort) mapping tables
+        """
         short_to_long = {}
         long_to_short = {}
         size = len(keys)
@@ -236,9 +260,13 @@ class MessageShortener(Shortener):
     # protected
     # noinspection PyMethodMayBeStatic
     def _translate(self, info: StrMap, dictionary: StringPairing) -> StrMap:
-        """ Translates the keys of info using the given dictionary.
+        """Translates the keys of ``info`` using the given ``dictionary``.
 
-            NOTICE: does not modify the original map, creates a new one instead.
+        NOTICE: does not modify the original map, creates a new one instead.
+
+        :param info: source map whose keys need translation
+        :param dictionary: mapping table (old key -> new key)
+        :return: new map with translated keys (unmatched keys kept as-is)
         """
         result = {}
         for key, value in info.items():

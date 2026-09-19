@@ -49,8 +49,20 @@ from ..dkd import ContentProcessor
 from ..base import TwinsHelper
 
 
+# -----------------------------------------------------------------------------
+#  BaseContentProcessor (Default CPU Implementation)
+# -----------------------------------------------------------------------------
+
+
 class BaseContentProcessor(TwinsHelper, ContentProcessor):
-    """ CPU - Content Processing Unit """
+    """Base implementation of :class:`ContentProcessor` with common response utilities.
+
+    Provides default handling for unsupported content types (returns "not supported" receipt)
+    and utility methods for creating receipt responses. Serves as the parent class
+    for all concrete content processors.
+
+    Extends :class:`TwinsHelper` to access Facebook (entity management) and Messenger services.
+    """
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:
@@ -67,8 +79,20 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     #   Convenient responding
     #
 
+    # protected
     def _respond_receipt(self, text: str, envelope: Envelope, content: Optional[Content],
                          extra: Optional[StrMap] = None) -> List[Content]:
+        """Creates a list containing a single receipt command response.
+
+        Convenience method for consistent response formatting across processors.
+
+        `text` is the human-readable response text.
+        `envelope` is the original message envelope (for sender/receiver context).
+        `content` is the original message content (optional, for additional context).
+        `extra` is the extra key-value data to include in the receipt (optional).
+
+        Returns a list with one :class:`ReceiptCommand` instance.
+        """
         return [
             self.create_receipt(text=text, envelope=envelope, content=content, extra=extra)
         ]
@@ -76,8 +100,10 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
     @classmethod
     def create_receipt(cls, text: str, envelope: Envelope, content: Optional[Content],
                        extra: Optional[StrMap] = None) -> Command:
-        """
-        Receipt command with text, original envelope, serial number & group
+        """Creates a receipt command with standardized formatting.
+
+        Includes original message context (envelope, serial number, group ID)
+        and optional extra data. Static method for use without instantiation.
 
         :param text:     respond message
         :param envelope: original message envelope
@@ -103,8 +129,17 @@ def command_handler() -> CommandHandler:
     return ext.command_handler
 
 
+# -----------------------------------------------------------------------------
+#  BaseCommandProcessor (Default Command CPU)
+# -----------------------------------------------------------------------------
+
+
 class BaseCommandProcessor(BaseContentProcessor):
-    """ CPU - Command Processing Unit """
+    """Base implementation of :class:`ContentProcessor` for command content.
+
+    Specializes :class:`BaseContentProcessor` for command handling, providing default
+    "command not supported" responses for unsupported commands.
+    """
 
     # Override
     async def process_content(self, content: Content, r_msg: ReliableMessage) -> List[Content]:

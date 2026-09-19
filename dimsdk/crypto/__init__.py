@@ -30,14 +30,11 @@
 
 from .agent import VisaAgent, DefaultVisaAgent
 from .agent import VisaAgentExtension
-from .agent import EncryptedBundle, UserEncryptedBundle
 
 
 __all__ = [
 
     'VisaAgent', 'DefaultVisaAgent',
     'VisaAgentExtension',
-
-    'EncryptedBundle', 'UserEncryptedBundle',
 
 ]

@@ -37,16 +37,21 @@ from ..mkm import User, Group
 
 
 class Barrack(ABC):
-    """
-        Entity Factory
-        ~~~~~~~~~~~~~~
-        Entity pool to manage User/Group instances
+    """Entity pool for managing and caching User/Group instances (account entity manager).
+
+    Core responsibilities:
+    1. In-memory caching of User/Group entities to avoid repeated creation
+    2. Lazy creation of User/Group entities when required metadata is available
+    3. Fast lookup of entities by ID (identifier)
+
+    Key design: Acts as a "barracks" (entity pool) to centralize entity management,
+    ensuring only one instance exists per ID and reducing redundant data loading.
     """
 
     @abstractmethod
     def cache_user(self, user: User):
         """
-        Cache user in memory (overwrite the old one)
+        Caches a User entity in memory (overwrites existing entry for the same ID).
 
         :param user: user entity
         """
@@ -57,7 +62,7 @@ class Barrack(ABC):
     @abstractmethod
     def cache_group(self, group: Group):
         """
-        Cache group in memory (overwrite the old one)
+        Caches a Group entity in memory (overwrites existing entry for the same ID).
 
         :param group: group entity
         """
@@ -68,7 +73,7 @@ class Barrack(ABC):
     @abstractmethod
     def get_user(self, identifier: ID) -> Optional[User]:
         """
-        Get user entity from cache
+        Retrieves a cached User entity by ID.
 
         :param identifier: user ID
         :return: user entity
@@ -80,7 +85,7 @@ class Barrack(ABC):
     @abstractmethod
     def get_group(self, identifier: ID) -> Optional[Group]:
         """
-        Get group entity from cache
+        Retrieves a cached Group entity by ID.
 
         :param identifier: group ID
         :return: group entity
@@ -92,7 +97,10 @@ class Barrack(ABC):
     @abstractmethod
     def create_user(self, identifier: ID) -> Optional[User]:
         """
-        Create user when visa.key exists
+        Creates a User entity if the required visa key metadata exists.
+
+        Lazy creation rule: Only creates a User when the user's visa.key (public key)
+        is available (entity is "ready" for use). Does not cache the created user automatically.
 
         :param identifier: user ID
         :return: user, None on not ready
@@ -104,7 +112,10 @@ class Barrack(ABC):
     @abstractmethod
     def create_group(self, identifier: ID) -> Optional[Group]:
         """
-        Create group when members exist
+        Creates a Group entity if the required member list exists.
+
+        Lazy creation rule: Only creates a Group when the group's member list is available
+        (entity is "ready" for use). Does not cache the created group automatically.
 
         :param identifier: group ID
         :return: group, None on not ready
@@ -120,7 +131,10 @@ class Barrack(ABC):
     @abstractmethod
     async def get_local_users(self) -> List[ID]:
         """
-        Get all local users (for decrypting received message)
+        Retrieves all local user IDs (used for decrypting received messages).
+
+        Local users are accounts logged into the current device with private keys,
+        required to decrypt incoming personal/group messages targeted to the device.
 
         :return: users with private key
         """

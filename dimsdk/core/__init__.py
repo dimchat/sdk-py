@@ -36,14 +36,6 @@ from .transformer import Transformer
 
 from .delegate import CipherKeyDelegate
 
-#
-#   Dao-Ke-Dao (shortener / compressor)
-#   NOTE: physically located in `dkd/`; re-exported here to match the Dart
-#         barrel (lib/core.dart exports src/dkd/compress_keys.dart & compressor.dart)
-#
-from ..dkd.compress_keys import Shortener, MessageShortener
-from ..dkd.compressor import Compressor, MessageCompressor
-
 
 __all__ = [
 
@@ -58,8 +50,5 @@ __all__ = [
     'Transformer',
 
     'CipherKeyDelegate',
-
-    'Shortener', 'MessageShortener',
-    'Compressor', 'MessageCompressor',
 
 ]

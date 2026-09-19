@@ -47,11 +47,20 @@ from ..core import CipherKeyDelegate
 
 
 class Messenger(Transformer, Packer, Processor, ABC):
+    """Unified messaging service (combines packing, processing, and key management).
+
+    Acts as a facade for all messaging operations:
+    1. Delegates packing/unpacking to a :class:`Packer` implementation
+    2. Delegates message processing to a :class:`Processor` implementation
+    3. Manages directional symmetric keys via :class:`CipherKeyDelegate`
+
+    Implements: :class:`Transformer`, :class:`Packer`, :class:`Processor`
+    """
 
     @property  # protected
     @abstractmethod
     def cipher_key_delegate(self) -> Optional[CipherKeyDelegate]:
-        """ Delegate for Cipher Key """
+        """Key management delegate (directional symmetric keys) - internal use only."""
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.cipher_key_delegate getter'
         )
@@ -59,7 +68,7 @@ class Messenger(Transformer, Packer, Processor, ABC):
     @property  # protected
     @abstractmethod
     def packer(self) -> Optional[Packer]:
-        """ Delegate for Packing Message """
+        """Message packer implementation (delegated packing/unpacking) - internal use only."""
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.packer getter'
         )
@@ -67,7 +76,7 @@ class Messenger(Transformer, Packer, Processor, ABC):
     @property  # protected
     @abstractmethod
     def processor(self) -> Optional[Processor]:
-        """ Delegate for Processing Message """
+        """Message processor implementation (delegated processing) - internal use only."""
         raise NotImplementedError(
             f'Not implemented: {type(self).__module__}.{type(self).__name__}.processor getter'
         )
@@ -93,18 +102,41 @@ class Messenger(Transformer, Packer, Processor, ABC):
     #
 
     async def get_encrypt_key(self, msg: InstantMessage) -> Optional[SymmetricKey]:
+        """Retrieves the encryption key for an instant message (generates if missing).
+
+        Uses directional key scoping (sender -> target) via :class:`CipherKeyDelegate`.
+
+        `msg` is the instant message to get encryption key for.
+
+        Returns the directional symmetric encryption key (None if unavailable).
+        """
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
         db = self.cipher_key_delegate
         return await db.get_cipher_key(sender=sender, receiver=target, generate=True)
 
     async def get_decrypt_key(self, msg: SecureMessage) -> Optional[SymmetricKey]:
+        """Retrieves the decryption key for a secure message (does not generate).
+
+        Uses directional key scoping (sender -> target) via :class:`CipherKeyDelegate`.
+
+        `msg` is the secure message to get decryption key for.
+
+        Returns the directional symmetric decryption key (None if unavailable).
+        """
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
         db = self.cipher_key_delegate
         return await db.get_cipher_key(sender=sender, receiver=target, generate=False)
 
     async def cache_decrypt_key(self, key: SymmetricKey, msg: SecureMessage):
+        """Caches a decryption key for future use (directional scoping).
+
+        `key` is the symmetric key to cache.
+        `msg` is the secure message (for direction context).
+
+        Returns a future that completes when caching is done (no return value).
+        """
         sender = msg.sender
         target = CipherKeyDelegate.destination_for_message(msg=msg)
         db = self.cipher_key_delegate
