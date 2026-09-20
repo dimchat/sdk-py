@@ -96,19 +96,19 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     #
 
     # Override
-    async def serialize_content(self, content: Content, key: SymmetricKey, msg: InstantMessage) -> bytes:
+    async def serialize_content(self, content: Content, password: SymmetricKey, msg: InstantMessage) -> bytes:
         # NOTICE: check attachment for File/Image/Audio/Video message content
         #         before serialize content, this job should be do in subclass
         msg_body = content.to_map()
-        key_info = key.to_map()
+        key_info = password.to_map()
         compressor = self.compressor
         return compressor.compress_content(content=msg_body, key=key_info)
 
     # Override
-    async def encrypt_content(self, data: bytes, key: SymmetricKey, msg: InstantMessage) -> bytes:
+    async def encrypt_content(self, data: bytes, password: SymmetricKey, msg: InstantMessage) -> bytes:
         # store 'IV' in msg for AES decryption
         msg_info = msg.to_map()
-        return key.encrypt(plaintext=data, extra=msg_info)
+        return password.encrypt(plaintext=data, extra=msg_info)
 
     # # Override
     # async def encode_data(self, data: bytes, msg: InstantMessage) -> Any:
@@ -121,11 +121,11 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     #     return TransportableData.encode(data=data)
 
     # Override
-    async def serialize_key(self, key: SymmetricKey, msg: InstantMessage) -> Optional[bytes]:
+    async def serialize_key(self, password: SymmetricKey, msg: InstantMessage) -> Optional[bytes]:
         if shared_message_extensions.handler.is_broadcast(msg):
             # broadcast message has no key
             return None
-        key_info = key.to_map()
+        key_info = password.to_map()
         compressor = self.compressor
         return compressor.compress_symmetric_key(key=key_info)
 
@@ -207,15 +207,15 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     #         return TransportableData.decode(data)
 
     # Override
-    async def decrypt_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[bytes]:
+    async def decrypt_content(self, data: bytes, password: SymmetricKey, msg: SecureMessage) -> Optional[bytes]:
         # check 'IV' in msg for AES decryption
         msg_info = msg.to_map()
-        return key.decrypt(ciphertext=data, params=msg_info)
+        return password.decrypt(ciphertext=data, params=msg_info)
 
     # Override
-    async def deserialize_content(self, data: bytes, key: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
+    async def deserialize_content(self, data: bytes, password: SymmetricKey, msg: SecureMessage) -> Optional[Content]:
         # assert len(msg.data) > 0, f'message data empty: {msg.to_map()}'
-        key_info = key.to_map()
+        key_info = password.to_map()
         compressor = self.compressor
         info = compressor.extract_content(data=data, key=key_info)
         return Content.parse(content=info)
