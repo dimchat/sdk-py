@@ -28,20 +28,30 @@
 # SOFTWARE.
 # ==============================================================================
 
+# from .compress_keys import StringPairing
+from .compress_keys import Shortener, MessageShortener
+from .compressor import Compressor, MessageCompressor
+
 from .proc import ContentProcessor
 from .proc import ContentProcessorCreator
 from .proc import ContentProcessorFactory
 
 from .factory import GeneralContentProcessorFactory
 
-from .compress_keys import Shortener, MessageShortener
-from .compressor import Compressor, MessageCompressor
-
 
 __all__ = [
 
+    # 'StringPairing',
+
     #
-    #   Content Processor (DaoKeDao)
+    #   export to 'core.*'
+    #
+
+    'Shortener', 'MessageShortener',
+    'Compressor', 'MessageCompressor',
+
+    #
+    #   export to 'cpu.*'
     #
 
     'ContentProcessor',
@@ -49,12 +59,5 @@ __all__ = [
     'ContentProcessorFactory',
 
     'GeneralContentProcessorFactory',
-
-    #
-    #   Compressor (Short Key + JSON + UTF8 Encoding)
-    #
-
-    'Shortener', 'MessageShortener',
-    'Compressor', 'MessageCompressor',
 
 ]

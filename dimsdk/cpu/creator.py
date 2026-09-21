@@ -47,6 +47,7 @@ from .base import BaseContentProcessor
 from .base import BaseCommandProcessor
 
 
+# noinspection PyAbstractClass
 class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
     """Base implementation of :class:`ContentProcessorCreator` for standard content/command types.
 
@@ -66,9 +67,8 @@ class BaseContentProcessorCreator(TwinsHelper, ContentProcessorCreator):
         # assert False, f'unsupported content: {msg_type}'
         return None
 
-    # Override
-    def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
-        # raise NotImplementedError(
-        #     f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_command_processor()'
-        # )
-        return None
+    # # Override
+    # def create_command_processor(self, msg_type: str, cmd: str) -> Optional[ContentProcessor]:
+    #     raise NotImplementedError(
+    #         f'Not implemented: {type(self).__module__}.{type(self).__name__}.create_command_processor()'
+    #     )

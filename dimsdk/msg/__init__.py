@@ -28,23 +28,21 @@
 # SOFTWARE.
 # ==============================================================================
 
-from .instant_packer import BundleMap
-
 from .instant_delegate import InstantMessageDelegate
 from .secure_delegate import SecureMessageDelegate
 from .reliable_delegate import ReliableMessageDelegate
 
+# from .instant_packer import BundleMap
 from .instant_packer import InstantMessagePacker
 from .secure_packer import SecureMessagePacker
 from .reliable_packer import ReliableMessagePacker
 
-from .helpers import MessagePackerFactory
 from .helpers import MessagePackerExtension
+from .helpers import MessagePackerFactory
+# from .helpers import packer_factory
 
 
 __all__ = [
-
-    'BundleMap',
 
     #
     #   Message Transformers (DaoKeDao)
@@ -54,11 +52,13 @@ __all__ = [
     'SecureMessageDelegate',
     'ReliableMessageDelegate',
 
+    # 'BundleMap',
     'InstantMessagePacker',
     'SecureMessagePacker',
     'ReliableMessagePacker',
 
-    'MessagePackerFactory',
     'MessagePackerExtension',
+    'MessagePackerFactory',
+    # 'packer_factory',
 
 ]

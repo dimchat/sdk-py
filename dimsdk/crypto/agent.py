@@ -33,11 +33,13 @@ from typing import Optional, Union, Set, List
 
 from dimp import VerifyKey, EncryptKey
 from dimp import PublicKey
+
 from dimp import Meta, Document
 from dimp import ID, SecureMessage
-from dimp import AccountHandler
-from dimp import GeneralAccountExtension, shared_account_extensions
+
 from dimp import EncryptedBundle, UserEncryptedBundle
+from dimp import AccountExtensions
+from dimp import shared_account_extensions, account_handler
 
 
 # -----------------------------------------------------------------------------
@@ -291,15 +293,10 @@ class VisaAgentExtension:
 shared_account_extensions.visa_agent: VisaAgent = DefaultVisaAgent()
 
 
-def account_extensions() -> Union[VisaAgentExtension, GeneralAccountExtension]:
+def _account_extension() -> Union[VisaAgentExtension, AccountExtensions]:
     return shared_account_extensions
 
 
 def visa_agent() -> VisaAgent:
-    ext = account_extensions()
+    ext = _account_extension()
     return ext.visa_agent
-
-
-def account_handler() -> AccountHandler:
-    ext = account_extensions()
-    return ext.handler

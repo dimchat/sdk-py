@@ -40,9 +40,7 @@ from dimp import StrMap
 from dimp import ReliableMessage
 from dimp import Envelope
 from dimp import Content, Command
-
-from dimp import CommandHandler, GeneralCommandExtension
-from dimp import shared_message_extensions
+from dimp import command_handler
 
 from ..dkd import ContentProcessor
 
@@ -118,15 +116,6 @@ class BaseContentProcessor(TwinsHelper, ContentProcessor):
         if extra is not None:
             res.update(extra)
         return res
-
-
-def command_extensions() -> GeneralCommandExtension:
-    return shared_message_extensions
-
-
-def command_handler() -> CommandHandler:
-    ext = command_extensions()
-    return ext.command_handler
 
 
 # -----------------------------------------------------------------------------

@@ -28,6 +28,9 @@
 # SOFTWARE.
 # ==============================================================================
 
+from typing import Union
+
+from dimp import MessageExtensions
 from dimp import shared_message_extensions
 
 from .instant_delegate import InstantMessageDelegate
@@ -105,10 +108,10 @@ class MessagePackerExtension:
 shared_message_extensions.packer_factory = MessagePackerFactory()
 
 
-def message_extensions() -> MessagePackerExtension:
+def _message_extension() -> Union[MessagePackerExtension, MessageExtensions]:
     return shared_message_extensions
 
 
 def packer_factory() -> MessagePackerFactory:
-    ext = message_extensions()
+    ext = _message_extension()
     return ext.packer_factory

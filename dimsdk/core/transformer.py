@@ -34,14 +34,20 @@ from typing import Optional
 from dimp import SymmetricKey
 from dimp import ID
 from dimp import Content
+from dimp import Message
 from dimp import InstantMessage, SecureMessage, ReliableMessage
 from dimp import EncryptedBundle
-from dimp import shared_message_extensions
+from dimp import message_handler
 
 from ..mkm import EntityDelegate
 from ..msg import InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate
 
 from ..dkd import Compressor
+
+
+def is_broadcast(msg: Message) -> bool:
+    helper = message_handler()
+    return helper.is_broadcast(message=msg)
 
 
 class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessageDelegate, ABC):
@@ -112,7 +118,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # # Override
     # async def encode_data(self, data: bytes, msg: InstantMessage) -> Any:
-    #     if shared_message_extensions.handler.is_broadcast(msg):
+    #     if is_broadcast(msg=msg):
     #         # broadcast message content will not be encrypted (just encoded to JsON),
     #         # so no need to encode to Base64 here
     #         return utf8_decode(data=data)
@@ -122,7 +128,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def serialize_key(self, password: SymmetricKey, msg: InstantMessage) -> Optional[bytes]:
-        if shared_message_extensions.handler.is_broadcast(msg):
+        if is_broadcast(msg=msg):
             # broadcast message has no key
             return None
         key_info = password.to_map()
@@ -131,7 +137,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def encrypt_key(self, data: bytes, receiver: ID, msg: InstantMessage) -> Optional[EncryptedBundle]:
-        assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
+        assert not is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         assert receiver.is_user, f'receiver error: {receiver}'
         # TODO: make sure the receiver's public key exists
         facebook = self.facebook
@@ -144,7 +150,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # # Override
     # async def encode_keys(self, bundle: EncryptedBundle, receiver: ID, msg: InstantMessage) -> StrMap:
-    #     assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
+    #     assert not is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
     #     # message key had been encrypted by a public key,
     #     # so the data should be encode here (with algorithm 'base64' as default).
     #     return bundle.encode(identifier=receiver)
@@ -156,7 +162,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # # Override
     # async def decode_keys(self, keys: StrMap, receiver: ID, msg: SecureMessage) -> Optional[EncryptedBundle]:
-    #     assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
+    #     assert not is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
     #     assert receiver.is_user, f'receiver error: {receiver}'
     #     facebook = self.facebook
     #     user = await facebook.get_user(identifier=receiver)
@@ -171,7 +177,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
     async def decrypt_key(self, bundle: EncryptedBundle, receiver: ID, msg: SecureMessage) -> Optional[bytes]:
         # NOTICE: the receiver must be a member ID
         #         if it's a group message
-        assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
+        assert not is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         assert receiver.is_user, f'receiver error: {receiver}'
         facebook = self.facebook
         user = await facebook.get_user(identifier=receiver)
@@ -183,7 +189,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # Override
     async def deserialize_key(self, data: Optional[bytes], msg: SecureMessage) -> Optional[SymmetricKey]:
-        assert not shared_message_extensions.handler.is_broadcast(msg), f'broadcast message has no key: {msg}'
+        assert not is_broadcast(msg=msg), f'broadcast message has no key: {msg}'
         if data is None:
             # assert False, f'reused key? get it from cache: {msg.sender} => {msg.receiver}, {msg.group}'
             return None
@@ -193,7 +199,7 @@ class Transformer(InstantMessageDelegate, SecureMessageDelegate, ReliableMessage
 
     # # Override
     # async def decode_data(self, data: Any, msg: SecureMessage) -> Optional[bytes]:
-    #     if shared_message_extensions.handler.is_broadcast(msg):
+    #     if is_broadcast(msg=msg):
     #         # broadcast message content will not be encrypted (just encoded to JsON),
     #         # so return the string data directly
     #         if isinstance(data, str):

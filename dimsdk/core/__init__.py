@@ -28,6 +28,10 @@
 # SOFTWARE.
 # ==============================================================================
 
+from ..dkd import Shortener, MessageShortener
+from ..dkd import Compressor, MessageCompressor
+
+
 from .barrack import Barrack
 
 from .packer import Packer
@@ -38,6 +42,9 @@ from .delegate import CipherKeyDelegate
 
 
 __all__ = [
+
+    'Shortener', 'MessageShortener',
+    'Compressor', 'MessageCompressor',
 
     #
     #   Core Interfaces
